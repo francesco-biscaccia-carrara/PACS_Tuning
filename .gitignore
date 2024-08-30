@@ -1,0 +1,22 @@
+/local
+/.DS_Store
+/.vscode
+/code/log
+/code/build
+/code/instances
+
+#Thesis stuff
+/thesis/*.aux
+/thesis/*.fls
+/thesis/*.log
+/thesis/*.out
+/thesis/*.synctex.gz
+/thesis/*.toc
+/thesis/*.xmpi
+/thesis/*.fdb_latexmk
+/thesis/.trunk
+/thesis/.DS_Store
+/thesis/*.bcf
+/thesis/*.run.xml
+/thesis/*.blg
+/thesis/*.bbl
