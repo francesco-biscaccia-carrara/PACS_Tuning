@@ -15,14 +15,14 @@ set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "-Og -ggdb")
 
 # setting the default verbose/warn/intchecks (edited with the -D flag)
-#set(VERBOSE "1" CACHE STRING "Verbose setting set from command line")
+set(VERBOSE "1" CACHE STRING "Verbose setting set from command line")
 #message(STATUS "VERBOSE is set to ${VERBOSE}")
 #set(WARN "0" CACHE STRING "Flag to enable warning messages")
 #message(STATUS "WARN is set to ${WARN}")
 #set(INTCHECK "0" CACHE STRING "Flag to enable integrity checks")
 #message(STATUS "INTCHECK is set to ${INTCHECK}")
-set(CPLEX_DIR "/Applications/CPLEX_Studio2211/cplex/lib/arm64_osx/static_pic" CACHE STRING "Path to the CPLEX library") #application for Mac, opt/ibm for linux
-set(CPLEX_INCLUDE "/Applications/CPLEX_Studio2211/cplex/include/ilcplex" CACHE STRING "Path to the CPLEX headers")
+set(CPLEX_DIR "/opt/ibm/ILOG/CPLEX_Studio2211/cplex/lib/x86-64_linux/static_pic" CACHE STRING "Path to the CPLEX library") #application for Mac, opt/ibm for linux
+set(CPLEX_INCLUDE "/opt/ibm/ILOG/CPLEX_Studio2211/cplex/include/ilcplex" CACHE STRING "Path to the CPLEX headers")
 
 # check if all necessary folders exist
 cmake_path(GET CMAKE_HOME_DIRECTORY PARENT_PATH HOME_DIR)
@@ -68,6 +68,12 @@ add_library(
     include/utils.hpp
 )
 
+add_library(
+    MIP
+    source/MIP_solver.cpp
+    include/MIP_solver.hpp
+)
+
 # ...
 
 find_library(CPLEX_LIBRARY
@@ -87,13 +93,14 @@ add_executable(
 
 target_link_libraries(
     main
+    MIP
     Utils
     #...
     ${CPLEX_LIBRARY}
 )
 
 # adding definitions
-add_definitions(-D HPLUS_HOME_DIR="${HOME_DIR}" -D HPLUS_VERBOSE=${VERBOSE} -D HPLUS_WARN=${WARN} -D HPLUS_INTCHECK=${INTCHECK}) #HPLUS zanzi stuff
+add_definitions(-D HPLUS_HOME_DIR="${HOME_DIR}" -D MH_VERBOSE=${VERBOSE} -D HPLUS_WARN=${WARN} -D HPLUS_INTCHECK=${INTCHECK}) #HPLUS zanzi stuff
 
 # custom builds
 add_custom_target(opt
