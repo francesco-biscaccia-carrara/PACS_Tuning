@@ -74,6 +74,12 @@ add_library(
     include/MIP_solver.hpp
 )
 
+add_library(
+    FMIP
+    source/FMIP.cpp
+    include/FMIP.hpp
+)
+
 # ...
 
 find_library(CPLEX_LIBRARY
@@ -94,6 +100,7 @@ add_executable(
 target_link_libraries(
     main
     MIP
+    FMIP
     Utils
     #...
     ${CPLEX_LIBRARY}

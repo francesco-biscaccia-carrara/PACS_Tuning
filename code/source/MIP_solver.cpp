@@ -106,7 +106,7 @@ void MIP_solver::set_obj_function(std::vector<double> new_obj){
     free(indices);
 }
 
-void MIP_solver::add_col(std::vector<double> new_col, double obj_coef, double ub, double lb, std::string name){
+void MIP_solver::add_col(std::vector<double> new_col, double obj_coef, double lb, double ub, std::string name){
     int num_row = CPXgetnumrows(env,model);
 
     if(new_col.size() != num_row) print_state(ERROR,"Wrong column size!");

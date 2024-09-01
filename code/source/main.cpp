@@ -1,12 +1,10 @@
-#include "../include/MIP_solver.hpp"
+#include "../include/FMIP.hpp"
 
 int main(){
-    MIP_solver FMIP = MIP_solver("test");
-    std::vector<double> row(FMIP.get_num_cols(),0);
-    row[1]=4;
+    FMIP FMIP("test");
     std::cout<<FMIP.get_num_rows()<<std::endl;
-    FMIP.add_row(row,'G',300);
-    std::cout<<FMIP.get_num_rows()<<std::endl;
+    FMIP.prepare();
+    FMIP.solve(100);
     FMIP.save_model();
 
     /*
