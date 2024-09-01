@@ -2,14 +2,12 @@
 
 int main(){
     MIP_solver FMIP = MIP_solver("test");
-    FMIP.solve(100.0);
-    
-    std::cout<<FMIP.get_obj_value()<<std::endl;
-    std::vector<double> x_star = FMIP.get_solution();
-
-    MIP_solver OMIP = MIP_solver(FMIP);
-    OMIP.solve(100.0);
-    std::cout<<FMIP.get_obj_value()<<std::endl;
+    std::vector<double> row(FMIP.get_num_cols(),0);
+    row[1]=4;
+    std::cout<<FMIP.get_num_rows()<<std::endl;
+    FMIP.add_row(row,'G',300);
+    std::cout<<FMIP.get_num_rows()<<std::endl;
+    FMIP.save_model();
 
     /*
     switch (STATE) {

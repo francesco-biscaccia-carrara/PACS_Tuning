@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include <string>
+#include <string.h>
 #include <vector>
 #include <algorithm>
 #include <iostream>

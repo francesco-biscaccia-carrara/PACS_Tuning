@@ -15,14 +15,22 @@ class MIP_solver{
         explicit MIP_solver(const MIP_solver& other_solver);
         
         int solve(double time_limit);
+        void save_model();
+        
         double get_obj_value();
         std::vector<double> get_solution();
-        //void change_obj();
-        //void change_bounds();
-        //void add_variable();
-        //void remove_variable();
-        //void add_constraint();
-        //void remove_constraint();
+
+        int get_num_cols();
+        int get_num_rows();
+        int get_num_vars();
+
+        void add_col(std::vector<double> new_col, double obj_coef, double lb, double ub, std::string name);
+        void add_row(std::vector<double> new_row, char sense, double rhs);
+
+        std::vector<double> get_obj_function();
+        void set_obj_function(std::vector<double> new_obj);
+
+        void set_var_value(int index, double val);
 
         ~MIP_solver();
 
