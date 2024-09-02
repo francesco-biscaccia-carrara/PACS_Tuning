@@ -4,7 +4,7 @@
 ## 🤝 Contributor
 
 - Matteo Zanella [@Zanzibarr](https://github.com/Zanzibarr)
-- Riccardo Modolo [@RickSrick](https://github.com/RickSrick)
+- Riccardo Modolo [@RickSrick](https://github.com/RickSrick)  
 Thanks to them for their assistance with code reviews and project setup. ❤️
 
 ## 📄 License
