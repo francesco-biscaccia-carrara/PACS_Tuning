@@ -80,6 +80,12 @@ add_library(
     include/FMIP.hpp
 )
 
+add_library(
+    OMIP
+    source/OMIP.cpp
+    include/OMIP.hpp
+)
+
 # ...
 
 find_library(CPLEX_LIBRARY
@@ -101,6 +107,7 @@ target_link_libraries(
     main
     MIP
     FMIP
+    OMIP
     Utils
     #...
     ${CPLEX_LIBRARY}

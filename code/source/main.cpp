@@ -1,12 +1,26 @@
 #include "../include/FMIP.hpp"
+#include "../include/OMIP.hpp"
 
 int main(){
-    FMIP FMIP("test");
-    std::cout<<FMIP.get_num_rows()<<std::endl;
-    FMIP.prepare();
-    FMIP.solve(100);
-    FMIP.save_model();
 
+    MIP_solver mip("22433");
+    mip.solve(100);
+
+    std::vector<double> obj=mip.get_obj_function();
+    std::vector<double> sol=mip.get_solution();
+    std::cout<<"SOL_SIZE="<<sol.size()<<std::endl;
+
+    double cost =0;int i=0;
+    for(auto e : sol){
+        std::cout<<e<<"|";
+        cost += e*obj[i];
+        i++;
+    }
+    std::cout<<std::endl;
+   std::cout<<cost<<std::endl;
+   std::cout<<mip.get_obj_value()<<std::endl;
+   std::cout<<"COLS="<<mip.get_num_cols()<<std::endl;
+   std::cout<<"ROWS="<<mip.get_num_rows()<<std::endl;
     /*
     switch (STATE) {
         case CPXMIP_TIME_LIM_FEAS:      // exceeded time limit, found intermediate solution

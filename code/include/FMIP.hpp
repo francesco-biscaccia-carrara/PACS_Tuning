@@ -8,15 +8,14 @@ class FMIP : public MIP_solver {
     public:
         explicit FMIP(std::string file_name);
         explicit FMIP(const FMIP& other_solver);
-        
-        std::vector<double> get_old_obj_function();
-        int get_num_og_var();
-        void prepare();
+        explicit FMIP(const MIP_solver& other_solver);
 
-    private:
-        int num_og_var;
-        std::vector<double> old_obj;
-    
+        void save_model();
+
+        std::vector<double> get_solution();
+        
+    private: 
+        void prepare();
 };
 
 #endif

@@ -71,34 +71,29 @@ double MIP_solver::get_obj_value(){
 }
 
 std::vector<double> MIP_solver::get_solution(){
-    int num_vars = CPXgetnumcols(env,model)-1;
-    double* x_star = (double* ) calloc(num_vars,sizeof(double));
-    if (CPXgetx(env,model, x_star, 0, num_vars)) print_state(ERROR, "Unable to obtain the solution!");
-    std::vector<double> sol(x_star, x_star+num_vars);
-    std::transform(sol.begin(), sol.end(), sol.begin(), [](double el) {
-        return (el > 0.5) ? 1.0 : 0.0;
-    });
-    
+    int num_cols = CPXgetnumcols(env,model);
+    double* x_star = (double* ) calloc(num_cols,sizeof(double));
+    if (CPXgetx(env,model, x_star, 0, num_cols-1)) print_state(ERROR, "Unable to obtain the solution!");
+    std::vector<double> sol(x_star, x_star+num_cols);
     free(x_star);
     return sol;
 }
 
-int MIP_solver::get_num_cols() {return CPXgetnumcols(env,model);}
+int MIP_solver::get_num_cols() {return CPXgetnumcols(env,model);} // num cols = num var
 int MIP_solver::get_num_rows() {return CPXgetnumrows(env,model);}
-int MIP_solver::get_num_vars() {return CPXgetnumcols(env,model)-1;}
 
 std::vector<double> MIP_solver::get_obj_function(){
-    int num_vars = CPXgetnumcols(env,model)-1;
-    double* obj_f = (double* ) calloc(num_vars,sizeof(double));
-    if(CPXgetobj(env, model, obj_f, 0, num_vars)) print_state(ERROR, "Unable to get obj. coefficients!");
-    std::vector<double> obj(obj_f, obj_f+num_vars);
+    int num_cols = CPXgetnumcols(env,model);
+    double* obj_f = (double* ) calloc(num_cols,sizeof(double));
+    if(CPXgetobj(env, model, obj_f, 0, num_cols-1)) print_state(ERROR, "Unable to get obj. coefficients!");
+    std::vector<double> obj(obj_f, obj_f+num_cols);
     free(obj_f);
     return obj;
 }
 
 void MIP_solver::set_obj_function(std::vector<double> new_obj){
     int num_cols = CPXgetnumcols(env,model);
-    if(new_obj.size() != (num_cols-1)) print_state(ERROR,"No suitable obj_function coefficients");
+    if(new_obj.size() != num_cols) print_state(ERROR,"No suitable obj_function coefficients");
 
     int* indices = (int*) malloc(num_cols*sizeof(int));
     for(int i=0;i<num_cols;i++) indices[i]=i;
@@ -116,7 +111,7 @@ void MIP_solver::add_col(std::vector<double> new_col, double obj_coef, double lb
     strcpy(col_name,name.c_str());
     cname[0]=col_name;
     int* indices = (int*) malloc(num_row*sizeof(int));
-    double* values = (double*) malloc(num_row*sizeof(int));
+    double* values = (double*) malloc(num_row*sizeof(double));
     int start_index = 0;
     int nnz =0;
     for(int i=0;i<num_row;i++){
@@ -139,7 +134,7 @@ void MIP_solver::add_row(std::vector<double> new_row, char sense, double rhs){
     if(new_row.size() != num_cols) print_state(ERROR,"Wrong row size!");
     
     int* indices = (int*) malloc(num_cols*sizeof(int));
-    double* values = (double*) malloc(num_cols*sizeof(int));
+    double* values = (double*) malloc(num_cols*sizeof(double));
     int start_index = 0;
     int nnz =0;
     for(int i=0;i<num_cols;i++){
@@ -156,9 +151,24 @@ void MIP_solver::add_row(std::vector<double> new_row, char sense, double rhs){
 
 }
 
+void MIP_solver::remove_row(int index){
+    if(CPXdelrows (env, model, index, index)) print_state(ERROR,"Row not removed!");
+}
+
 void MIP_solver::set_var_value(int index, double val){
     char bound = 'B'; //Both
     CPXchgbds(env, model, 1, &index, &bound, &val);
+}
+
+void MIP_solver::set_vars_value(std::vector<double> values){
+    int num_cols = CPXgetnumcols(env,model);
+    
+    if(values.size() != num_cols) print_state(ERROR,"Wrong values size!");
+    for(int i=0;i<num_cols;i++){
+        if(values[i] < CPX_INFBOUND){
+            set_var_value(i,values[i]);
+        }
+    }
 }
 
 MIP_solver::~MIP_solver(){

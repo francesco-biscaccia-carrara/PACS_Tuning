@@ -22,19 +22,20 @@ class MIP_solver{
 
         int get_num_cols();
         int get_num_rows();
-        int get_num_vars();
 
         void add_col(std::vector<double> new_col, double obj_coef, double lb, double ub, std::string name);
         void add_row(std::vector<double> new_row, char sense, double rhs);
+        void remove_row(int index);
 
         std::vector<double> get_obj_function();
         void set_obj_function(std::vector<double> new_obj);
 
         void set_var_value(int index, double val);
+        void set_vars_value(std::vector<double> values);
 
         ~MIP_solver();
 
-    private:
+    protected:
         std::string file_name;
         CPXLPptr model; 
         CPXENVptr env;
