@@ -1,24 +1,24 @@
 #ifndef OMIP_H
 #define OMIP_H
 
-#include "MIP_solver.hpp"
+#include "MIP.hpp"
 
-class OMIP : public MIP_solver {
+class OMIP : public MIP {
 
     public:
-        explicit OMIP(std::string file_name);
-        explicit OMIP(const OMIP& other_solver);
-        explicit OMIP(const MIP_solver& other_solver);
+        explicit OMIP(std::string fileName);
+        explicit OMIP(const OMIP& otherOMIP);
+        explicit OMIP(const MIP& otherMIP);
 
-        void save_model();
+        void saveModel();
 
-        void update_budget_constraint(double rhs);
+        void updateBudgetConstr(double rhs);
 
-        std::vector<double> get_solution();
+        std::vector<double> getSol();
 
     private: 
         void setup();
-        void add_budget_constraint(double rhs);
+        void addBudgetConstr(double rhs);
 
 };
 

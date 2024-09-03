@@ -3,75 +3,75 @@
 #define OMIP_SLACK_OBJ_COEFF 0
 #define OMIP_BUD_CONST_SENSE 'L'
 
-OMIP::OMIP(std::string file_name) : MIP_solver(file_name){
+OMIP::OMIP(std::string fileName) : MIP(fileName){
     setup();
 
     #if MH_VERBOSE == 1
         CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	    CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
-        if (CPXsetlogfilename(env,  (CPLEX_LOG_DIR+file_name+"_OMIP.log").c_str(), "w") ) print_state(ERROR, "CPXsetlogfilename error!");
+        if (CPXsetlogfilename(env,  (CPLEX_LOG_DIR+fileName+"_OMIP.log").c_str(), "w") ) Logger::print(ERROR, "CPXsetlogfilename error!");
     #endif
 }
 
-OMIP::OMIP(const OMIP& other_solver) : MIP_solver(other_solver){
+OMIP::OMIP(const OMIP& otherOMIP) : MIP(otherOMIP){
 
     #if MH_VERBOSE == 1
         CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	    CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
-        if (CPXsetlogfilename(env,  (CPLEX_LOG_DIR+file_name+"_OMIP_clone.log").c_str(), "w") ) print_state(ERROR, "CPXsetlogfilename error!");
+        if (CPXsetlogfilename(env,  (CPLEX_LOG_DIR+fileName+"_OMIP_clone.log").c_str(), "w") ) Logger::print(ERROR, "CPXsetlogfilename error!");
     #endif
 }
 
-OMIP::OMIP(const MIP_solver& other_solver) : MIP_solver(other_solver){
+OMIP::OMIP(const MIP& otherMIP) : MIP(otherMIP){
     setup();
 
     #if MH_VERBOSE == 1
         CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	    CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
-        if (CPXsetlogfilename(env,  (CPLEX_LOG_DIR+file_name+"_OMIP_clone.log").c_str(), "w") ) print_state(ERROR, "CPXsetlogfilename error!");
+        if (CPXsetlogfilename(env,  (CPLEX_LOG_DIR+fileName+"_OMIP_clone.log").c_str(), "w") ) Logger::print(ERROR, "CPXsetlogfilename error!");
     #endif
 }
 
 
-void OMIP::save_model(){
+void OMIP::saveModel(){
     #if MH_VERBOSE == 1
-        CPXwriteprob(env, model, (MIP_LOG_DIR+file_name+"_OMIP.lp").c_str(), NULL);
+        CPXwriteprob(env, model, (MIP_LOG_DIR+fileName+"_OMIP.lp").c_str(), NULL);
     #endif
 }
 
 
-void OMIP::update_budget_constraint(double rhs){
-    remove_row(get_num_rows()-1);
-    add_budget_constraint(rhs);
+void OMIP::updateBudgetConstr(double rhs){
+    removeRow(getNumRows()-1);
+    addBudgetConstr(rhs);
 }
 
-std::vector<double> OMIP::get_solution(){
-    std::vector<double> x_star = MIP_solver::get_solution();
-    x_star.resize(get_num_cols()-2*(get_num_rows()-1));
-    return x_star;
+std::vector<double> OMIP::getSol(){
+    std::vector<double> xStar = MIP::getSol();
+    xStar.resize(getNumCols()-2*(getNumRows()-1));
+    return xStar;
 }   
 
 void OMIP::setup(){
-    for(int i=0;i<get_num_rows();i++){
-        std::vector<double> col(get_num_rows(),0);
+    for(int i=0;i<getNumRows();i++){
+        std::vector<double> col(getNumRows(),0);
         col[i]=1;
-        add_col(col,OMIP_SLACK_OBJ_COEFF,0,CPX_INFBOUND,"SP_"+std::to_string(i+1));
+        addCol(col,OMIP_SLACK_OBJ_COEFF,0,CPX_INFBOUND,"SP_"+std::to_string(i+1));
     }
 
-    for(int i=0;i<get_num_rows();i++){
-        std::vector<double> col(get_num_rows(),0);
+    for(int i=0;i<getNumRows();i++){
+        std::vector<double> col(getNumRows(),0);
         col[i]=-1;
-        add_col(col,OMIP_SLACK_OBJ_COEFF,0,CPX_INFBOUND,"SN_"+std::to_string(i+1));
+        addCol(col,OMIP_SLACK_OBJ_COEFF,0,CPX_INFBOUND,"SN_"+std::to_string(i+1));
     }
 
-    add_budget_constraint(CPX_INFBOUND);
+    addBudgetConstr(CPX_INFBOUND);
 }
 
-void OMIP::add_budget_constraint(double rhs){
-    std::vector<double> budg_constr(get_num_cols(),0);
-    int starting_point = (get_num_cols()-2*get_num_rows());
-    for(int i=starting_point;i<get_num_cols();i++){
-        budg_constr[i]=1;
+void OMIP::addBudgetConstr(double rhs){
+    std::vector<double> budConstr(getNumCols(),0);
+    int start = (getNumCols()-2*getNumRows());
+    for(int i=start;i<getNumCols();i++){
+        budConstr[i]=1;
     }
-    add_row(budg_constr,OMIP_BUD_CONST_SENSE,rhs);
+    addRow(budConstr,OMIP_BUD_CONST_SENSE,rhs);
 }

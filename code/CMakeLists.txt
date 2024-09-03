@@ -64,14 +64,14 @@ include_directories(${CPLEX_INCLUDE})
 
 add_library(
     Utils
-    source/utils.cpp
-    include/utils.hpp
+    source/Utils.cpp
+    include/Utils.hpp
 )
 
 add_library(
     MIP
-    source/MIP_solver.cpp
-    include/MIP_solver.hpp
+    source/MIP.cpp
+    include/MIP.hpp
 )
 
 add_library(
@@ -88,8 +88,8 @@ add_library(
 
 add_library(
     FixPol
-    source/fixing_policy.cpp
-    include/fixing_policy.hpp
+    source/FixPolicy.cpp
+    include/FixPolicy.hpp
 )
 
 # ...

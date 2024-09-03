@@ -1,18 +1,18 @@
 #ifndef FMIP_H
 #define FMIP_H
 
-#include "MIP_solver.hpp"
+#include "MIP.hpp"
 
-class FMIP : public MIP_solver {
+class FMIP : public MIP {
 
     public:
-        explicit FMIP(std::string file_name);
-        explicit FMIP(const FMIP& other_solver);
-        explicit FMIP(const MIP_solver& other_solver);
+        explicit FMIP(std::string fileName);
+        explicit FMIP(const FMIP& otherFMIP);
+        explicit FMIP(const MIP& otherMIP);
 
-        void save_model();
+        void saveModel();
 
-        std::vector<double> get_solution();
+        std::vector<double> getSol();
         
     private: 
         void setup();
