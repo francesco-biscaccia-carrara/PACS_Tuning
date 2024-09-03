@@ -4,7 +4,7 @@
 #define FMIP_VAR_OBJ_COEFF 0
 
 FMIP::FMIP(std::string file_name) : MIP_solver(file_name){
-    prepare();
+    setup();
 
     #if MH_VERBOSE == 1
         CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
@@ -14,7 +14,6 @@ FMIP::FMIP(std::string file_name) : MIP_solver(file_name){
 }
 
 FMIP::FMIP(const FMIP& other_solver) : MIP_solver(other_solver){
-    prepare();
 
     #if MH_VERBOSE == 1
         CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
@@ -24,7 +23,7 @@ FMIP::FMIP(const FMIP& other_solver) : MIP_solver(other_solver){
 }
 
 FMIP::FMIP(const MIP_solver& other_solver) : MIP_solver(other_solver){
-    prepare();
+    setup();
 
     #if MH_VERBOSE == 1
         CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
@@ -45,7 +44,7 @@ std::vector<double> FMIP::get_solution(){
     return x_star;
 }  
 
-void FMIP::prepare(){
+void FMIP::setup(){
     std::vector<double> obj(get_num_cols(),FMIP_VAR_OBJ_COEFF);
     set_obj_function(obj);
 

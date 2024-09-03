@@ -15,7 +15,7 @@ class FMIP : public MIP_solver {
         std::vector<double> get_solution();
         
     private: 
-        void prepare();
+        void setup();
 };
 
 #endif

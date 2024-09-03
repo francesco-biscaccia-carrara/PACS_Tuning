@@ -86,6 +86,12 @@ add_library(
     include/OMIP.hpp
 )
 
+add_library(
+    FixPol
+    source/fixing_policy.cpp
+    include/fixing_policy.hpp
+)
+
 # ...
 
 find_library(CPLEX_LIBRARY
@@ -108,6 +114,7 @@ target_link_libraries(
     MIP
     FMIP
     OMIP
+    FixPol
     Utils
     #...
     ${CPLEX_LIBRARY}

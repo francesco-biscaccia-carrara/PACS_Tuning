@@ -17,7 +17,7 @@ class OMIP : public MIP_solver {
         std::vector<double> get_solution();
 
     private: 
-        void prepare();
+        void setup();
         void add_budget_constraint(double rhs);
 
 };

@@ -4,7 +4,7 @@
 #define OMIP_BUD_CONST_SENSE 'L'
 
 OMIP::OMIP(std::string file_name) : MIP_solver(file_name){
-    prepare();
+    setup();
 
     #if MH_VERBOSE == 1
         CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
@@ -14,7 +14,6 @@ OMIP::OMIP(std::string file_name) : MIP_solver(file_name){
 }
 
 OMIP::OMIP(const OMIP& other_solver) : MIP_solver(other_solver){
-    prepare();
 
     #if MH_VERBOSE == 1
         CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
@@ -24,7 +23,7 @@ OMIP::OMIP(const OMIP& other_solver) : MIP_solver(other_solver){
 }
 
 OMIP::OMIP(const MIP_solver& other_solver) : MIP_solver(other_solver){
-    prepare();
+    setup();
 
     #if MH_VERBOSE == 1
         CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
@@ -52,7 +51,7 @@ std::vector<double> OMIP::get_solution(){
     return x_star;
 }   
 
-void OMIP::prepare(){
+void OMIP::setup(){
     for(int i=0;i<get_num_rows();i++){
         std::vector<double> col(get_num_rows(),0);
         col[i]=1;

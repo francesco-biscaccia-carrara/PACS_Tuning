@@ -46,6 +46,10 @@ MIP_solver::MIP_solver(const MIP_solver& other_solver){
     #endif
 }
 
+void MIP_solver::set_num_processors(int num_procs){
+    if(CPXsetintparam(env, CPX_PARAM_THREADS, num_procs)) print_state(ERROR, "CPX_PARAM_THREADS not cahanged!");
+}
+
 int MIP_solver::solve(double time_limit){
 
     if(time_limit < EPSILON) print_state(ERROR, "Time-limit (%10.4f) is too short!", time_limit);
@@ -101,7 +105,7 @@ void MIP_solver::set_obj_function(std::vector<double> new_obj){
     free(indices);
 }
 
-void MIP_solver::add_col(std::vector<double> new_col, double obj_coef, double lb, double ub, std::string name){
+void MIP_solver::add_col(std::vector<double>& new_col, double obj_coef, double lb, double ub, std::string name){
     int num_row = CPXgetnumrows(env,model);
 
     if(new_col.size() != num_row) print_state(ERROR,"Wrong column size!");
@@ -128,7 +132,7 @@ void MIP_solver::add_col(std::vector<double> new_col, double obj_coef, double lb
     free(values);
 }
 
-void MIP_solver::add_row(std::vector<double> new_row, char sense, double rhs){
+void MIP_solver::add_row(std::vector<double>& new_row, char sense, double rhs){
     int num_cols = CPXgetnumcols(env,model);
 
     if(new_row.size() != num_cols) print_state(ERROR,"Wrong row size!");
@@ -155,12 +159,20 @@ void MIP_solver::remove_row(int index){
     if(CPXdelrows (env, model, index, index)) print_state(ERROR,"Row not removed!");
 }
 
+std::pair<double,double> MIP_solver::get_var_bounds(int index){
+    double lb = CPX_INFBOUND, ub = CPX_INFBOUND;
+    if(CPXgetlb(env, model, &lb, index, index)) print_state(ERROR,"Unable to get the var lower_bound!");
+    if(CPXgetub(env, model, &ub, index, index)) print_state(ERROR,"Unable to get the var lower_bound!");
+    return std::make_pair(lb, ub);
+}
+
+
 void MIP_solver::set_var_value(int index, double val){
     char bound = 'B'; //Both
     CPXchgbds(env, model, 1, &index, &bound, &val);
 }
 
-void MIP_solver::set_vars_value(std::vector<double> values){
+void MIP_solver::set_vars_value(std::vector<double>& values){
     int num_cols = CPXgetnumcols(env,model);
     
     if(values.size() != num_cols) print_state(ERROR,"Wrong values size!");

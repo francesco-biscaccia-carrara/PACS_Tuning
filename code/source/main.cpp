@@ -1,26 +1,26 @@
 #include "../include/FMIP.hpp"
 #include "../include/OMIP.hpp"
+#include "../include/fixing_policy.hpp"
 
 int main(){
 
-    MIP_solver mip("22433");
-    mip.solve(100);
-
-    std::vector<double> obj=mip.get_obj_function();
-    std::vector<double> sol=mip.get_solution();
-    std::cout<<"SOL_SIZE="<<sol.size()<<std::endl;
-
-    double cost =0;int i=0;
-    for(auto e : sol){
-        std::cout<<e<<"|";
-        cost += e*obj[i];
-        i++;
-    }
-    std::cout<<std::endl;
-   std::cout<<cost<<std::endl;
-   std::cout<<mip.get_obj_value()<<std::endl;
-   std::cout<<"COLS="<<mip.get_num_cols()<<std::endl;
-   std::cout<<"ROWS="<<mip.get_num_rows()<<std::endl;
+    std::srand(SEED);
+    FMIP f_mip("2club200v15p5scn");
+    OMIP o_mip("2club200v15p5scn");
+    int x_length = f_mip.get_num_cols() - 2 * f_mip.get_num_rows();
+    std::vector<double> init_fixing(x_length,CPX_INFBOUND);
+    fixing_policy::first_theta_var(f_mip,init_fixing,0.5);
+    init_fixing.resize(f_mip.get_num_cols(),CPX_INFBOUND);
+    f_mip.set_vars_value(init_fixing);
+    f_mip.save_model();
+    f_mip.solve(100);
+    std::vector<double> first_sol = f_mip.get_solution();
+    first_sol.resize(f_mip.get_num_cols(),CPX_INFBOUND);
+    o_mip.set_vars_value(first_sol);
+    o_mip.update_budget_constraint(f_mip.get_obj_value());
+    o_mip.save_model();
+    o_mip.solve(100);
+    std::cout<<o_mip.get_obj_value()<<std::endl;
     /*
     switch (STATE) {
         case CPXMIP_TIME_LIM_FEAS:      // exceeded time limit, found intermediate solution
