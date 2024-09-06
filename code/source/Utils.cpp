@@ -1,13 +1,22 @@
 #include "../include/Utils.hpp"
 
-const std::string Logger::ANSI_COLOR_RED    = "\x1b[31m";
+const std::string Logger::ANSI_COLOR_RED            ="\x1b[31m";
 const std::string Logger::ANSI_COLOR_GREEN          ="\x1b[32m";
 const std::string Logger::ANSI_COLOR_YELLOW         ="\x1b[33m";
 const std::string Logger::ANSI_COLOR_BLUE           ="\x1b[34m";
 const std::string Logger::ANSI_COLOR_MAGENTA        ="\x1b[35m";
 const std::string Logger::ANSI_COLOR_CYAN           ="\x1b[36m";
 const std::string Logger::ANSI_COLOR_RESET          ="\x1b[0m";
+std::mt19937_64 RandNumGen::rng(std::random_device{}());
 
+void RandNumGen::setSeed(unsigned long long seed){
+    RandNumGen::rng.seed(seed);
+}
+
+int RandNumGen::randInt(int min, int max) {
+        std::uniform_int_distribution<int> dist(min, max);
+        return dist(rng);
+}
 
 
 void Logger::print(LogLevel typeMsg, const char* msg, ...){
@@ -48,7 +57,8 @@ void Logger::print(LogLevel typeMsg, const char* msg, ...){
     if (typeMsg == ERROR) std::exit(1);
 }
 
-double Time::getTime(){
+
+double Clock::getTime(){
     struct timeval tv;
     gettimeofday(&tv, NULL);
     
@@ -56,7 +66,7 @@ double Time::getTime(){
 }
 
 
-double Time::timeElapsed(const double initTime) {
+double Clock::timeElapsed(const double initTime) {
     
     struct timeval tv;
     gettimeofday(&tv, NULL);

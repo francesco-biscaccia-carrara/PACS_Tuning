@@ -15,6 +15,9 @@ class FMIP : public MIP {
         std::vector<double> getSol();
         
     private: 
+        const int FMIP_SLACK_OBJ_COEFF = 1;
+        const int FMIP_VAR_OBJ_COEFF = 0;
+
         void setup();
 };
 

@@ -13,6 +13,7 @@ class MIP{
         
         void setNumCores(const int numCores);
         int solve(const double timeLimit);
+        int solveRelaxation(const double timeLimit);
         void saveModel();
         
         double getObjValue();
@@ -31,18 +32,31 @@ class MIP{
 
         
         std::pair<double,double> getVarBounds(const int index);
+        char getVarType(const int index);
+        void changeVarType(const int index,const char type);
         void setVarValues(const int index, const double val);
         void setVarsValues(const std::vector<double>& values);
 
         ~MIP();
 
     protected:
-        std::string fileName;
         CPXLPptr model; 
         CPXENVptr env;
+        std::string fileName;
         const std::string CPLEX_LOG_DIR ="../log/cplex_out/log/";
         const std::string MIP_LOG_DIR = "../log/cplex_out/mip/";
         const std::string INST_DIR = "../instances/";
+        
+        int setLogFileName(std::string logFileName);
+
+    private:
+        std::vector<std::pair<int,char>> restoreVarType;
+        const double DUAL_PRIM_GAP_TOL = 1e-4;
+        const double MIP_GAP_TOL = 0.0;
+
+        void changeProbType(const int type);
+       
+
 };
 
 

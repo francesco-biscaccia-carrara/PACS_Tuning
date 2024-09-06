@@ -17,6 +17,9 @@ class OMIP : public MIP {
         std::vector<double> getSol();
 
     private: 
+        const int OMIP_SLACK_OBJ_COEFF = 0;
+        const char OMIP_BUD_CONST_SENSE = 'L';
+        
         void setup();
         void addBudgetConstr(double rhs);
 

@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <vector>
+#include <random>
 #include <algorithm>
 #include <iostream>
 #include <cstdarg>
@@ -15,7 +16,15 @@
 #endif
 
 #define EPSILON 1e-7
-#define SEED 2120934
+
+class RandNumGen{
+    public: 
+        static void setSeed(unsigned long long seed);
+        static int randInt(int min, int max); 
+
+    private:
+        static std::mt19937_64 rng;
+};
 
 
 enum LogLevel {ERROR, WARN, INFO };
@@ -36,7 +45,7 @@ class Logger{
         static const std::string ANSI_COLOR_RESET;   
     };
 
-class Time{
+class Clock{
 
     public:
         static double  getTime();
