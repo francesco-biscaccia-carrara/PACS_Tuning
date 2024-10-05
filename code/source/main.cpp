@@ -15,6 +15,7 @@ int main(int argc, char* argv[]){
     initFix.resize(fMIP.getNumCols(),CPX_INFBOUND);
     fMIP.setVarsValues(initFix);
     fMIP.solve(100);
+    std::cout<<fMIP.getObjValue()<<std::endl;
     std::vector<double> first_sol = fMIP.getSol();
     first_sol.resize(fMIP.getNumCols(),CPX_INFBOUND);
     oMIP.setVarsValues(first_sol);

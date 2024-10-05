@@ -2,48 +2,57 @@
 
 const double FixPolicy::MAX_UB = 1e7;
 
+bool isInteger(double n){
+    return ((std::floor(n) == n) && (n != CPX_INFBOUND));
+}
+
 bool allInteger(std::vector<double>& x){
-    for(auto e : x) if((std::floor(e) != e) || (e == CPX_INFBOUND)) return false;
+    for(auto e : x) if(!isInteger(e)) return false;
     return true;
 }
 
 void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x,double topPerc){
     if(topPerc < EPSILON || topPerc > 1.0) Logger::print(ERROR,"wrong percentage!");
 
-    int xLength = x.size();
-    std::vector<std::pair<int,double>> sorter;
-    for(int i = 0 ;i < xLength; i++){
-        std::pair<double,double> vb = fMIP.getVarBounds(i);
-        std::pair<int,double> p{i,vb.second-vb.first};
-        sorter.push_back(p);
-    }
+    std::vector<int> sorter(x.size());
+    std::iota(sorter.begin(), sorter.end(), 0);
 
-    if(sorter.size()!= xLength) Logger::print(ERROR,"sometihing went wrong on init!");
+    if(sorter.size()!= x.size()) Logger::print(ERROR,"sometihing went wrong on init!");
 
-    std::sort(sorter.begin(),sorter.end(),  [](const std::pair<int, double>& a, const std::pair<int, double>& b) {
-        return a.second < b.second;
+    std::sort(sorter.begin(),sorter.end(), [&fMIP](const int& a,const int& b){
+        auto aBounds = fMIP.getVarBounds(a);
+        auto bBounds = fMIP.getVarBounds(b);
+        return (aBounds.second - aBounds.first) <  (bBounds.second - bBounds.first); 
     });
-    
-    //FIXME: error here and below   
-    while(!allInteger(x)){
-        for(int i=0;i<(int)(topPerc*xLength);i++){
-            std::pair<double,double> vb = fMIP.getVarBounds(sorter[i].first);
-            x[sorter[i].first]=RandNumGen::randInt(std::max(-FixPolicy::MAX_UB,vb.first),std::min(FixPolicy::MAX_UB,vb.second));
-        } 
-        sorter.erase(sorter.begin(),sorter.begin()+(topPerc*xLength));
+
+    std::set<int> fixedVars;
+
+    while(!allInteger(x) && fixedVars.size()<x.size()){
+        int numNotFixedVars = x.size() - fixedVars.size();
+        int varsToFix = static_cast<int>(numNotFixedVars * topPerc);
+
+        for (int i = 0, n = 0; n < varsToFix && i < sorter.size(); i++) {
+            int idx = sorter[i];
+            if (fixedVars.count(idx) == 0) {
+                auto vb = fMIP.getVarBounds(idx);
+                x[idx] = RandNumGen::randInt(std::max(-FixPolicy::MAX_UB, vb.first),
+                                             std::min(FixPolicy::MAX_UB, vb.second));
+                fixedVars.insert(idx);
+                n++;
+            }
+        }
 
         std::vector<double> tmp (x);
         tmp.resize(fMIP.getNumCols(),CPX_INFBOUND);
         fMIP.setVarsValues(tmp);
-        fMIP.solveRelaxation(100.0);
+        fMIP.solveRelaxation(CPX_INFBOUND);
         std::vector<double> lpSol = fMIP.getSol();
-        for(int i=0;i<lpSol.size();i++){
-            if(std::floor(lpSol[i]) == lpSol[i] && std::floor(x[i]) != lpSol[i]){
-                x[i]=lpSol[i];
-                sorter.erase(sorter.begin()+i,sorter.begin()+i+1);
+
+        for(int i=0;i<lpSol.size();i++) {
+            if(isInteger(lpSol[i])) {
+                x[i] = lpSol[i];
+                fixedVars.insert(i);
             }
         }
     }
-    
-
 }
