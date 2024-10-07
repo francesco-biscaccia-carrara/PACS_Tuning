@@ -6,21 +6,26 @@
 
 int main(int argc, char* argv[]){
 
-    FMIP fMIP("2club200v15p5scn");
-    OMIP oMIP("2club200v15p5scn");
-    RandNumGen::setSeed(SEED);
-    int xLength = fMIP.getNumCols() - 2 * fMIP.getNumRows();
+    ArgsParser CLIEnv(argc,argv);
+    MIP originalMIP(CLIEnv.getFileName());
+    RandNumGen::setSeed(CLIEnv.getSeed());
+
+    FMIP fMIP(originalMIP);
+    OMIP oMIP(originalMIP);
+    
+    int xLength = originalMIP.getNumCols();
     std::vector<double> initFix(xLength,CPX_INFBOUND);
     FixPolicy::firstThetaFixing(fMIP,initFix,0.5);
     initFix.resize(fMIP.getNumCols(),CPX_INFBOUND);
+
     fMIP.setVarsValues(initFix);
-    fMIP.solve(100);
+    fMIP.solve(CLIEnv.getTimeLimit());
     std::cout<<fMIP.getObjValue()<<std::endl;
     std::vector<double> first_sol = fMIP.getSol();
     first_sol.resize(fMIP.getNumCols(),CPX_INFBOUND);
     oMIP.setVarsValues(first_sol);
     oMIP.updateBudgetConstr(fMIP.getObjValue());
-    oMIP.solve(100);
+    oMIP.solve(CLIEnv.getTimeLimit());
     std::cout<<oMIP.getObjValue()<<std::endl;
 
     /*

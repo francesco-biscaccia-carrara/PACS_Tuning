@@ -77,7 +77,7 @@ int MIP::solveRelaxation(const double timeLimit){
     
     changeProbType(CPXPROB_MILP); //Necessary to get vars type
 
-    for(int i = 0; i < getNumCols();i++){
+    for(size_t i = 0; i < getNumCols();i++){
         char type = getVarType(i);
         
         if(type == CPX_BINARY|| type == CPX_INTEGER){
@@ -121,7 +121,7 @@ void MIP::setObjFunction(const std::vector<double>& newObj){
     if(newObj.size() != numCols) Logger::print(ERROR,"No suitable obj_function coefficients");
 
     int* indices = (int*) malloc(numCols*sizeof(int));
-    for(int i=0;i<numCols;i++) indices[i]=i;
+    for(size_t i=0;i<numCols;i++) indices[i]=i;
     if(CPXchgobj(env, model, numCols, indices, &newObj[0])) Logger::print(ERROR,"obj_function not changed");
     free(indices);
 }
@@ -155,7 +155,7 @@ void MIP::addCol(const std::vector<double>& newCol, const double objCoef,const d
     int* indices = (int*) malloc(numRow*sizeof(int));
     double* values = (double*) malloc(numRow*sizeof(double));
     int start = 0, nnz = 0;
-    for(int i=0;i<numRow;i++){
+    for(size_t i=0;i<numRow;i++){
         if(newCol[i]!=0){
             indices[nnz]=i;
             values[nnz]=newCol[i];
@@ -178,7 +178,7 @@ void MIP::addRow(const std::vector<double>& newRow,const char sense,const double
     int* indices = (int*) malloc(numCols*sizeof(int));
     double* values = (double*) malloc(numCols*sizeof(double));
     int start = 0,nnz =0;
-    for(int i=0;i<numCols;i++){
+    for(size_t i=0;i<numCols;i++){
         if(newRow[i]!=0){
             indices[nnz]=i;
             values[nnz]=newRow[i];
@@ -233,7 +233,7 @@ void MIP::setVarsValues(const std::vector<double>& values){
     int numCols =getNumCols();
     
     if(values.size() != numCols) Logger::print(ERROR,"Wrong values size!");
-    for(int i=0;i<numCols;i++){
+    for(size_t i=0;i<numCols;i++){
         if(values[i] < CPX_INFBOUND/2){
             setVarValues(i,values[i]);
         }

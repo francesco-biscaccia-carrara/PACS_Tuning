@@ -33,7 +33,7 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x,double topPe
 
         for (int i = 0, n = 0; n < varsToFix && i < sorter.size(); i++) {
             int idx = sorter[i];
-            if (fixedVars.count(idx) == 0) {
+            if (!fixedVars.count(idx)) {
                 auto vb = fMIP.getVarBounds(idx);
                 x[idx] = RandNumGen::randInt(std::max(-FixPolicy::MAX_UB, vb.first),
                                              std::min(FixPolicy::MAX_UB, vb.second));
@@ -48,7 +48,7 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x,double topPe
         fMIP.solveRelaxation(CPX_INFBOUND);
         std::vector<double> lpSol = fMIP.getSol();
 
-        for(int i=0;i<lpSol.size();i++) {
+        for(size_t i=0;i<lpSol.size();i++) {
             if(isInteger(lpSol[i])) {
                 x[i] = lpSol[i];
                 fixedVars.insert(i);

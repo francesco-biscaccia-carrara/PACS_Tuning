@@ -67,9 +67,45 @@ double Clock::getTime(){
 
 
 double Clock::timeElapsed(const double initTime) {
-    
     struct timeval tv;
     gettimeofday(&tv, NULL);
 
     return ((double)tv.tv_sec)+((double)tv.tv_usec/1e+6) - initTime;
 }
+
+void ArgsParser::help(){
+  Logger::print(ERROR,"To set the parameters properly you have to execute ./main and add: \
+        \n '-in / -f / -file <filename>' to specity the input file;\
+        \n '-time_limit / -tl / -time <time_dbl>' to specity the max execution time (double value);\
+        \n '-seed / -sd / -rnd_seed <seed>' to specity the random seed (int value);");
+}
+
+
+ArgsParser::ArgsParser(int argc, char* argv[]){
+    fileName = "";
+    timeLimit = 0;
+    seed = 0;
+
+    std::set<std::string> fileNameInp = {"-file","-in","-f"};
+    std::set<std::string> timeLimitInp = {"-time_limit","-tl","-time"};
+    std::set<std::string> seedInp = {"-seed","-sd","-rnd_seed"};
+
+    for (size_t i = 1; i < argc; i++){
+        if(fileNameInp.count(argv[i])) fileName = std::string(argv[++i]);
+        if(timeLimitInp.count(argv[i])) timeLimit = std::atof(argv[++i]);
+        if(seedInp.count(argv[i])) seed = std::atoi(argv[++i]);
+    }
+
+    if(fileName == "" || !timeLimit  || !seed) help();
+}
+
+std::string ArgsParser::getFileName() {return fileName;}
+
+
+double ArgsParser::getTimeLimit(){return timeLimit;}
+
+
+unsigned long long ArgsParser::getSeed() {return seed;}
+
+
+ArgsParser::~ArgsParser(){return;}

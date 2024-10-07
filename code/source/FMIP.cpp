@@ -41,13 +41,13 @@ void FMIP::setup(){
     std::vector<double> obj(getNumCols(),FMIP::FMIP_VAR_OBJ_COEFF);
     setObjFunction(obj);
 
-    for(int i=0;i<getNumRows();i++){
+    for(size_t i=0;i<getNumRows();i++){
         std::vector<double> col(getNumRows(),0);
         col[i]=1;
         addCol(col,FMIP::FMIP_SLACK_OBJ_COEFF,0,CPX_INFBOUND,"SP_"+std::to_string(i+1));
     }
 
-    for(int i=0;i<getNumRows();i++){
+    for(size_t i=0;i<getNumRows();i++){
         std::vector<double> col(getNumRows(),0);
         col[i]=-1;
         addCol(col,FMIP::FMIP_SLACK_OBJ_COEFF,0,CPX_INFBOUND,"SN_"+std::to_string(i+1));

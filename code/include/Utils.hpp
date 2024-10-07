@@ -53,4 +53,21 @@ class Clock{
         static double  timeElapsed(const double initTime);
 };
 
+class ArgsParser{
+
+    public:
+        explicit            ArgsParser(int argc, char* argv[]);
+        std::string         getFileName();
+        double              getTimeLimit();
+        unsigned long long  getSeed();
+
+        ~ArgsParser();
+
+    private:
+        void                help();
+        std::string         fileName;
+        double              timeLimit;
+        unsigned long long  seed;
+};
+
 #endif
