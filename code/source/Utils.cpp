@@ -13,9 +13,10 @@ void RandNumGen::setSeed(unsigned long long seed){
     RandNumGen::rng.seed(seed);
 }
 
+//MIN and MAX are included
 int RandNumGen::randInt(int min, int max) {
-        std::uniform_int_distribution<int> dist(min, max);
-        return dist(rng);
+    std::uniform_int_distribution<int> dist(min, max);
+    return dist(rng);
 }
 
 
@@ -77,32 +78,48 @@ void ArgsParser::help(){
   Logger::print(ERROR,"To set the parameters properly you have to execute ./main and add: \
         \n '-in / -f / -file <filename>' to specity the input file;\
         \n '-time_limit / -tl / -time <time_dbl>' to specity the max execution time (double value);\
+        \n '-time_fix / -th / -theta <theta_dbl>' to specity the \\% of vars to fix in the initial vector (double value within (0,1));\
         \n '-seed / -sd / -rnd_seed <seed>' to specity the random seed (int value);");
 }
 
 
 ArgsParser::ArgsParser(int argc, char* argv[]){
     fileName = "";
-    timeLimit = 0;
+    timeLimit = 0.0;
+    thetaFix = 0.0; 
     seed = 0;
+
 
     std::set<std::string> fileNameInp = {"-file","-in","-f"};
     std::set<std::string> timeLimitInp = {"-time_limit","-tl","-time"};
+    std::set<std::string> thetaFixInp = {"-theta_fix","-th","-theta"};
     std::set<std::string> seedInp = {"-seed","-sd","-rnd_seed"};
 
     for (size_t i = 1; i < argc; i++){
         if(fileNameInp.count(argv[i])) fileName = std::string(argv[++i]);
         if(timeLimitInp.count(argv[i])) timeLimit = std::atof(argv[++i]);
+        if(thetaFixInp.count(argv[i])) thetaFix = std::atof(argv[++i]);
         if(seedInp.count(argv[i])) seed = std::atoi(argv[++i]);
     }
 
-    if(fileName == "" || !timeLimit  || !seed) help();
+    if(fileName == "" || !timeLimit || !thetaFix || !seed) help();
+
+    #if MH_VERBOSE == 1
+    Logger::print(INFO,"ENV contains \
+    \n\t - filename:\t%s \
+    \n\t - time-limit:\t%f\
+    \n\t - theta:\t%f\
+    \n\t - seed:\t%d",fileName.c_str(),timeLimit,thetaFix,seed);
+    #endif
 }
 
 std::string ArgsParser::getFileName() {return fileName;}
 
 
 double ArgsParser::getTimeLimit(){return timeLimit;}
+
+
+double ArgsParser::getThetaFix(){return thetaFix;}
 
 
 unsigned long long ArgsParser::getSeed() {return seed;}

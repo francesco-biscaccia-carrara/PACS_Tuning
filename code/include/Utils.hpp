@@ -59,6 +59,7 @@ class ArgsParser{
         explicit            ArgsParser(int argc, char* argv[]);
         std::string         getFileName();
         double              getTimeLimit();
+        double              getThetaFix();
         unsigned long long  getSeed();
 
         ~ArgsParser();
@@ -67,6 +68,7 @@ class ArgsParser{
         void                help();
         std::string         fileName;
         double              timeLimit;
+        double              thetaFix;
         unsigned long long  seed;
 };
 

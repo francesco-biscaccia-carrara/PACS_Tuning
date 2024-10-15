@@ -2,32 +2,39 @@
 #include "../include/OMIP.hpp"
 #include "../include/FixPolicy.hpp"
 
-#define SEED 2120934
-
 int main(int argc, char* argv[]){
 
     ArgsParser CLIEnv(argc,argv);
-    MIP originalMIP(CLIEnv.getFileName());
     RandNumGen::setSeed(CLIEnv.getSeed());
 
+    MIP originalMIP(CLIEnv.getFileName());
     FMIP fMIP(originalMIP);
     OMIP oMIP(originalMIP);
     
     int xLength = originalMIP.getNumCols();
-    std::vector<double> initFix(xLength,CPX_INFBOUND);
-    FixPolicy::firstThetaFixing(fMIP,initFix,0.5);
-    initFix.resize(fMIP.getNumCols(),CPX_INFBOUND);
+    std::vector<double> initSol(xLength,CPX_INFBOUND);
+    FixPolicy::firstThetaFixing(fMIP,initSol,CLIEnv.getThetaFix());
+    
+    double FMIPCost = CPX_INFBOUND;
+    double initTime = Clock::getTime();
 
-    fMIP.setVarsValues(initFix);
-    fMIP.solve(CLIEnv.getTimeLimit());
-    std::cout<<fMIP.getObjValue()<<std::endl;
-    std::vector<double> first_sol = fMIP.getSol();
-    first_sol.resize(fMIP.getNumCols(),CPX_INFBOUND);
-    oMIP.setVarsValues(first_sol);
-    oMIP.updateBudgetConstr(fMIP.getObjValue());
-    oMIP.solve(CLIEnv.getTimeLimit());
-    std::cout<<oMIP.getObjValue()<<std::endl;
-
+    while( (FMIPCost< -EPSILON ||FMIPCost > EPSILON) && Clock::timeElapsed(initTime) < CLIEnv.getTimeLimit()){
+        //FixPolicy::randomRhoFix(initSol,0.5);
+        initSol.resize(fMIP.getNumCols(),CPX_INFBOUND);
+        fMIP.setVarsValues(initSol);
+        fMIP.solve(CLIEnv.getTimeLimit());
+        FMIPCost = fMIP.getObjValue();
+        std::cout<<"FMIP cost:"<<FMIPCost<<std::endl;
+        std::vector<double> first_sol = fMIP.getSol();
+        //FixPolicy::randomRhoFix(first_sol,0.5);
+        first_sol.resize(fMIP.getNumCols(),CPX_INFBOUND);
+        oMIP.setVarsValues(first_sol);
+        oMIP.updateBudgetConstr(fMIP.getObjValue());
+        oMIP.solve(CLIEnv.getTimeLimit());
+        std::cout<<"OMIP cost:"<<oMIP.getObjValue()<<std::endl;
+        initSol = oMIP.getSol();
+    }
+    
     /*
     switch (STATE) {
         case CPXMIP_TIME_LIM_FEAS:      // exceeded time limit, found intermediate solution

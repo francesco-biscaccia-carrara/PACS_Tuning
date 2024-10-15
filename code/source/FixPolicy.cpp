@@ -12,7 +12,7 @@ bool allInteger(std::vector<double>& x){
 }
 
 void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x,double topPerc){
-    if(topPerc < EPSILON || topPerc > 1.0) Logger::print(ERROR,"wrong percentage!");
+    if(topPerc < EPSILON || topPerc >= 1.0) Logger::print(ERROR,"wrong percentage!");
 
     std::vector<int> sorter(x.size());
     std::iota(sorter.begin(), sorter.end(), 0);
@@ -56,3 +56,17 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x,double topPe
         }
     }
 }
+
+
+void FixPolicy::randomRhoFix(std::vector<double>& x,double rho){
+    if(rho < EPSILON || rho >= 1.0) Logger::print(ERROR,"wrong percentage!");
+
+    int start = RandNumGen::randInt(0,x.size()-1);
+    int numFixedVars = static_cast<int>(rho*x.size());
+
+    std::set<int> fixedVars;
+    for(size_t i=0; i < numFixedVars; i++) fixedVars.insert((start+i)%x.size());
+    for(size_t i=0; i < x.size(); i++){
+        if(!fixedVars.count(i)) x[i]=CPX_INFBOUND;
+    }
+}   
