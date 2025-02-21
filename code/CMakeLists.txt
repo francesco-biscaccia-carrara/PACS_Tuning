@@ -30,7 +30,7 @@ set(LOGS_DIR "${HOME_DIR}/code/log")
 set(CPXOUT_DIR "${HOME_DIR}/code/log/cplex_out")
 set(CPXLOG_DIR "${CPXOUT_DIR}/log")
 set(CPXLP_DIR "${CPXOUT_DIR}/mip")
-set(INST_DIR "${HOME_DIR}/code/instances")
+set(DATA_DIR "${HOME_DIR}/code/data")
 if(NOT EXISTS ${LOGS_DIR})
     file(MAKE_DIRECTORY ${LOGS_DIR})
     message(STATUS "Directory ${LOGS_DIR} created.")
@@ -53,7 +53,7 @@ endif()
 if(NOT EXISTS ${CPLEX_INCLUDE})
     message(FATAL_ERROR "Directory ${CPLEX_INCLUDE} doesn't exist... Please set with -DCPLEX_INCLUDE=<path> the correct path to CPLEXs headers folder.")
 endif()
-if(NOT EXISTS ${INST_DIR})
+if(NOT EXISTS ${DATA_DIR})
     message(FATAL_ERROR "Directory ${INST_DIR} doesn't exist... Please create it and put the instances in there")
 endif()
 
@@ -121,7 +121,7 @@ target_link_libraries(
 )
 
 # adding definitions
-add_definitions(-D HPLUS_HOME_DIR="${HOME_DIR}" -D MH_VERBOSE=${VERBOSE} -D HPLUS_WARN=${WARN} -D HPLUS_INTCHECK=${INTCHECK}) #HPLUS zanzi stuff
+add_definitions(-D ACS_HOME_DIR="${HOME_DIR}" -D ACS_VERBOSE=${VERBOSE} -D ACS_WARN=${WARN} -D ACS_INTCHECK=${INTCHECK}) #ACS for us
 
 # custom builds
 add_custom_target(opt

@@ -104,7 +104,7 @@ ArgsParser::ArgsParser(int argc, char* argv[]){
 
     if(fileName == "" || !timeLimit || !thetaFix || !seed) help();
 
-    #if MH_VERBOSE == 1
+    #if ACS_VERBOSE == 1
     Logger::print(INFO,"ENV contains \
     \n\t - filename:\t%s \
     \n\t - time-limit:\t%f\

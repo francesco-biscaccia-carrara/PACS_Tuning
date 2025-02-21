@@ -4,14 +4,14 @@
 OMIP::OMIP(std::string fileName) : MIP(fileName){
     setup();
 
-    #if MH_VERBOSE == 1
+    #if ACS_VERBOSE == 1
         if (setLogFileName(fileName+"_OMIP")) Logger::print(ERROR, "CPXsetlogfilename error!");
     #endif
 }
 
 OMIP::OMIP(const OMIP& otherOMIP) : MIP(otherOMIP){
 
-    #if MH_VERBOSE == 1
+    #if ACS_VERBOSE == 1
         if (setLogFileName(fileName+"_clone_OMIP")) Logger::print(ERROR, "CPXsetlogfilename error!");
     #endif
 }
@@ -19,14 +19,14 @@ OMIP::OMIP(const OMIP& otherOMIP) : MIP(otherOMIP){
 OMIP::OMIP(const MIP& otherMIP) : MIP(otherMIP){
     setup();
 
-    #if MH_VERBOSE == 1
+    #if ACS_VERBOSE == 1
         if (setLogFileName(fileName+"_clone_OMIP")) Logger::print(ERROR, "CPXsetlogfilename error!");
     #endif
 }
 
 
 void OMIP::saveModel(){
-    #if MH_VERBOSE == 1
+    #if ACS_VERBOSE == 1
         CPXwriteprob(env, model, (MIP_LOG_DIR+fileName+"_OMIP.lp").c_str(), NULL);
     #endif
 }

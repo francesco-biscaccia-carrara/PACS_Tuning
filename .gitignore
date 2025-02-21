@@ -3,7 +3,7 @@
 /.vscode
 /code/log
 /code/build
-/code/instances
+/code/data
 
 #Thesis stuff
 /thesis/*.aux

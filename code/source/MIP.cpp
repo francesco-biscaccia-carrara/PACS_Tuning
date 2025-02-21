@@ -23,7 +23,7 @@ MIP:: MIP(const std::string fileName){
     CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP::MIP_GAP_TOL);
     CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP::DUAL_PRIM_GAP_TOL);
 
-    #if MH_VERBOSE == 1
+    #if ACS_VERBOSE == 1
         CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	    CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
         if(setLogFileName(fileName)) Logger::print(ERROR, "CPXsetlogfilename error!");
@@ -44,7 +44,7 @@ MIP::MIP(const MIP& otherMIP){
         Logger::print(ERROR,"Model not cloned!");
     }
 
-    #if MH_VERBOSE == 1
+    #if ACS_VERBOSE == 1
         if(setLogFileName(fileName)) Logger::print(ERROR, "CPXsetlogfilename error!");
     #endif
 }
@@ -93,7 +93,7 @@ int MIP::solveRelaxation(const double timeLimit){
 }
 
 void MIP::saveModel(){
-    #if MH_VERBOSE == 1
+    #if ACS_VERBOSE == 1
         CPXwriteprob(env, model, (MIP_LOG_DIR+fileName+".lp").c_str(), NULL);
     #endif
 }
@@ -248,7 +248,7 @@ MIP::~MIP(){
 
 
 int MIP::setLogFileName(std::string logFileName){
-    #if MH_VERBOSE == 1
+    #if ACS_VERBOSE == 1
        return CPXsetlogfilename(env, (CPLEX_LOG_DIR+logFileName+".log").c_str(), "w");
     #endif
     return 1;

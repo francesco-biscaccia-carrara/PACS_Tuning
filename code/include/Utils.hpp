@@ -12,8 +12,8 @@
 #include <cstdarg>
 #include <cstdlib>
 
-#ifndef MH_VERBOSE
-#define MH_VERBOSE 1
+#ifndef ACS_VERBOSE
+    #define ACS_VERBOSE 1
 #endif
 
 #define EPSILON 1e-7

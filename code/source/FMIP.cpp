@@ -4,14 +4,14 @@
 FMIP::FMIP(const std::string fileName) : MIP(fileName){
     setup();
 
-    #if MH_VERBOSE == 1
+    #if ACS_VERBOSE == 1
         if (setLogFileName(fileName+"_FMIP")) Logger::print(ERROR, "CPXsetlogfilename error!");
     #endif
 }
 
 FMIP::FMIP(const FMIP& otherFMIP) : MIP(otherFMIP){
 
-    #if MH_VERBOSE == 1
+    #if ACS_VERBOSE == 1
         if (setLogFileName(fileName+"_clone_FMIP")) Logger::print(ERROR, "CPXsetlogfilename error!");
     #endif
 }
@@ -19,14 +19,14 @@ FMIP::FMIP(const FMIP& otherFMIP) : MIP(otherFMIP){
 FMIP::FMIP(const MIP& otherMIP) : MIP(otherMIP){
     setup();
 
-    #if MH_VERBOSE == 1
+    #if ACS_VERBOSE == 1
         if (setLogFileName(fileName+"_clone_FMIP")) Logger::print(ERROR, "CPXsetlogfilename error!");
     #endif
 }
 
 
 void FMIP::saveModel(){
-    #if MH_VERBOSE == 1
+    #if ACS_VERBOSE == 1
         CPXwriteprob(env, model, (MIP_LOG_DIR+fileName+"_FMIP.lp").c_str(), NULL);
     #endif
 }
