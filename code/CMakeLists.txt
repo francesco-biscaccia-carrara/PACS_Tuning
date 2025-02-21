@@ -21,8 +21,8 @@ set(VERBOSE "1" CACHE STRING "Verbose setting set from command line")
 #message(STATUS "WARN is set to ${WARN}")
 #set(INTCHECK "0" CACHE STRING "Flag to enable integrity checks")
 #message(STATUS "INTCHECK is set to ${INTCHECK}")
-set(CPLEX_DIR "/opt/ibm/ILOG/CPLEX_Studio2211/cplex/lib/x86-64_linux/static_pic" CACHE STRING "Path to the CPLEX library") #application for Mac, opt/ibm for linux
-set(CPLEX_INCLUDE "/opt/ibm/ILOG/CPLEX_Studio2211/cplex/include/ilcplex" CACHE STRING "Path to the CPLEX headers")
+set(CPLEX_DIR "/opt/ibm/ILOG/CPLEX_Studio2212/cplex/lib/x86-64_linux/static_pic" CACHE STRING "Path to the CPLEX library") #application for Mac, opt/ibm for linux
+set(CPLEX_INCLUDE "/opt/ibm/ILOG/CPLEX_Studio2212/cplex/include/ilcplex" CACHE STRING "Path to the CPLEX headers")
 
 # check if all necessary folders exist
 cmake_path(GET CMAKE_HOME_DIRECTORY PARENT_PATH HOME_DIR)
