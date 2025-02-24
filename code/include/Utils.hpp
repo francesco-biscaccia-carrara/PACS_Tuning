@@ -18,58 +18,65 @@
 
 #define EPSILON 1e-7
 
-class RandNumGen{
-    public: 
-        static void setSeed(unsigned long long seed);
-        static int randInt(int min, int max); 
+namespace Utils{
 
-    private:
-        static std::mt19937_64 rng;
-};
+    class RandNumGen{
+        public: 
+            static void setSeed(unsigned long long seed);
+            static int randInt(int min, int max); 
+    
+        private:
+            static std::mt19937_64 rng;
+    };
+    
 
-
-enum LogLevel {ERROR, WARN, INFO };
-
-class Logger{
-
-    public:
+    namespace Logger{
+        enum LogLevel {ERROR, WARN, INFO};
         
-        static void print(LogLevel typeMsg, const char* msg, ...);
+        void print(LogLevel typeMsg, const char* msg, ...);
+    
+        constexpr const char*   ANSI_COLOR_RED          {"\x1b[31m"};
+        constexpr const char*   ANSI_COLOR_GREEN        {"\x1b[32m"};
+        constexpr const char*   ANSI_COLOR_YELLOW       {"\x1b[33m"};
+        constexpr const char*   ANSI_COLOR_BLUE         {"\x1b[34m"};
+        constexpr const char*   ANSI_COLOR_MAGENTA      {"\x1b[35m"};
+        constexpr const char*   ANSI_COLOR_CYAN         {"\x1b[36m"};
+        constexpr const char*   ANSI_COLOR_RESET        {"\x1b[0m"};         
 
-    private:
-        static const std::string ANSI_COLOR_RED;
-        static const std::string ANSI_COLOR_GREEN;
-        static const std::string ANSI_COLOR_YELLOW;  
-        static const std::string ANSI_COLOR_BLUE;    
-        static const std::string ANSI_COLOR_MAGENTA; 
-        static const std::string ANSI_COLOR_CYAN;    
-        static const std::string ANSI_COLOR_RESET;   
+    };
+    
+    class Clock{
+    
+        public:
+            static double  getTime();
+            static double  timeElapsed(const double initTime);
+    };
+    
+
+    class ArgsParser{
+    
+        public:
+            ArgsParser(int argc, char* argv[]);
+            ArgsParser(const ArgsParser&) = delete;
+            ArgsParser& operator=(const ArgsParser&) = delete;
+
+            inline  std::string         getFileName(){return fileName;};
+            inline  double              getTimeLimit(){return timeLimit;};
+            inline  double              getThetaFix(){return thetaFix;};
+            inline  unsigned long long  getSeed(){return seed;};
+    
+            ~ArgsParser()   =  default;
+    
+        private:
+            void                help();
+            std::string         fileName;
+            double              timeLimit;
+            double              thetaFix;
+            unsigned long long  seed;
     };
 
-class Clock{
+}
 
-    public:
-        static double  getTime();
-        static double  timeElapsed(const double initTime);
-};
 
-class ArgsParser{
-
-    public:
-        explicit            ArgsParser(int argc, char* argv[]);
-        std::string         getFileName();
-        double              getTimeLimit();
-        double              getThetaFix();
-        unsigned long long  getSeed();
-
-        ~ArgsParser();
-
-    private:
-        void                help();
-        std::string         fileName;
-        double              timeLimit;
-        double              thetaFix;
-        unsigned long long  seed;
-};
 
 #endif

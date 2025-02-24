@@ -4,38 +4,46 @@
 #include "Utils.hpp"
 #include <cplex.h>
 
+using namespace Utils;
+using namespace Logger;
+
 
 class MIP{
 
     public:
-        explicit MIP(const std::string fileName);
-        explicit MIP(const MIP& otherMIP);
+        MIP(const std::string fileName);
+        MIP(const MIP& otherMIP);
+        MIP& operator=(const MIP&) = delete;
         
-        void setNumCores(const int numCores);
+        MIP& setNumCores(const int numCores);
         int solve(const double timeLimit);
         int solveRelaxation(const double timeLimit);
-        void saveModel();
+        
         
         double getObjValue();
         std::vector<double> getObjFunction();
-        void setObjFunction(const std::vector<double>& newObj);
+        MIP& setObjFunction(const std::vector<double>& newObj);
 
         std::vector<double> getSol();
 
-        int getNumCols();
-        int getNumRows();
+        inline int getNumCols(){return CPXgetnumcols(env,model);}; // num cols = num var
+        int getNumRows(){{return CPXgetnumrows(env,model);}} // num cols = num constr
 
-        void addCol(const std::vector<double>& newCol, const double objCoef,const double lb, const double ub, const std::string name);
-        void addRow(const std::vector<double>& newRow,const char sense,const double rhs);
-        void removeRow(const int index);
-        void removeCol(const int index);
+        MIP& addCol(const std::vector<double>& newCol, const double objCoef,const double lb, const double ub, const std::string name);
+        MIP& addRow(const std::vector<double>& newRow,const char sense,const double rhs);
+        MIP& removeRow(const int index);
+        MIP& removeCol(const int index);
 
         
         std::pair<double,double> getVarBounds(const int index);
         char getVarType(const int index);
-        void changeVarType(const int index,const char type);
-        void setVarValues(const int index, const double val);
-        void setVarsValues(const std::vector<double>& values);
+        MIP& changeVarType(const int index,const char type);
+        MIP& setVarValues(const int index, const double val);
+        MIP& setVarsValues(const std::vector<double>& values);
+
+        #if ACS_VERBOSE == 1
+        MIP& saveModel();
+        #endif
 
         ~MIP();
 
@@ -45,7 +53,7 @@ class MIP{
         std::string fileName;
         const std::string CPLEX_LOG_DIR ="../log/cplex_out/log/";
         const std::string MIP_LOG_DIR = "../log/cplex_out/mip/";
-        const std::string INST_DIR = "../instances/";
+        const std::string INST_DIR = "../data/";
         
         int setLogFileName(std::string logFileName);
 
@@ -54,7 +62,7 @@ class MIP{
         const double DUAL_PRIM_GAP_TOL = 1e-4;
         const double MIP_GAP_TOL = 0.0;
 
-        void changeProbType(const int type);
+        MIP& changeProbType(const int type);
        
 
 };

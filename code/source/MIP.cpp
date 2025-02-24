@@ -50,8 +50,9 @@ MIP::MIP(const MIP& otherMIP){
 }
 
 
-void MIP::setNumCores(const int numCores){
+MIP& MIP::setNumCores(const int numCores){
     if(CPXsetintparam(env, CPX_PARAM_THREADS, numCores)) Logger::print(ERROR, "CPX_PARAM_THREADS not cahanged!");
+    return *this;
 }
 
 
@@ -92,12 +93,6 @@ int MIP::solveRelaxation(const double timeLimit){
     return CPXgetstat(env,model);
 }
 
-void MIP::saveModel(){
-    #if ACS_VERBOSE == 1
-        CPXwriteprob(env, model, (MIP_LOG_DIR+fileName+".lp").c_str(), NULL);
-    #endif
-}
-
 
 double MIP::getObjValue(){
     double objValue;
@@ -116,7 +111,7 @@ std::vector<double> MIP::getObjFunction(){
 }
 
 
-void MIP::setObjFunction(const std::vector<double>& newObj){
+MIP& MIP::setObjFunction(const std::vector<double>& newObj){
     int numCols = getNumCols();
     if(newObj.size() != numCols) Logger::print(ERROR,"No suitable obj_function coefficients");
 
@@ -124,6 +119,7 @@ void MIP::setObjFunction(const std::vector<double>& newObj){
     for(size_t i=0;i<numCols;i++) indices[i]=i;
     if(CPXchgobj(env, model, numCols, indices, &newObj[0])) Logger::print(ERROR,"obj_function not changed");
     free(indices);
+    return *this;
 }
 
 
@@ -137,13 +133,7 @@ std::vector<double> MIP::getSol(){
 }
 
 
-int MIP::getNumCols() {return CPXgetnumcols(env,model);} // num cols = num var
-
-
-int MIP::getNumRows() {return CPXgetnumrows(env,model);}
-
-
-void MIP::addCol(const std::vector<double>& newCol, const double objCoef,const double lb, const double ub, const std::string name){
+MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef,const double lb, const double ub, const std::string name){
     int numRow = getNumRows();
 
     if(newCol.size() != numRow) Logger::print(ERROR,"Wrong column size!");
@@ -167,10 +157,11 @@ void MIP::addCol(const std::vector<double>& newCol, const double objCoef,const d
     free(cname);
     free(indices);
     free(values);
+    return *this;
 }
 
 
-void MIP::addRow(const std::vector<double>& newRow,const char sense,const double rhs){
+MIP& MIP::addRow(const std::vector<double>& newRow,const char sense,const double rhs){
     int numCols = getNumCols();
 
     if(newRow.size() != numCols) Logger::print(ERROR,"Wrong row size!");
@@ -189,17 +180,19 @@ void MIP::addRow(const std::vector<double>& newRow,const char sense,const double
     if(CPXaddrows(env, model, 0, 1, nnz, &rhs, &sense, &start , indices, values, NULL,NULL)) Logger::print(ERROR,"No Column added!");
     free(indices);
     free(values);
-
+    return *this;
 }
 
 
-void MIP::removeRow(const int index){
+MIP& MIP::removeRow(const int index){
     if(CPXdelrows (env, model, index, index)) Logger::print(ERROR,"Row not removed!");
+    return *this;
 }
 
 
-void MIP::removeCol(const int index){
+MIP& MIP::removeCol(const int index){
     if(CPXdelcols (env, model, index, index)) Logger::print(ERROR,"Row not removed!");
+    return *this;
 }
 
 
@@ -218,18 +211,20 @@ char MIP::getVarType(const int index){
 }
 
 
-void MIP::changeVarType(const int index,const char type){
+MIP& MIP::changeVarType(const int index,const char type){
     if(CPXchgctype(env, model, 1, &index, &type)) Logger::print(ERROR,"Type of var %d not changed!",index);
+    return *this;
 }
 
 
-void MIP::setVarValues(const int index, const double val){
+MIP& MIP::setVarValues(const int index, const double val){
     char bound = 'B'; //Both
     CPXchgbds(env, model, 1, &index, &bound, &val);
+    return *this;
 }
 
 
-void MIP::setVarsValues(const std::vector<double>& values){
+MIP& MIP::setVarsValues(const std::vector<double>& values){
     int numCols =getNumCols();
     
     if(values.size() != numCols) Logger::print(ERROR,"Wrong values size!");
@@ -238,7 +233,16 @@ void MIP::setVarsValues(const std::vector<double>& values){
             setVarValues(i,values[i]);
         }
     }
+    return *this;
 }
+
+
+#if ACS_VERBOSE == 1
+MIP& MIP::saveModel(){
+    CPXwriteprob(env, model, (MIP_LOG_DIR+fileName+".lp").c_str(), NULL);
+    return *this;
+}
+#endif
 
 
 MIP::~MIP(){
@@ -255,6 +259,7 @@ int MIP::setLogFileName(std::string logFileName){
 }
 
 
-void MIP::changeProbType(const int type){ 
+MIP& MIP::changeProbType(const int type){ 
     if(CPXchgprobtype (env, model, type)) Logger::print(ERROR,"Problem type not changed");
+    return *this;
 }

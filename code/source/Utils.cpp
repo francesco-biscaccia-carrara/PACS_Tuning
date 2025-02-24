@@ -1,12 +1,7 @@
 #include "../include/Utils.hpp"
 
-const std::string Logger::ANSI_COLOR_RED            ="\x1b[31m";
-const std::string Logger::ANSI_COLOR_GREEN          ="\x1b[32m";
-const std::string Logger::ANSI_COLOR_YELLOW         ="\x1b[33m";
-const std::string Logger::ANSI_COLOR_BLUE           ="\x1b[34m";
-const std::string Logger::ANSI_COLOR_MAGENTA        ="\x1b[35m";
-const std::string Logger::ANSI_COLOR_CYAN           ="\x1b[36m";
-const std::string Logger::ANSI_COLOR_RESET          ="\x1b[0m";
+using namespace Utils;
+
 std::mt19937_64 RandNumGen::rng(std::random_device{}());
 
 void RandNumGen::setSeed(unsigned long long seed){
@@ -74,28 +69,24 @@ double Clock::timeElapsed(const double initTime) {
     return ((double)tv.tv_sec)+((double)tv.tv_usec/1e+6) - initTime;
 }
 
+
 void ArgsParser::help(){
-  Logger::print(ERROR,"To set the parameters properly you have to execute ./main and add: \
-        \n '-in / -f / -file <filename>' to specity the input file;\
+  Logger::print(Logger::ERROR,"To set the parameters properly you have to execute ./main and add: \
+        \n '-file / -in / -f <filename>' to specity the input file;\
         \n '-time_limit / -tl / -time <time_dbl>' to specity the max execution time (double value);\
-        \n '-time_fix / -th / -theta <theta_dbl>' to specity the \\% of vars to fix in the initial vector (double value within (0,1));\
+        \n '-theta_fix / -th / -theta <theta_dbl>' to specity the \\% of vars to fix in the initial vector (double value within (0,1));\
         \n '-seed / -sd / -rnd_seed <seed>' to specity the random seed (int value);");
 }
 
 
-ArgsParser::ArgsParser(int argc, char* argv[]){
-    fileName = "";
-    timeLimit = 0.0;
-    thetaFix = 0.0; 
-    seed = 0;
+ArgsParser::ArgsParser(int argc, char* argv[]): fileName {""}, timeLimit {0.0}, thetaFix {0.0}, seed {0} {
 
+    std::set<std::string> fileNameInp {"-file","-in","-f"};
+    std::set<std::string> timeLimitInp {"-time_limit","-tl","-time"};
+    std::set<std::string> thetaFixInp {"-theta_fix","-th","-theta"};
+    std::set<std::string> seedInp {"-seed","-sd","-rnd_seed"};
 
-    std::set<std::string> fileNameInp = {"-file","-in","-f"};
-    std::set<std::string> timeLimitInp = {"-time_limit","-tl","-time"};
-    std::set<std::string> thetaFixInp = {"-theta_fix","-th","-theta"};
-    std::set<std::string> seedInp = {"-seed","-sd","-rnd_seed"};
-
-    for (size_t i = 1; i < argc; i++){
+    for (size_t i {1}; i < argc; i++){
         if(fileNameInp.count(argv[i])) fileName = std::string(argv[++i]);
         if(timeLimitInp.count(argv[i])) timeLimit = std::atof(argv[++i]);
         if(thetaFixInp.count(argv[i])) thetaFix = std::atof(argv[++i]);
@@ -105,24 +96,11 @@ ArgsParser::ArgsParser(int argc, char* argv[]){
     if(fileName == "" || !timeLimit || !thetaFix || !seed) help();
 
     #if ACS_VERBOSE == 1
-    Logger::print(INFO,"ENV contains \
-    \n\t - filename:\t%s \
-    \n\t - time-limit:\t%f\
-    \n\t - theta:\t%f\
-    \n\t - seed:\t%d",fileName.c_str(),timeLimit,thetaFix,seed);
+        Logger::print(Logger::INFO,"ENV contains \
+                        \n\t - filename:\t%s \
+                        \n\t - time-limit:\t%f\
+                        \n\t - theta:\t%f\
+                        \n\t - seed:\t%d",
+                        fileName.c_str(),timeLimit,thetaFix,seed);
     #endif
 }
-
-std::string ArgsParser::getFileName() {return fileName;}
-
-
-double ArgsParser::getTimeLimit(){return timeLimit;}
-
-
-double ArgsParser::getThetaFix(){return thetaFix;}
-
-
-unsigned long long ArgsParser::getSeed() {return seed;}
-
-
-ArgsParser::~ArgsParser(){return;}
