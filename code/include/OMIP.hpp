@@ -3,6 +3,8 @@
 
 #include "MIP.hpp"
 
+using namespace Utils;
+
 class OMIP : public MIP {
 
     public:

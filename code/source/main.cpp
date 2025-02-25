@@ -4,7 +4,7 @@
 
 int main(int argc, char* argv[]) {
 
-	ArgsParser CLIEnv(argc, argv);
+	ArgsParser CLIEnv{ argc, argv };
 	RandNumGen::setSeed(CLIEnv.getSeed());
 
 	MIP	 originalMIP(CLIEnv.getFileName());
@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
 
 	int					xLength = originalMIP.getNumCols();
 	std::vector<double> initSol(xLength, CPX_INFBOUND);
-	FixPolicy::firstThetaFixing(fMIP, initSol, CLIEnv.getTheta());
+	//FixPolicy::firstThetaFixing(fMIP, initSol, CLIEnv.getTheta());
 
 	double FMIPCost = CPX_INFBOUND;
 	double initTime = Clock::getTime();
@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
 	found."); break; case CPXMIP_TIME_LIM_INFEAS:    // exceeded time limit, no
 	intermediate solution found Logger::print(WARN,"exceeded time limit, no
 	intermediate solution found."); break; case CPXMIP_INFEASIBLE:         //
-	proven to be infeasible Logger::print(ERROR,"infeasible problem."); break;
+	proven to be infeasible Logger::print(Logger::LogLevel::ERROR,"infeasible problem."); break;
 		case CPXMIP_ABORT_FEAS:         // terminated by user, found solution
 			Logger::print(WARN,"terminated by user, found solution found.");
 			break;
@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
 			Logger::print(WARN,"found optimal.");
 			break;
 		default:                        // unhandled status
-			Logger::print(ERROR,"Unhandled cplex status: %d", STATE);
+			Logger::print(Logger::LogLevel::ERROR,"Unhandled cplex status: %d", STATE);
 			break;
 	}
 	*/

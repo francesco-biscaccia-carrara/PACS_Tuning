@@ -3,14 +3,12 @@
 
 #include "FMIP.hpp"
 
-class FixPolicy {
-    
-    public:
-        static void firstThetaFixing(FMIP& fMIP, std::vector<double>& x,double topPerc);
-        static void randomRhoFix(std::vector<double>& x,double rho);
+using namespace Utils;
 
-    private:
-        const static double MAX_UB;
+namespace FixPolicy {
+
+    void firstThetaFixing(FMIP& fMIP, std::vector<double>& x,double topPerc);
+    void randomRhoFix(std::vector<double>& x,double rho);
 };
 
 #endif

@@ -1,6 +1,6 @@
 #include "../include/FixPolicy.hpp"
 
-const double FixPolicy::MAX_UB = 1e7;
+#define MAX_UB 1e7
 
 bool isInteger(double n) {
 	return ((std::floor(n) == n) && (n != CPX_INFBOUND));
@@ -15,13 +15,13 @@ bool allInteger(std::vector<double>& x) {
 
 void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double topPerc) {
 	if (topPerc < EPSILON || topPerc >= 1.0)
-		Logger::print(ERROR, "wrong percentage!");
+		Logger::print(Logger::LogLevel::ERROR, "wrong percentage!");
 
 	std::vector<int> sorter(x.size());
 	std::iota(sorter.begin(), sorter.end(), 0);
 
 	if (sorter.size() != x.size())
-		Logger::print(ERROR, "sometihing went wrong on init!");
+		Logger::print(Logger::LogLevel::ERROR, "sometihing went wrong on init!");
 
 	std::sort(sorter.begin(), sorter.end(), [&fMIP](const int& a, const int& b) {
 		auto [aLowerBound, aUpperBound]{ fMIP.getVarBounds(a) };
@@ -39,8 +39,8 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double topP
 			int idx = sorter[i];
 			if (!fixedVars.count(idx)) {
 				auto [lowerBound, upperBound] = fMIP.getVarBounds(idx);
-				x[idx] = RandNumGen::randInt(std::max(-FixPolicy::MAX_UB, lowerBound),
-											 std::min(FixPolicy::MAX_UB, upperBound));
+				x[idx] = RandNumGen::randInt(std::max(-MAX_UB, lowerBound),
+											 std::min(MAX_UB, upperBound));
 				fixedVars.insert(idx);
 				n++;
 			}
@@ -63,17 +63,20 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double topP
 
 void FixPolicy::randomRhoFix(std::vector<double>& x, double rho) {
 	if (rho < EPSILON || rho >= 1.0)
-		Logger::print(ERROR, "wrong percentage!");
+		Logger::print(Logger::LogLevel::ERROR, "wrong percentage!");
 
 	int start = RandNumGen::randInt(0, x.size() - 1);
 	int numFixedVars{ static_cast<int>(rho * x.size()) };
-	int end{ start + numFixedVars - 1 };
 
 #if ACS_VERBOSE == DEBUG
-	Logger::print(INFO, "Fixing %d vars starting from %d, in a circular fashion", numFixedVars, start);
+	Logger::print(Logger::LogLevel::INFO, "Fixing %d vars starting from %d, in a circular fashion", numFixedVars, start);
 #endif
 
+	std::vector<bool> fixedVarFlag(x.size(), false);
+	for (size_t i{ 0 }; i < numFixedVars; i++)
+		fixedVarFlag[(start + i) % x.size()] = true;
+
 	for (size_t i = 0; i < x.size(); i++)
-		if (i < start || i > end)
+		if (!fixedVarFlag[i])
 			x[i] = CPX_INFBOUND;
 }

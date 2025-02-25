@@ -6,9 +6,6 @@
 
 using namespace Utils;
 
-/// Enum import
-using enum Logger::LogLevel;
-
 #define CPLEX_LOG_DIR "../log/cplex_out/log/"
 #define MIP_LOG_DIR "../log/cplex_out/mip/"
 #define INST_DIR "../data/"
@@ -34,9 +31,7 @@ public:
 	std::vector<double> getSol();
 
 	inline int getNumCols() { return CPXgetnumcols(env, model); }; // num cols = num var
-	inline int getNumRows() {
-		{ return CPXgetnumrows(env, model); }
-	} // num rows = num constr
+	inline int getNumRows() { return CPXgetnumrows(env, model); }; // num rows = num constr
 
 	MIP& addCol(const std::vector<double>& newCol, const double objCoef, const double lb, const double ub, const std::string name);
 	MIP& addRow(const std::vector<double>& newRow, const char sense, const double rhs);

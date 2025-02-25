@@ -8,10 +8,10 @@ MIP:: MIP(const std::string fileName){
     int status;
     env = CPXopenCPLEX(&status);
     model = CPXcreateprob(env, &status, "MIP");
-    if(status) Logger::print(ERROR,"Model not created!");
+    if(status) Logger::print(Logger::LogLevel::ERROR,"Model not created!");
     
     status =CPXreadcopyprob(env, model, (INST_DIR+fileName+".mps").c_str(),"MPS");
-    if(status) Logger::print(ERROR,"Failed to read the problem from file! %d",status);
+    if(status) Logger::print(Logger::LogLevel::ERROR,"Failed to read the problem from file! %d",status);
     
     CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
     CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
@@ -21,7 +21,7 @@ MIP:: MIP(const std::string fileName){
     #if ACS_VERBOSE == DEBUG
         CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	    CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
-        if(setLogFileName(fileName)) Logger::print(ERROR, "CPXsetlogfilename error!");
+        if(setLogFileName(fileName)) Logger::print(Logger::LogLevel::ERROR, "CPXsetlogfilename error!");
     #endif
 }
 
@@ -33,7 +33,7 @@ MIP::MIP(const MIP& otherMIP){
     env = CPXopenCPLEX(&status);
     model = CPXcloneprob(env,otherMIP.model, &status);
     
-    if(status) Logger::print(ERROR,"Model not cloned!");
+    if(status) Logger::print(Logger::LogLevel::ERROR,"Model not cloned!");
 
     CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
     CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
@@ -43,34 +43,34 @@ MIP::MIP(const MIP& otherMIP){
     #if ACS_VERBOSE == DEBUG
         CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	    CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
-        if(setLogFileName(fileName)) Logger::print(ERROR, "CPXsetlogfilename error!");
+        if(setLogFileName(fileName)) Logger::print(Logger::LogLevel::ERROR, "CPXsetlogfilename error!");
     #endif
 }
 
 
 MIP& MIP::setNumCores(const int numCores){
-    if(CPXsetintparam(env, CPX_PARAM_THREADS, numCores)) Logger::print(ERROR, "CPX_PARAM_THREADS not cahanged!");
+    if(CPXsetintparam(env, CPX_PARAM_THREADS, numCores)) Logger::print(Logger::LogLevel::ERROR, "CPX_PARAM_THREADS not cahanged!");
     return *this;
 }
 
 
 int MIP::solve(const double timeLimit){
 
-    if(timeLimit < EPSILON) Logger::print(ERROR, "Time-limit (%10.4f) is too short!", timeLimit);
+    if(timeLimit < EPSILON) Logger::print(Logger::LogLevel::ERROR, "Time-limit (%10.4f) is too short!", timeLimit);
 
     if(timeLimit < CPX_INFBOUND) [[likely]] CPXsetdblparam(env,CPX_PARAM_TILIM,timeLimit);
 
     for(size_t i{0}; i < restoreVarType.size();i++) changeVarType(i,restoreVarType[i]);
     changeProbType(CPXPROB_MILP);
 
-	if(int error {CPXmipopt(env,model)}) Logger::print(ERROR, "CPLEX cannot solve this problem! %d",error);
+	if(int error {CPXmipopt(env,model)}) Logger::print(Logger::LogLevel::ERROR, "CPLEX cannot solve this problem! %d",error);
 
     return CPXgetstat(env,model);
 }
 
 int MIP::solveRelaxation(const double timeLimit){
 
-    if(timeLimit < EPSILON) Logger::print(ERROR, "Time-limit (%10.4f) is too short!", timeLimit);
+    if(timeLimit < EPSILON) Logger::print(Logger::LogLevel::ERROR, "Time-limit (%10.4f) is too short!", timeLimit);
 
     if(timeLimit<CPX_INFBOUND) CPXsetdblparam(env,CPX_PARAM_TILIM,timeLimit);
     
@@ -82,7 +82,7 @@ int MIP::solveRelaxation(const double timeLimit){
     }
     changeProbType(CPXPROB_LP);
 	
-	if (int error {CPXlpopt(env,model)}) Logger::print(ERROR, "CPLEX cannot solve the problem relaxation! %d",error);
+	if (int error {CPXlpopt(env,model)}) Logger::print(Logger::LogLevel::ERROR, "CPLEX cannot solve the problem relaxation! %d",error);
  
     return CPXgetstat(env,model);
 }
@@ -90,7 +90,7 @@ int MIP::solveRelaxation(const double timeLimit){
 
 double MIP::getObjValue(){
     double objValue;
-    if(int error {CPXgetobjval(env,model,&objValue)}) Logger::print(ERROR,"Unable to obtain obj value! %d",error);
+    if(int error {CPXgetobjval(env,model,&objValue)}) Logger::print(Logger::LogLevel::ERROR,"Unable to obtain obj value! %d",error);
     return objValue;
 }
 
@@ -98,7 +98,7 @@ double MIP::getObjValue(){
 std::vector<double> MIP::getObjFunction(){
     int numCols {getNumCols()};
     double* objFun {(double* ) calloc(numCols,sizeof(double))};
-    if(CPXgetobj(env, model, objFun, 0, numCols-1)) Logger::print(ERROR, "Unable to get obj. coefficients!");
+    if(CPXgetobj(env, model, objFun, 0, numCols-1)) Logger::print(Logger::LogLevel::ERROR, "Unable to get obj. coefficients!");
     std::vector<double> obj(objFun, objFun+numCols);
     free(objFun);
     return obj;
@@ -107,11 +107,11 @@ std::vector<double> MIP::getObjFunction(){
 
 MIP& MIP::setObjFunction(const std::vector<double>& newObj){
     int numCols {getNumCols()};
-    if(newObj.size() != numCols) Logger::print(ERROR,"No suitable obj_function coefficients"); //TODO: Assert type
+    if(newObj.size() != numCols) Logger::print(Logger::LogLevel::ERROR,"No suitable obj_function coefficients"); //TODO: Assert type
 
     int* indices {(int*) malloc(numCols*sizeof(int))};
     for(size_t i{0};i<numCols;i++) indices[i]=i;
-    if(CPXchgobj(env, model, numCols, indices, &newObj[0])) Logger::print(ERROR,"obj_function not changed");
+    if(CPXchgobj(env, model, numCols, indices, &newObj[0])) Logger::print(Logger::LogLevel::ERROR,"obj_function not changed");
     free(indices);
     return *this;
 }
@@ -120,7 +120,7 @@ MIP& MIP::setObjFunction(const std::vector<double>& newObj){
 std::vector<double> MIP::getSol(){
     int numCols  {getNumCols()};
     double* xStar {(double* ) calloc(numCols,sizeof(double))};
-    if (CPXgetx(env,model, xStar, 0, numCols-1)) Logger::print(ERROR, "Unable to obtain the solution!");
+    if (CPXgetx(env,model, xStar, 0, numCols-1)) Logger::print(Logger::LogLevel::ERROR, "Unable to obtain the solution!");
     std::vector<double> sol(xStar, xStar+numCols);
     free(xStar);
     return sol;
@@ -130,7 +130,7 @@ std::vector<double> MIP::getSol(){
 MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef,const double lb, const double ub, const std::string name){
     int numRow {getNumRows()};
 
-    if(newCol.size() != numRow) Logger::print(ERROR,"Wrong column size!"); //TODO: Assert type
+    if(newCol.size() != numRow) Logger::print(Logger::LogLevel::ERROR,"Wrong column size!"); //TODO: Assert type
 
     char** cname {(char**) calloc(1,sizeof(char*))};
     char colName[name.length()];
@@ -147,7 +147,7 @@ MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef,const d
         }
     }
 
-    if(CPXaddcols(env, model, 1, nnz, &objCoef, &start , indices, values, &lb, &ub, &cname[0])) Logger::print(ERROR,"No Column added!");
+    if(CPXaddcols(env, model, 1, nnz, &objCoef, &start , indices, values, &lb, &ub, &cname[0])) Logger::print(Logger::LogLevel::ERROR,"No Column added!");
     free(cname);
     free(indices);
     free(values);
@@ -158,7 +158,7 @@ MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef,const d
 MIP& MIP::addRow(const std::vector<double>& newRow,const char sense,const double rhs){
     int numCols {getNumCols()};
 
-    if(newRow.size() != numCols) Logger::print(ERROR,"Wrong row size!"); //TODO: Assert type exe
+    if(newRow.size() != numCols) Logger::print(Logger::LogLevel::ERROR,"Wrong row size!"); //TODO: Assert type exe
     
     int* indices {(int*) malloc(numCols*sizeof(int))};
     double* values {(double*) malloc(numCols*sizeof(double))};
@@ -171,7 +171,7 @@ MIP& MIP::addRow(const std::vector<double>& newRow,const char sense,const double
         }
     }
 
-    if(CPXaddrows(env, model, 0, 1, nnz, &rhs, &sense, &start , indices, values, NULL,NULL)) Logger::print(ERROR,"No Column added!");
+    if(CPXaddrows(env, model, 0, 1, nnz, &rhs, &sense, &start , indices, values, NULL,NULL)) Logger::print(Logger::LogLevel::ERROR,"No Column added!");
     free(indices);
     free(values);
     return *this;
@@ -179,50 +179,50 @@ MIP& MIP::addRow(const std::vector<double>& newRow,const char sense,const double
 
 
 MIP& MIP::removeRow(const int index){
-    if( index < 0 || index > getNumRows()-1) Logger::print(ERROR,"Wrong index removeRow()!");
+    if( index < 0 || index > getNumRows()-1) Logger::print(Logger::LogLevel::ERROR,"Wrong index removeRow()!");
 
-    if(CPXdelrows (env, model, index, index)) Logger::print(ERROR,"Row not removed!");
+    if(CPXdelrows (env, model, index, index)) Logger::print(Logger::LogLevel::ERROR,"Row not removed!");
     return *this;
 }
 
 
 MIP& MIP::removeCol(const int index){
-    if( index < 0 || index > getNumCols()-1) Logger::print(ERROR,"Wrong index removeCol()!");
+    if( index < 0 || index > getNumCols()-1) Logger::print(Logger::LogLevel::ERROR,"Wrong index removeCol()!");
 
-    if(CPXdelcols (env, model, index, index)) Logger::print(ERROR,"Row not removed!");
+    if(CPXdelcols (env, model, index, index)) Logger::print(Logger::LogLevel::ERROR,"Row not removed!");
     return *this;
 }
 
 
 VarBounds MIP::getVarBounds(const int index){
-    if( index < 0 || index > getNumCols()-1) Logger::print(ERROR,"Wrong index getVarBounds()!");
+    if( index < 0 || index > getNumCols()-1) Logger::print(Logger::LogLevel::ERROR,"Wrong index getVarBounds()!");
 
     double lb = CPX_INFBOUND, ub = CPX_INFBOUND;
-    if(CPXgetlb(env, model, &lb, index, index)) Logger::print(ERROR,"Unable to get the var lower_bound!");
-    if(CPXgetub(env, model, &ub, index, index)) Logger::print(ERROR,"Unable to get the var upper_bound!");
+    if(CPXgetlb(env, model, &lb, index, index)) Logger::print(Logger::LogLevel::ERROR,"Unable to get the var lower_bound!");
+    if(CPXgetub(env, model, &ub, index, index)) Logger::print(Logger::LogLevel::ERROR,"Unable to get the var upper_bound!");
     return VarBounds{.lowerBound{lb},.upperBound{ub}};
 }
 
 
 char MIP::getVarType(const int index){
-    if( index < 0 || index > getNumCols()-1) Logger::print(ERROR,"Wrong index getVarType()!");
+    if( index < 0 || index > getNumCols()-1) Logger::print(Logger::LogLevel::ERROR,"Wrong index getVarType()!");
 
     char type;
-    if(int error {CPXgetctype(env,model,&type,index,index)}) Logger::print(ERROR,"Unable to get var %d type! %d",index,error);
+    if(int error {CPXgetctype(env,model,&type,index,index)}) Logger::print(Logger::LogLevel::ERROR,"Unable to get var %d type! %d",index,error);
     return type;
 }
 
 
 MIP& MIP::changeVarType(const int index,const char type){
-    if( index < 0 || index > getNumCols()-1) Logger::print(ERROR,"Wrong index changeVarType()!");
+    if( index < 0 || index > getNumCols()-1) Logger::print(Logger::LogLevel::ERROR,"Wrong index changeVarType()!");
 
-    if(CPXchgctype(env, model, 1, &index, &type)) Logger::print(ERROR,"Type of var %d not changed!",index);
+    if(CPXchgctype(env, model, 1, &index, &type)) Logger::print(Logger::LogLevel::ERROR,"Type of var %d not changed!",index);
     return *this;
 }
 
 
 MIP& MIP::setVarValues(const int index, const double val){
-    if( index < 0 || index > getNumCols()-1) Logger::print(ERROR,"Wrong index in setVarValues()!");
+    if( index < 0 || index > getNumCols()-1) Logger::print(Logger::LogLevel::ERROR,"Wrong index in setVarValues()!");
 
     char bound {BOTH_BOUNDS};
     CPXchgbds(env, model, 1, &index, &bound, &val);
@@ -233,7 +233,7 @@ MIP& MIP::setVarValues(const int index, const double val){
 MIP& MIP::setVarsValues(const std::vector<double>& values){
     int numCols {getNumCols()};
     
-    if(values.size() != numCols) Logger::print(ERROR,"Wrong values size!");
+    if(values.size() != numCols) Logger::print(Logger::LogLevel::ERROR,"Wrong values size!");
     for(size_t i {0}; i < numCols; i++)
         if(values[i] < CPX_INFBOUND/2) setVarValues(i,values[i]);
     return *this;
@@ -247,6 +247,6 @@ MIP::~MIP(){
 
 
 MIP& MIP::changeProbType(const int type){ 
-    if(CPXchgprobtype (env, model, type)) Logger::print(ERROR,"Problem type not changed");
+    if(CPXchgprobtype (env, model, type)) Logger::print(Logger::LogLevel::ERROR,"Problem type not changed");
     return *this;
 }

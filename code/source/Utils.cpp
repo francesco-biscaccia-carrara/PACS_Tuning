@@ -90,13 +90,13 @@ ArgsParser::ArgsParser(int argc, char* argv[]): fileName {""}, timeLimit {0.0}, 
 
     for (size_t i {1}; i < argc; i++){
         if(fileNameInp.count(argv[i])) fileName = std::string(argv[++i]);
-        if(timeLimitInp.count(argv[i])) timeLimit = std::atof(argv[++i]);
-        if(thetaFixInp.count(argv[i])) theta = std::atof(argv[++i]);
-        if(rhoInp.count(argv[i])) rho = std::atof(argv[++i]);
-        if(seedInp.count(argv[i])) seed = std::atoi(argv[++i]);
+        if(timeLimitInp.count(argv[i])) timeLimit = std::stof(argv[++i]);
+        if(thetaFixInp.count(argv[i])) theta = std::stof(argv[++i]);
+        if(rhoInp.count(argv[i])) rho = std::stof(argv[++i]);
+        if(seedInp.count(argv[i])) seed = std::stoi(argv[++i]);
     }
 
-    if(fileName == "" || !timeLimit || !theta || !rho || !seed) help();
+    if(fileName.empty()|| !timeLimit || !theta || !rho || !seed) help();
 
     #if ACS_VERBOSE == DEBUG
         Logger::print(Logger::LogLevel::INFO,"ENV contains \
