@@ -1,4 +1,5 @@
 /local
+/.clang-format
 /.DS_Store
 /.vscode
 /code/log

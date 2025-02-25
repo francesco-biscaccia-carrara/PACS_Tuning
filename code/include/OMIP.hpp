@@ -6,22 +6,24 @@
 class OMIP : public MIP {
 
     public:
-        explicit OMIP(std::string fileName);
-        explicit OMIP(const OMIP& otherOMIP);
-        explicit OMIP(const MIP& otherMIP);
+        OMIP(std::string fileName);
+        OMIP(const OMIP& otherOMIP);
+        OMIP(const MIP& otherMIP);
+        OMIP& operator=(const MIP&) = delete;
+        OMIP& operator=(const OMIP&) = delete;
 
-        void saveModel();
-
-        void updateBudgetConstr(double rhs);
+        OMIP& updateBudgetConstr(double rhs);
 
         std::vector<double> getSol();
 
+        #if ACS_VERBOSE == DEBUG
+            inline void saveModel() {CPXwriteprob(env, model, (MIP_LOG_DIR+fileName+"_OMIP.lp").c_str(), NULL);};
+        #endif
+
+
     private: 
-        const int OMIP_SLACK_OBJ_COEFF = 0;
-        const char OMIP_BUD_CONST_SENSE = 'L';
-        
         void setup();
-        void addBudgetConstr(double rhs);
+        OMIP& addBudgetConstr(double rhs);
 
 };
 

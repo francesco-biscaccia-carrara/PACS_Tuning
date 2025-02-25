@@ -6,18 +6,20 @@
 class FMIP : public MIP {
 
     public:
-        explicit FMIP(std::string fileName);
-        explicit FMIP(const FMIP& otherFMIP);
-        explicit FMIP(const MIP& otherMIP);
-
-        void saveModel();
+        FMIP(std::string fileName);
+        FMIP(const FMIP& otherFMIP);
+        FMIP(const MIP& otherMIP);
+        FMIP& operator=(const MIP&) = delete;
+        FMIP& operator=(const FMIP&) = delete;
 
         std::vector<double> getSol();
+
+        #if ACS_VERBOSE == DEBUG
+            inline void saveModel() {CPXwriteprob(env, model, (MIP_LOG_DIR+fileName+"_FMIP.lp").c_str(), NULL);};
+        #endif
+
         
     private: 
-        const int FMIP_SLACK_OBJ_COEFF = 1;
-        const int FMIP_VAR_OBJ_COEFF = 0;
-
         void setup();
 };
 

@@ -1,29 +1,24 @@
 #include "../include/MIP.hpp"
 
+#define BOTH_BOUNDS 'B'
 
 MIP:: MIP(const std::string fileName){
 
-    int status;
     this->fileName = fileName;
+    int status;
     env = CPXopenCPLEX(&status);
     model = CPXcreateprob(env, &status, "MIP");
-    if(status){
-        CPXfreeprob(env, &model);
-        CPXcloseCPLEX(&env);
-        Logger::print(ERROR,"Model not created!");
-    }
+    if(status) Logger::print(ERROR,"Model not created!");
+    
+    status =CPXreadcopyprob(env, model, (INST_DIR+fileName+".mps").c_str(),"MPS");
+    if(status) Logger::print(ERROR,"Failed to read the problem from file! %d",status);
+    
+    CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
+    CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
 
-    status = CPXreadcopyprob(env, model, (INST_DIR+fileName+".mps").c_str(),"MPS");
-    if(status){
-        Logger::print(ERROR,"Failed to read the problem from file! %d",status);
-        CPXfreeprob(env, &model);
-        CPXcloseCPLEX(&env);
-    }
+    restoreVarType.reserve(getNumCols());
 
-    CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP::MIP_GAP_TOL);
-    CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP::DUAL_PRIM_GAP_TOL);
-
-    #if ACS_VERBOSE == 1
+    #if ACS_VERBOSE == DEBUG
         CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	    CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
         if(setLogFileName(fileName)) Logger::print(ERROR, "CPXsetlogfilename error!");
@@ -33,18 +28,21 @@ MIP:: MIP(const std::string fileName){
 
 MIP::MIP(const MIP& otherMIP){
 
-    int status;
     this->fileName = otherMIP.fileName+"_clone";
+    int status;
     env = CPXopenCPLEX(&status);
     model = CPXcloneprob(env,otherMIP.model, &status);
+    
+    if(status) Logger::print(ERROR,"Model not cloned!");
 
-    if(status){
-        CPXfreeprob(env, &model);
-        CPXcloseCPLEX(&env);
-        Logger::print(ERROR,"Model not cloned!");
-    }
+    CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
+    CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
+    
+    restoreVarType.reserve(getNumCols());
 
-    #if ACS_VERBOSE == 1
+    #if ACS_VERBOSE == DEBUG
+        CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
+	    CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
         if(setLogFileName(fileName)) Logger::print(ERROR, "CPXsetlogfilename error!");
     #endif
 }
@@ -60,12 +58,12 @@ int MIP::solve(const double timeLimit){
 
     if(timeLimit < EPSILON) Logger::print(ERROR, "Time-limit (%10.4f) is too short!", timeLimit);
 
-    if(timeLimit<CPX_INFBOUND) CPXsetdblparam(env,CPX_PARAM_TILIM,timeLimit);
+    if(timeLimit < CPX_INFBOUND) [[likely]] CPXsetdblparam(env,CPX_PARAM_TILIM,timeLimit);
 
-    for(auto e: restoreVarType) changeVarType(e.first,e.second);
+    for(size_t i{0}; i < restoreVarType.size();i++) changeVarType(i,restoreVarType[i]);
     changeProbType(CPXPROB_MILP);
 
-	if(int error = CPXmipopt(env,model)) Logger::print(ERROR, "CPLEX cannot solve this problem! %d",error);
+	if(int error {CPXmipopt(env,model)}) Logger::print(ERROR, "CPLEX cannot solve this problem! %d",error);
 
     return CPXgetstat(env,model);
 }
@@ -78,17 +76,13 @@ int MIP::solveRelaxation(const double timeLimit){
     
     changeProbType(CPXPROB_MILP); //Necessary to get vars type
 
-    for(size_t i = 0; i < getNumCols();i++){
+    for(size_t i {0}; i < getNumCols();i++){
         char type = getVarType(i);
-        
-        if(type == CPX_BINARY|| type == CPX_INTEGER){
-            std::pair<int,char> p{i,type};
-            restoreVarType.push_back(p);
-        }
+        if(type == CPX_BINARY || type == CPX_INTEGER) restoreVarType[i]=type;
     }
     changeProbType(CPXPROB_LP);
 	
-	if (int error = CPXlpopt(env,model)) Logger::print(ERROR, "CPLEX cannot solve the problem relaxation! %d",error);
+	if (int error {CPXlpopt(env,model)}) Logger::print(ERROR, "CPLEX cannot solve the problem relaxation! %d",error);
  
     return CPXgetstat(env,model);
 }
@@ -96,14 +90,14 @@ int MIP::solveRelaxation(const double timeLimit){
 
 double MIP::getObjValue(){
     double objValue;
-    if(int error = CPXgetobjval(env,model,&objValue)) Logger::print(ERROR,"Unable to obtain obj value! %d",error);
+    if(int error {CPXgetobjval(env,model,&objValue)}) Logger::print(ERROR,"Unable to obtain obj value! %d",error);
     return objValue;
 }
 
 
 std::vector<double> MIP::getObjFunction(){
-    int numCols = getNumCols();
-    double* objFun = (double* ) calloc(numCols,sizeof(double));
+    int numCols {getNumCols()};
+    double* objFun {(double* ) calloc(numCols,sizeof(double))};
     if(CPXgetobj(env, model, objFun, 0, numCols-1)) Logger::print(ERROR, "Unable to get obj. coefficients!");
     std::vector<double> obj(objFun, objFun+numCols);
     free(objFun);
@@ -112,11 +106,11 @@ std::vector<double> MIP::getObjFunction(){
 
 
 MIP& MIP::setObjFunction(const std::vector<double>& newObj){
-    int numCols = getNumCols();
-    if(newObj.size() != numCols) Logger::print(ERROR,"No suitable obj_function coefficients");
+    int numCols {getNumCols()};
+    if(newObj.size() != numCols) Logger::print(ERROR,"No suitable obj_function coefficients"); //TODO: Assert type
 
-    int* indices = (int*) malloc(numCols*sizeof(int));
-    for(size_t i=0;i<numCols;i++) indices[i]=i;
+    int* indices {(int*) malloc(numCols*sizeof(int))};
+    for(size_t i{0};i<numCols;i++) indices[i]=i;
     if(CPXchgobj(env, model, numCols, indices, &newObj[0])) Logger::print(ERROR,"obj_function not changed");
     free(indices);
     return *this;
@@ -124,8 +118,8 @@ MIP& MIP::setObjFunction(const std::vector<double>& newObj){
 
 
 std::vector<double> MIP::getSol(){
-    int numCols = getNumCols();
-    double* xStar = (double* ) calloc(numCols,sizeof(double));
+    int numCols  {getNumCols()};
+    double* xStar {(double* ) calloc(numCols,sizeof(double))};
     if (CPXgetx(env,model, xStar, 0, numCols-1)) Logger::print(ERROR, "Unable to obtain the solution!");
     std::vector<double> sol(xStar, xStar+numCols);
     free(xStar);
@@ -134,16 +128,16 @@ std::vector<double> MIP::getSol(){
 
 
 MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef,const double lb, const double ub, const std::string name){
-    int numRow = getNumRows();
+    int numRow {getNumRows()};
 
-    if(newCol.size() != numRow) Logger::print(ERROR,"Wrong column size!");
+    if(newCol.size() != numRow) Logger::print(ERROR,"Wrong column size!"); //TODO: Assert type
 
-    char** cname = (char**) calloc(1,sizeof(char*));
+    char** cname {(char**) calloc(1,sizeof(char*))};
     char colName[name.length()];
     strcpy(colName,name.c_str());
     cname[0]=colName;
-    int* indices = (int*) malloc(numRow*sizeof(int));
-    double* values = (double*) malloc(numRow*sizeof(double));
+    int* indices {(int*) malloc(numRow*sizeof(int))};
+    double* values {(double*) malloc(numRow*sizeof(double))};
     int start = 0, nnz = 0;
     for(size_t i=0;i<numRow;i++){
         if(newCol[i]!=0){
@@ -162,12 +156,12 @@ MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef,const d
 
 
 MIP& MIP::addRow(const std::vector<double>& newRow,const char sense,const double rhs){
-    int numCols = getNumCols();
+    int numCols {getNumCols()};
 
-    if(newRow.size() != numCols) Logger::print(ERROR,"Wrong row size!");
+    if(newRow.size() != numCols) Logger::print(ERROR,"Wrong row size!"); //TODO: Assert type exe
     
-    int* indices = (int*) malloc(numCols*sizeof(int));
-    double* values = (double*) malloc(numCols*sizeof(double));
+    int* indices {(int*) malloc(numCols*sizeof(int))};
+    double* values {(double*) malloc(numCols*sizeof(double))};
     int start = 0,nnz =0;
     for(size_t i=0;i<numCols;i++){
         if(newRow[i]!=0){
@@ -185,77 +179,70 @@ MIP& MIP::addRow(const std::vector<double>& newRow,const char sense,const double
 
 
 MIP& MIP::removeRow(const int index){
+    if( index < 0 || index > getNumRows()-1) Logger::print(ERROR,"Wrong index removeRow()!");
+
     if(CPXdelrows (env, model, index, index)) Logger::print(ERROR,"Row not removed!");
     return *this;
 }
 
 
 MIP& MIP::removeCol(const int index){
+    if( index < 0 || index > getNumCols()-1) Logger::print(ERROR,"Wrong index removeCol()!");
+
     if(CPXdelcols (env, model, index, index)) Logger::print(ERROR,"Row not removed!");
     return *this;
 }
 
 
-std::pair<double,double> MIP::getVarBounds(const int index){
+VarBounds MIP::getVarBounds(const int index){
+    if( index < 0 || index > getNumCols()-1) Logger::print(ERROR,"Wrong index getVarBounds()!");
+
     double lb = CPX_INFBOUND, ub = CPX_INFBOUND;
     if(CPXgetlb(env, model, &lb, index, index)) Logger::print(ERROR,"Unable to get the var lower_bound!");
-    if(CPXgetub(env, model, &ub, index, index)) Logger::print(ERROR,"Unable to get the var lower_bound!");
-    return std::make_pair(lb, ub);
+    if(CPXgetub(env, model, &ub, index, index)) Logger::print(ERROR,"Unable to get the var upper_bound!");
+    return VarBounds{.lowerBound{lb},.upperBound{ub}};
 }
 
 
 char MIP::getVarType(const int index){
+    if( index < 0 || index > getNumCols()-1) Logger::print(ERROR,"Wrong index getVarType()!");
+
     char type;
-    if(int error = CPXgetctype(env,model,&type,index,index)) Logger::print(ERROR,"Unable to get var %d type! %d",index,error);
+    if(int error {CPXgetctype(env,model,&type,index,index)}) Logger::print(ERROR,"Unable to get var %d type! %d",index,error);
     return type;
 }
 
 
 MIP& MIP::changeVarType(const int index,const char type){
+    if( index < 0 || index > getNumCols()-1) Logger::print(ERROR,"Wrong index changeVarType()!");
+
     if(CPXchgctype(env, model, 1, &index, &type)) Logger::print(ERROR,"Type of var %d not changed!",index);
     return *this;
 }
 
 
 MIP& MIP::setVarValues(const int index, const double val){
-    char bound = 'B'; //Both
+    if( index < 0 || index > getNumCols()-1) Logger::print(ERROR,"Wrong index in setVarValues()!");
+
+    char bound {BOTH_BOUNDS};
     CPXchgbds(env, model, 1, &index, &bound, &val);
     return *this;
 }
 
 
 MIP& MIP::setVarsValues(const std::vector<double>& values){
-    int numCols =getNumCols();
+    int numCols {getNumCols()};
     
     if(values.size() != numCols) Logger::print(ERROR,"Wrong values size!");
-    for(size_t i=0;i<numCols;i++){
-        if(values[i] < CPX_INFBOUND/2){
-            setVarValues(i,values[i]);
-        }
-    }
+    for(size_t i {0}; i < numCols; i++)
+        if(values[i] < CPX_INFBOUND/2) setVarValues(i,values[i]);
     return *this;
 }
-
-
-#if ACS_VERBOSE == 1
-MIP& MIP::saveModel(){
-    CPXwriteprob(env, model, (MIP_LOG_DIR+fileName+".lp").c_str(), NULL);
-    return *this;
-}
-#endif
 
 
 MIP::~MIP(){
     CPXfreeprob(env, &model);
     CPXcloseCPLEX(&env);
-}
-
-
-int MIP::setLogFileName(std::string logFileName){
-    #if ACS_VERBOSE == 1
-       return CPXsetlogfilename(env, (CPLEX_LOG_DIR+logFileName+".log").c_str(), "w");
-    #endif
-    return 1;
 }
 
 

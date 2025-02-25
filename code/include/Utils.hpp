@@ -16,9 +16,19 @@
     #define ACS_VERBOSE 1
 #endif
 
+#define NO_VER  -1
+#define DEFAULT 0
+#define VERBOSE 1
+#define DEBUG   10
+
 #define EPSILON 1e-7
 
 namespace Utils{
+
+    struct VarBounds{
+        double lowerBound;
+        double upperBound;
+    };
 
     class RandNumGen{
         public: 
@@ -31,7 +41,7 @@ namespace Utils{
     
 
     namespace Logger{
-        enum LogLevel {ERROR, WARN, INFO};
+        enum class LogLevel {ERROR, WARN, INFO};
         
         void print(LogLevel typeMsg, const char* msg, ...);
     
@@ -60,10 +70,11 @@ namespace Utils{
             ArgsParser(const ArgsParser&) = delete;
             ArgsParser& operator=(const ArgsParser&) = delete;
 
-            inline  std::string         getFileName(){return fileName;};
-            inline  double              getTimeLimit(){return timeLimit;};
-            inline  double              getThetaFix(){return thetaFix;};
-            inline  unsigned long long  getSeed(){return seed;};
+            inline  std::string         getFileName()   {return fileName;};
+            inline  double              getTimeLimit()  {return timeLimit;};
+            inline  double              getTheta()      {return theta;};
+            inline  double              getRho()        {return rho;};
+            inline  unsigned long long  getSeed()       {return seed;};
     
             ~ArgsParser()   =  default;
     
@@ -71,7 +82,8 @@ namespace Utils{
             void                help();
             std::string         fileName;
             double              timeLimit;
-            double              thetaFix;
+            double              theta;
+            double              rho;
             unsigned long long  seed;
     };
 
