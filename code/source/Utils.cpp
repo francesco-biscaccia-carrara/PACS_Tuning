@@ -2,109 +2,154 @@
 
 using namespace Utils;
 
-std::mt19937_64 RandNumGen::rng(std::random_device{}());
+#pragma region STATIC
 
-void RandNumGen::setSeed(unsigned long long seed){
-    RandNumGen::rng.seed(seed);
+static std::mt19937_64 rng{ std::random_device{}() };
+
+static bool isSeedSet{ false };
+
+static void printHelp() {
+	Logger::print(Logger::LogLevel::ERROR, "Usage: ./main [OPTIONS]\
+        \n '-h  / --help'\t\t\t Show help message\
+        \n '-f  / --filename <string>'\t Input file\
+        \n '-tl / --timelimit <double>'\t Max execution time;\
+        \n '-th / --theta <double (0,1)>'\t %% of vars to fix in the initially;\
+        \n '-rh / --rho <double (0,1)>'\t %% of vars to fix per ACS iteration;\
+        \n '-sd / --seed <u long long>'\t Random seed;");
 }
 
-//MIN and MAX are included
-int RandNumGen::randInt(int min, int max) {
-    std::uniform_int_distribution<int> dist(min, max);
-    return dist(rng);
+#pragma endregion
+
+void Random::setSeed(unsigned long long newSeed) {
+	rng.seed(newSeed);
+	isSeedSet = true;
 }
 
+// MIN and MAX are included
+int Random::Int(int min, int max) {
+	if (!isSeedSet)
+		Logger::print(Logger::LogLevel::WARN, "Using OS generated seed!");
 
-void Logger::print(LogLevel typeMsg, const char* msg, ...){
-    std::string msgClr;
-    std::string msgPref;
-
-    switch (typeMsg) {
-        case Logger::LogLevel::ERROR:
-            msgClr = Logger::ANSI_COLOR_RED; // ANSI_COLOR_RED
-            msgPref = "ERROR";
-            break;
-
-        case Logger::LogLevel::WARN:
-            msgClr = Logger::ANSI_COLOR_YELLOW ; // ANSI_COLOR_YELLOW
-            msgPref = "WARNING";
-            break;
-
-        case Logger::LogLevel::INFO:
-            msgClr = Logger::ANSI_COLOR_BLUE; // ANSI_COLOR_BLUE
-            msgPref = "INFO";
-            break;
-
-        default:
-            msgClr = Logger::ANSI_COLOR_RESET; // ANSI_COLOR_RESET
-            msgPref = "";
-            break;
-    }
-
-    std::cout << msgClr << "\033[1m\033[4m" << msgPref << Logger::ANSI_COLOR_RESET << msgClr << ": ";
-
-    va_list ap;
-    va_start(ap, msg);
-    vprintf(msg,ap);
-    va_end(ap);
-
-    std::cout << Logger::ANSI_COLOR_RESET << std::endl;
-
-    if (typeMsg == Logger::LogLevel::ERROR) std::exit(1);
+    if(min > max)
+		Random::Int(max, min);
+	std::uniform_int_distribution get{ min, max };
+	return get(rng);
 }
 
+void Logger::print(LogLevel typeMsg, const char* msg, ...) {
+	std::string msgClr;
+	std::string msgPref;
 
-double Clock::getTime(){
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    
-    return ((double)tv.tv_sec)+((double)tv.tv_usec/1e+6);
+	switch (typeMsg) {
+		case Logger::LogLevel::ERROR:
+			msgClr = Logger::ANSI_COLOR_RED; // ANSI_COLOR_RED
+			msgPref = "ERROR";
+			break;
+
+		case Logger::LogLevel::WARN:
+			msgClr = Logger::ANSI_COLOR_YELLOW; // ANSI_COLOR_YELLOW
+			msgPref = "WARNING";
+			break;
+
+		case Logger::LogLevel::INFO:
+			msgClr = Logger::ANSI_COLOR_BLUE; // ANSI_COLOR_BLUE
+			msgPref = "INFO";
+			break;
+
+		default:
+			msgClr = Logger::ANSI_COLOR_RESET; // ANSI_COLOR_RESET
+			msgPref = "";
+			break;
+	}
+
+	std::cout << msgClr << "\033[1m\033[4m" << msgPref << Logger::ANSI_COLOR_RESET << msgClr << ": ";
+
+	va_list ap;
+	va_start(ap, msg);
+	vprintf(msg, ap);
+	va_end(ap);
+
+	std::cout << Logger::ANSI_COLOR_RESET << std::endl;
+
+	if (typeMsg == Logger::LogLevel::ERROR)
+		std::exit(1);
 }
 
+double Clock::getTime() {
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+
+	return ((double)tv.tv_sec) + ((double)tv.tv_usec / 1e+6);
+}
 
 double Clock::timeElapsed(const double initTime) {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
 
-    return ((double)tv.tv_sec)+((double)tv.tv_usec/1e+6) - initTime;
+	return ((double)tv.tv_sec) + ((double)tv.tv_usec / 1e+6) - initTime;
 }
 
+ArgsParser::ArgsParser(int argc, char* argv[]) : fileName{ "" }, timeLimit{ 0.0 }, theta{ 0.0 }, rho{ 0.0 }, seed{ 0 } {
 
-void ArgsParser::help(){
-  Logger::print(Logger::LogLevel::ERROR,"To set the parameters properly you have to execute ./main and add: \
-        \n '-file / -in / -f <filename>' to specity the input file;\
-        \n '-time_limit / -tl / -time <time_dbl>' to specity the max execution time (double value);\
-        \n '-theta_fix / -th / -theta <theta_dbl>' to specity the \\% of vars to fix in the initial vector (double value within (0,1));\
-        \n '-rho_fix / -rh / -rho <rho_dbl>' to specity the \\% of vars to fix at each iteration of ACS (double value within (0,1));\
-        \n '-seed / -sd / -rnd_seed <seed>' to specity the random seed (int value);");
-}
+	constexpr std::array<std::pair<const char*, std::string ArgsParser::*>, 2> stringArgs{ {
+		{ "-f", &ArgsParser::fileName },
+		{ "--filename", &ArgsParser::fileName },
+	} };
 
+	constexpr std::array<std::pair<const char*, double ArgsParser::*>, 6> doubleArgs{ {
+		{ "-tl", &ArgsParser::timeLimit },
+		{ "--timelimit", &ArgsParser::timeLimit },
+		{ "-th", &ArgsParser::theta },
+		{ "--theta", &ArgsParser::theta },
+		{ "-rh", &ArgsParser::rho },
+		{ "--rho", &ArgsParser::rho },
+	} };
 
-ArgsParser::ArgsParser(int argc, char* argv[]): fileName {""}, timeLimit {0.0}, theta {0.0}, rho{0.0} ,seed {0} {
+	constexpr std::array<std::pair<const char*, unsigned long long ArgsParser::*>, 2> ullongArgs{ {
+		{ "-sd", &ArgsParser::seed },
+		{ "--seed", &ArgsParser::seed },
+	} };
 
-    std::set<std::string> fileNameInp {"-file","-in","-f"};
-    std::set<std::string> timeLimitInp {"-time_limit","-tl","-time"};
-    std::set<std::string> thetaFixInp {"-theta_fix","-th","-theta"};
-    std::set<std::string> seedInp {"-seed","-sd","-rnd_seed"};
-    std::set<std::string> rhoInp {"-rho_fix","-rh","-rho"};
+	for (int i = 1; i < argc; ++i) {
+		if (std::string(argv[i]) == "-h" || std::string(argv[i]) == "-help")
+			printHelp();
+	}
 
-    for (size_t i {1}; i < argc; i++){
-        if(fileNameInp.count(argv[i])) fileName = std::string(argv[++i]);
-        if(timeLimitInp.count(argv[i])) timeLimit = std::stof(argv[++i]);
-        if(thetaFixInp.count(argv[i])) theta = std::stof(argv[++i]);
-        if(rhoInp.count(argv[i])) rho = std::stof(argv[++i]);
-        if(seedInp.count(argv[i])) seed = std::stoi(argv[++i]);
-    }
+	for (int i = 1; i < argc - 1; i++) {
+		std::string key = argv[i];
 
-    if(fileName.empty()|| !timeLimit || !theta || !rho || !seed) help();
+		for (const auto& [flag, member] : stringArgs) {
+			if (key == flag) {
+				this->*member = argv[++i];
+				break;
+			}
+		}
 
-    #if ACS_VERBOSE == DEBUG
-        Logger::print(Logger::LogLevel::INFO,"ENV contains \
-                        \n\t - filename:\t%s \
-                        \n\t - time-limit:\t%f\
-                        \n\t - theta:\t%f\
-                        \n\t - rho:\t\t%f\
-                        \n\t - seed:\t%d",
-                        fileName.c_str(),timeLimit,theta,rho,seed);
-    #endif
+		for (const auto& [flag, member] : doubleArgs) {
+			if (key == flag) {
+				this->*member = std::strtod(argv[++i], nullptr);
+				break;
+			}
+		}
+
+		for (const auto& [flag, member] : ullongArgs) {
+			if (key == flag) {
+				this->*member = std::strtoull(argv[++i], nullptr, 10);
+				break;
+			}
+		}
+	}
+
+	if (fileName.empty() || !timeLimit || !theta || !rho || !seed)
+		printHelp();
+
+#if ACS_VERBOSE == DEBUG
+	Logger::print(Logger::LogLevel::INFO, "Parsed Arguments:\
+                            \n\t - File Name :  \t%s \
+                            \n\t - Time Limit : \t%f\
+                            \n\t - Theta : \t\t%f\
+                            \n\t - Rho : \t\t%f\
+                            \n\t - Seed : \t\t%d",
+				  fileName.c_str(), timeLimit, theta, rho, seed);
+#endif
 }

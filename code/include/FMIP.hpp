@@ -14,12 +14,7 @@ class FMIP : public MIP {
         FMIP& operator=(const MIP&) = delete;
         FMIP& operator=(const FMIP&) = delete;
 
-        std::vector<double> getSol();
-
-        #if ACS_VERBOSE == DEBUG
-            inline void saveModel() {CPXwriteprob(env, model, (MIP_LOG_DIR+fileName+"_FMIP.lp").c_str(), NULL);};
-        #endif
-
+        [[nodiscard]] std::vector<double> getSol();
         
     private: 
         void setup();

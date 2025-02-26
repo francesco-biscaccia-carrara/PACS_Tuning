@@ -39,8 +39,8 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double topP
 			int idx = sorter[i];
 			if (!fixedVars.count(idx)) {
 				auto [lowerBound, upperBound] = fMIP.getVarBounds(idx);
-				x[idx] = RandNumGen::randInt(std::max(-MAX_UB, lowerBound),
-											 std::min(MAX_UB, upperBound));
+				x[idx] = Random::Int(std::max(-MAX_UB, lowerBound),
+									 std::min(MAX_UB, upperBound));
 				fixedVars.insert(idx);
 				n++;
 			}
@@ -65,7 +65,7 @@ void FixPolicy::randomRhoFix(std::vector<double>& x, double rho) {
 	if (rho < EPSILON || rho >= 1.0)
 		Logger::print(Logger::LogLevel::ERROR, "wrong percentage!");
 
-	int start = RandNumGen::randInt(0, x.size() - 1);
+	int start = Random::Int(0, x.size() - 1);
 	int numFixedVars{ static_cast<int>(rho * x.size()) };
 
 #if ACS_VERBOSE == DEBUG

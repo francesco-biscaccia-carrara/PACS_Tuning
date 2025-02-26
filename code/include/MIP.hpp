@@ -24,13 +24,18 @@ public:
 	int	 solve(const double timeLimit);
 	int	 solveRelaxation(const double timeLimit);
 
-	double				getObjValue();
+	[[nodiscard]]
+	double getObjValue();
+	[[nodiscard]]
 	std::vector<double> getObjFunction();
 	MIP&				setObjFunction(const std::vector<double>& newObj);
 
+	[[nodiscard]]
 	std::vector<double> getSol();
 
+	[[nodiscard]]
 	inline int getNumCols() { return CPXgetnumcols(env, model); }; // num cols = num var
+	[[nodiscard]]
 	inline int getNumRows() { return CPXgetnumrows(env, model); }; // num rows = num constr
 
 	MIP& addCol(const std::vector<double>& newCol, const double objCoef, const double lb, const double ub, const std::string name);
@@ -39,24 +44,33 @@ public:
 	MIP& removeCol(const int index);
 
 	VarBounds getVarBounds(const int index);
-	char	  getVarType(const int index);
-	MIP&	  changeVarType(const int index, const char type);
-	MIP&	  setVarValues(const int index, const double val);
-	MIP&	  setVarsValues(const std::vector<double>& values);
+
+	[[nodiscard]]
+	char getVarType(const int index);
+	MIP& changeVarType(const int index, const char type);
+	MIP& setVarValues(const int index, const double val);
+	MIP& setVarsValues(const std::vector<double>& values);
 
 #if ACS_VERBOSE == DEBUG
-	inline void saveModel() { CPXwriteprob(env, model, (MIP_LOG_DIR + fileName + ".lp").c_str(), NULL); };
+	inline MIP& saveModel() {
+		CPXwriteprob(env, model, (MIP_LOG_DIR + fileName + "_" + id + ".lp").c_str(), NULL);
+		return *this;
+	};
+	inline MIP& saveLog() {
+		CPXsetlogfilename(env, (CPLEX_LOG_DIR + fileName + "_" + id + ".log").c_str(), "w");
+		return *this;
+	}
 #endif
 
 	~MIP();
 
 protected:
-	CPXLPptr	model;
-	CPXENVptr	env;
-	std::string fileName;
+	CPXLPptr  model;
+	CPXENVptr env;
 
 #if ACS_VERBOSE == DEBUG
-	inline int setLogFileName(std::string logFileName) { return CPXsetlogfilename(env, (CPLEX_LOG_DIR + logFileName + ".log").c_str(), "w"); };
+	std::string fileName;
+	std::string id;
 #endif
 
 private:

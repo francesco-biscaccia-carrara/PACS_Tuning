@@ -7,16 +7,16 @@ FMIP::FMIP(const std::string fileName) : MIP(fileName) {
 	setup();
 
 #if ACS_VERBOSE == DEBUG
-	if (setLogFileName(fileName + "_FMIP"))
-		Logger::print(Logger::LogLevel::ERROR, "CPXsetlogfilename error!");
+	this->fileName += "_FMIP";
+	Logger::print(Logger::LogLevel::INFO, "FMIP-ID:\t%s", id.c_str());
 #endif
 }
 
 FMIP::FMIP(const FMIP& otherFMIP) : MIP(otherFMIP) {
 
 #if ACS_VERBOSE == DEBUG
-	if (setLogFileName(fileName + "_clone_FMIP"))
-		Logger::print(Logger::LogLevel::ERROR, "CPXsetlogfilename error!");
+	this->fileName += "_FMIP";
+	Logger::print(Logger::LogLevel::INFO, "FMIP-ID:\t%s", id.c_str());
 #endif
 }
 
@@ -24,8 +24,8 @@ FMIP::FMIP(const MIP& otherMIP) : MIP(otherMIP) {
 	setup();
 
 #if ACS_VERBOSE == DEBUG
-	if (setLogFileName(fileName + "_clone_FMIP"))
-		Logger::print(Logger::LogLevel::ERROR, "CPXsetlogfilename error!");
+	this->fileName += "_FMIP";
+	Logger::print(Logger::LogLevel::INFO, "FMIP-ID:\t%s", id.c_str());
 #endif
 }
 

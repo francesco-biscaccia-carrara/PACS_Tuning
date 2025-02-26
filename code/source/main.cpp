@@ -5,15 +5,21 @@
 int main(int argc, char* argv[]) {
 
 	ArgsParser CLIEnv{ argc, argv };
-	RandNumGen::setSeed(CLIEnv.getSeed());
+	Random::setSeed(CLIEnv.getSeed());
 
 	MIP	 originalMIP(CLIEnv.getFileName());
-	FMIP fMIP(originalMIP);
-	OMIP oMIP(originalMIP);
+	FMIP fMIP(CLIEnv.getFileName());
+	OMIP oMIP(CLIEnv.getFileName());
+
+#if ACS_VERBOSE == DEBUG
+	originalMIP.saveModel();
+	fMIP.saveModel().saveLog();
+	oMIP.saveModel().saveLog();
+#endif
 
 	int					xLength = originalMIP.getNumCols();
 	std::vector<double> initSol(xLength, CPX_INFBOUND);
-	//FixPolicy::firstThetaFixing(fMIP, initSol, CLIEnv.getTheta());
+	// FixPolicy::firstThetaFixing(fMIP, initSol, CLIEnv.getTheta());
 
 	double FMIPCost = CPX_INFBOUND;
 	double initTime = Clock::getTime();

@@ -3,20 +3,20 @@
 #define OMIP_SLACK_OBJ_COEFF 0
 #define OMIP_BUD_CONST_SENSE 'L'
 
-OMIP::OMIP(std::string fileName) : MIP(fileName) {
+OMIP::OMIP(const std::string fileName) : MIP(fileName) {
 	setup();
 
 #if ACS_VERBOSE == DEBUG
-	if (setLogFileName(fileName + "_OMIP"))
-		Logger::print(Logger::LogLevel::ERROR, "CPXsetlogfilename error!");
+	this->fileName += "_OMIP";
+	Logger::print(Logger::LogLevel::INFO, "OMIP-ID:\t%s", id.c_str());
 #endif
 }
 
 OMIP::OMIP(const OMIP& otherOMIP) : MIP(otherOMIP) {
 
 #if ACS_VERBOSE == DEBUG
-	if (setLogFileName(fileName + "_clone_OMIP"))
-		Logger::print(Logger::LogLevel::ERROR, "CPXsetlogfilename error!");
+	this->fileName += "_OMIP";
+	Logger::print(Logger::LogLevel::INFO, "OMIP-ID:\t%s", id.c_str());
 #endif
 }
 
@@ -24,8 +24,8 @@ OMIP::OMIP(const MIP& otherMIP) : MIP(otherMIP) {
 	setup();
 
 #if ACS_VERBOSE == DEBUG
-	if (setLogFileName(fileName + "_clone_OMIP"))
-		Logger::print(Logger::LogLevel::ERROR, "CPXsetlogfilename error!");
+	this->fileName += "_OMIP";
+	Logger::print(Logger::LogLevel::INFO, "OMIP-ID:\t%s", id.c_str());
 #endif
 }
 
