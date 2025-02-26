@@ -15,7 +15,7 @@
 #include <vector>
 
 #ifndef ACS_VERBOSE
-	#define ACS_VERBOSE 10
+	#define ACS_VERBOSE 1
 #endif
 
 #define NO_VER -1

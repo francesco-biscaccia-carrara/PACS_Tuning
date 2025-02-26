@@ -68,7 +68,7 @@ void FixPolicy::randomRhoFix(std::vector<double>& x, double rho) {
 	int start = Random::Int(0, x.size() - 1);
 	int numFixedVars{ static_cast<int>(rho * x.size()) };
 
-#if ACS_VERBOSE == DEBUG
+#if ACS_VERBOSE >= VERBOSE
 	Logger::print(Logger::LogLevel::INFO, "Fixing %d vars starting from %d, in a circular fashion", numFixedVars, start);
 #endif
 
@@ -79,4 +79,9 @@ void FixPolicy::randomRhoFix(std::vector<double>& x, double rho) {
 	for (size_t i = 0; i < x.size(); i++)
 		if (!fixedVarFlag[i])
 			x[i] = CPX_INFBOUND;
+}
+
+void FixPolicy::fixTest(std::vector<double>& x) {
+	for (auto e: x)
+		e = Random::Int(0, 1);
 }

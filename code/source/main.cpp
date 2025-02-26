@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 
 	int					xLength = originalMIP.getNumCols();
 	std::vector<double> initSol(xLength, CPX_INFBOUND);
-	// FixPolicy::firstThetaFixing(fMIP, initSol, CLIEnv.getTheta());
+	FixPolicy::fixTest(initSol);
 
 	double FMIPCost = CPX_INFBOUND;
 	double initTime = Clock::getTime();

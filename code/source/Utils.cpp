@@ -143,7 +143,7 @@ ArgsParser::ArgsParser(int argc, char* argv[]) : fileName{ "" }, timeLimit{ 0.0 
 	if (fileName.empty() || !timeLimit || !theta || !rho || !seed)
 		printHelp();
 
-#if ACS_VERBOSE == DEBUG
+#if ACS_VERBOSE >= VERBOSE
 	Logger::print(Logger::LogLevel::INFO, "Parsed Arguments:\
                             \n\t - File Name :  \t%s \
                             \n\t - Time Limit : \t%f\
