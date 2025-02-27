@@ -13,7 +13,7 @@ bool allInteger(std::vector<double>& x) {
 	return true;
 }
 
-void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double topPerc) {
+void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double topPerc, double timeLimit) {
 	if (topPerc < EPSILON || topPerc >= 1.0)
 		Logger::print(Logger::LogLevel::ERROR, "wrong percentage!");
 
@@ -34,6 +34,9 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double topP
 	while (!allInteger(x) && fixedVars.size() < x.size()) {
 		int numNotFixedVars = x.size() - fixedVars.size();
 		int varsToFix = static_cast<int>(numNotFixedVars * topPerc);
+#if ACS_VERBOSE >= VERBOSE
+	Logger::print(Logger::LogLevel::INFO, "Fixing %d vars",varsToFix);
+#endif
 
 		for (int i = 0, n = 0; n < varsToFix && i < sorter.size(); i++) {
 			int idx = sorter[i];
@@ -49,7 +52,7 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double topP
 		std::vector<double> tmp(x);
 		tmp.resize(fMIP.getNumCols(), CPX_INFBOUND);
 		fMIP.setVarsValues(tmp);
-		fMIP.solveRelaxation(CPX_INFBOUND);
+		fMIP.solveRelaxation(timeLimit);
 		std::vector<double> lpSol = fMIP.getSol();
 
 		for (size_t i = 0; i < lpSol.size(); i++) {
@@ -82,6 +85,6 @@ void FixPolicy::randomRhoFix(std::vector<double>& x, double rho) {
 }
 
 void FixPolicy::fixTest(std::vector<double>& x) {
-	for (auto e: x)
+	for (auto e : x)
 		e = Random::Int(0, 1);
 }

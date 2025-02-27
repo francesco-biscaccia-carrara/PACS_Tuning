@@ -30,48 +30,51 @@ int Random::Int(int min, int max) {
 	if (!isSeedSet)
 		Logger::print(Logger::LogLevel::WARN, "Using OS generated seed!");
 
-    if(min > max)
+	if (min > max)
 		Random::Int(max, min);
 	std::uniform_int_distribution get{ min, max };
 	return get(rng);
 }
 
-void Logger::print(LogLevel typeMsg, const char* msg, ...) {
-	std::string msgClr;
-	std::string msgPref;
+void Logger::print(LogLevel typeMsg, const char* format, ...) {
+	const char* msgClr;
+	const char* msgPref;
 
 	switch (typeMsg) {
-		case Logger::LogLevel::ERROR:
-			msgClr = Logger::ANSI_COLOR_RED; // ANSI_COLOR_RED
+		case LogLevel::ERROR:
+			msgClr = ANSI_COLOR_RED;
 			msgPref = "ERROR";
 			break;
-
-		case Logger::LogLevel::WARN:
-			msgClr = Logger::ANSI_COLOR_YELLOW; // ANSI_COLOR_YELLOW
-			msgPref = "WARNING";
+		case LogLevel::WARN:
+			msgClr = ANSI_COLOR_YELLOW;
+			msgPref = "WARN";
 			break;
-
-		case Logger::LogLevel::INFO:
-			msgClr = Logger::ANSI_COLOR_BLUE; // ANSI_COLOR_BLUE
+		case LogLevel::INFO:
+			msgClr = ANSI_COLOR_BLUE;
 			msgPref = "INFO";
 			break;
-
+		case LogLevel::OUT:
+			msgClr = ANSI_COLOR_RESET;
+			msgPref = "OUT";
+			break;
 		default:
-			msgClr = Logger::ANSI_COLOR_RESET; // ANSI_COLOR_RESET
+			msgClr = ANSI_COLOR_RESET;
 			msgPref = "";
 			break;
 	}
 
-	std::cout << msgClr << "\033[1m\033[4m" << msgPref << Logger::ANSI_COLOR_RESET << msgClr << ": ";
+	printf("%s\033[1m\033[4m%s%s%s: ", msgClr, msgPref, ANSI_COLOR_RESET, msgClr);
 
-	va_list ap;
-	va_start(ap, msg);
-	vprintf(msg, ap);
-	va_end(ap);
+	va_list args;
+	va_start(args, format);
+	vfprintf(stdout, format, args);
+	va_end(args);
 
-	std::cout << Logger::ANSI_COLOR_RESET << std::endl;
+	printf("%s\n", ANSI_COLOR_RESET);
 
-	if (typeMsg == Logger::LogLevel::ERROR)
+	fflush(stdout);
+
+	if (typeMsg == LogLevel::ERROR)
 		std::exit(1);
 }
 

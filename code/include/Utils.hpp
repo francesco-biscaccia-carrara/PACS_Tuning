@@ -14,10 +14,6 @@
 #include <sys/time.h>
 #include <vector>
 
-#ifndef ACS_VERBOSE
-	#define ACS_VERBOSE 1
-#endif
-
 #define NO_VER -1
 #define DEFAULT 0
 #define VERBOSE 1
@@ -40,7 +36,8 @@ namespace Utils {
 	namespace Logger {
 		enum class LogLevel { ERROR,
 							  WARN,
-							  INFO };
+							  INFO,
+							  OUT};
 
 		void print(LogLevel typeMsg, const char* msg, ...);
 
