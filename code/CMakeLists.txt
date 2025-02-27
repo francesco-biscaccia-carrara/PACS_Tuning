@@ -10,17 +10,17 @@ endif()
 
 project(main)
 
+# Find and set up MPI
+find_package(MPI REQUIRED)
+
 # setting flags for optimization and debug builds
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "-Og -ggdb")
 
 # setting the default verbose/warn/intchecks (edited with the -D flag)
 set(VERBOSE "1" CACHE STRING "Verbose setting set from command line")
-#message(STATUS "VERBOSE is set to ${VERBOSE}")
 #set(WARN "0" CACHE STRING "Flag to enable warning messages")
-#message(STATUS "WARN is set to ${WARN}")
 #set(INTCHECK "0" CACHE STRING "Flag to enable integrity checks")
-#message(STATUS "INTCHECK is set to ${INTCHECK}")
 set(CPLEX_DIR "/opt/ibm/ILOG/CPLEX_Studio2212/cplex/lib/x86-64_linux/static_pic" CACHE STRING "Path to the CPLEX library") #application for Mac, opt/ibm for linux
 set(CPLEX_INCLUDE "/opt/ibm/ILOG/CPLEX_Studio2212/cplex/include/ilcplex" CACHE STRING "Path to the CPLEX headers")
 
@@ -60,6 +60,7 @@ endif()
 # build
 
 include_directories(include)
+include_directories(${MPI_INCLUDE_PATH})
 include_directories(${CPLEX_INCLUDE})
 
 add_library(
@@ -87,6 +88,12 @@ add_library(
 )
 
 add_library(
+    MPIController
+    source/MPIController.cpp
+    include/MPIController.hpp
+)
+
+add_library(
     FixPol
     source/FixPolicy.cpp
     include/FixPolicy.hpp
@@ -104,19 +111,24 @@ if(NOT CPLEX_LIBRARY)
     message(FATAL_ERROR "CPLEX library not found in ${CPLEX_DIR}")
 endif()
 
+# Add the main executable
 add_executable(
     main
     source/main.cpp
 )
 
+# Link MPI and other libraries to the executable
 target_link_libraries(
     main
     MIP
     FMIP
     OMIP
+    MPIController
     FixPol
     Utils
-    #...
+    # Link MPI explicitly
+    MPI::MPI_CXX
+    # Link CPLEX library
     ${CPLEX_LIBRARY}
 )
 

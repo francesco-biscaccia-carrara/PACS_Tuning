@@ -1,8 +1,11 @@
 #include "../include/FMIP.hpp"
 #include "../include/FixPolicy.hpp"
+#include "../include/MPIController.hpp"
 #include "../include/OMIP.hpp"
 
 int main(int argc, char* argv[]) {
+
+	//MPIController MPIEnv(argc, argv);
 
 	ArgsParser CLIEnv{ argc, argv };
 	Random::setSeed(CLIEnv.getSeed());
