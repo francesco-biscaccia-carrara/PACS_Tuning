@@ -66,12 +66,12 @@ namespace Utils {
 		explicit ArgsParserException(const std::string& message) : std::runtime_error("ArgsParserException: " + message){};
 	};
 
-	class ArgsParser {
+	class CLIParser {
 
 	public:
-		ArgsParser(int argc, char* argv[]);
-		ArgsParser(const ArgsParser&) = delete;
-		ArgsParser& operator=(const ArgsParser&) = delete;
+		static CLIParser& getInstance(int argc = 0, char* argv[] = nullptr);
+		CLIParser(const CLIParser&) = delete;
+		CLIParser& operator=(const CLIParser&) = delete;
 
 		inline std::string		  getFileName() noexcept { return fileName; };
 		inline double			  getTimeLimit() noexcept { return timeLimit; };
@@ -79,14 +79,16 @@ namespace Utils {
 		inline double			  getRho() noexcept { return rho; };
 		inline unsigned long long getSeed() noexcept { return seed; };
 
-		~ArgsParser() = default;
+		~CLIParser() = default;
 
 	private:
+		CLIParser(int argc = 0, char* argv[] = nullptr);
 		std::string		   fileName;
 		double			   timeLimit;
 		double			   theta;
 		double			   rho;
 		unsigned long long seed;
+		static bool		   init; // Singleton initilization
 	};
 
 } // namespace Utils

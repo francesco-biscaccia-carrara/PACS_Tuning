@@ -87,67 +87,77 @@ double Clock::timeElapsed(const double initTime) {
 	return ((double)tv.tv_sec) + ((double)tv.tv_usec / 1e+6) - initTime;
 }
 
-ArgsParser::ArgsParser(int argc, char* argv[]) : fileName{ "" }, timeLimit{ 0.0 }, theta{ 0.0 }, rho{ 0.0 }, seed{ 0 } {
+bool CLIParser::init = false;
 
-	constexpr std::array<std::pair<const char*, std::string ArgsParser::*>, 2> stringArgs{ {
-		{ "-f", &ArgsParser::fileName },
-		{ "--filename", &ArgsParser::fileName },
-	} };
+CLIParser& CLIParser::getInstance(int argc, char* argv[]) {
+	static CLIParser instance(argc, argv);
+	return instance;
+}
 
-	constexpr std::array<std::pair<const char*, double ArgsParser::*>, 6> doubleArgs{ {
-		{ "-tl", &ArgsParser::timeLimit },
-		{ "--timelimit", &ArgsParser::timeLimit },
-		{ "-th", &ArgsParser::theta },
-		{ "--theta", &ArgsParser::theta },
-		{ "-rh", &ArgsParser::rho },
-		{ "--rho", &ArgsParser::rho },
-	} };
+CLIParser::CLIParser(int argc, char* argv[]) : fileName{ "" }, timeLimit{ 0.0 }, theta{ 0.0 }, rho{ 0.0 }, seed{ 0 } {
+	if (argc > 0 && argv != nullptr && !init) {
 
-	constexpr std::array<std::pair<const char*, unsigned long long ArgsParser::*>, 2> ullongArgs{ {
-		{ "-sd", &ArgsParser::seed },
-		{ "--seed", &ArgsParser::seed },
-	} };
+		constexpr std::array<std::pair<const char*, std::string CLIParser::*>, 2> stringArgs{ {
+			{ "-f", &CLIParser::fileName },
+			{ "--filename", &CLIParser::fileName },
+		} };
 
-	for (int i = 1; i < argc; ++i) {
-		if (std::string(argv[i]) == "-h" || std::string(argv[i]) == "-help")
+		constexpr std::array<std::pair<const char*, double CLIParser::*>, 6> doubleArgs{ {
+			{ "-tl", &CLIParser::timeLimit },
+			{ "--timelimit", &CLIParser::timeLimit },
+			{ "-th", &CLIParser::theta },
+			{ "--theta", &CLIParser::theta },
+			{ "-rh", &CLIParser::rho },
+			{ "--rho", &CLIParser::rho },
+		} };
+
+		constexpr std::array<std::pair<const char*, unsigned long long CLIParser::*>, 2> ullongArgs{ {
+			{ "-sd", &CLIParser::seed },
+			{ "--seed", &CLIParser::seed },
+		} };
+
+		for (int i = 1; i < argc; ++i) {
+			if (std::string(argv[i]) == "-h" || std::string(argv[i]) == "-help")
+				throw ArgsParserException(printHelp());
+		}
+
+		for (int i = 1; i < argc - 1; i++) {
+			std::string key = argv[i];
+
+			for (const auto& [flag, member] : stringArgs) {
+				if (key == flag) {
+					this->*member = argv[++i];
+					break;
+				}
+			}
+
+			for (const auto& [flag, member] : doubleArgs) {
+				if (key == flag) {
+					this->*member = std::strtod(argv[++i], nullptr);
+					break;
+				}
+			}
+
+			for (const auto& [flag, member] : ullongArgs) {
+				if (key == flag) {
+					this->*member = std::strtoull(argv[++i], nullptr, 10);
+					break;
+				}
+			}
+		}
+
+		if (fileName.empty() || !timeLimit || !theta || !rho || !seed)
 			throw ArgsParserException(printHelp());
-	}
-
-	for (int i = 1; i < argc - 1; i++) {
-		std::string key = argv[i];
-
-		for (const auto& [flag, member] : stringArgs) {
-			if (key == flag) {
-				this->*member = argv[++i];
-				break;
-			}
-		}
-
-		for (const auto& [flag, member] : doubleArgs) {
-			if (key == flag) {
-				this->*member = std::strtod(argv[++i], nullptr);
-				break;
-			}
-		}
-
-		for (const auto& [flag, member] : ullongArgs) {
-			if (key == flag) {
-				this->*member = std::strtoull(argv[++i], nullptr, 10);
-				break;
-			}
-		}
-	}
-
-	if (fileName.empty() || !timeLimit || !theta || !rho || !seed)
-		throw ArgsParserException(printHelp());
 
 #if ACS_VERBOSE >= VERBOSE
-	Logger::print(Logger::LogLevel::INFO, "Parsed Arguments:\
+		Logger::print(Logger::LogLevel::INFO, "Parsed Arguments:\
                             \n\t - File Name :  \t%s \
                             \n\t - Time Limit : \t%f\
                             \n\t - Theta : \t\t%f\
                             \n\t - Rho : \t\t%f\
                             \n\t - Seed : \t\t%d",
-				  fileName.c_str(), timeLimit, theta, rho, seed);
+					  fileName.c_str(), timeLimit, theta, rho, seed);
 #endif
+		init = true;
+	}
 }

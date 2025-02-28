@@ -4,6 +4,7 @@
 #define FMIP_VAR_OBJ_COEFF 0
 
 FMIP::FMIP(const std::string fileName) : MIP(fileName) {
+	MIPNumVars = getNumCols();
 	setup();
 
 #if ACS_VERBOSE == DEBUG
@@ -13,6 +14,7 @@ FMIP::FMIP(const std::string fileName) : MIP(fileName) {
 }
 
 FMIP::FMIP(const FMIP& otherFMIP) : MIP(otherFMIP) {
+	MIPNumVars = getNumCols();
 
 #if ACS_VERBOSE == DEBUG
 	this->fileName += "_FMIP";
@@ -21,6 +23,7 @@ FMIP::FMIP(const FMIP& otherFMIP) : MIP(otherFMIP) {
 }
 
 FMIP::FMIP(const MIP& otherMIP) : MIP(otherMIP) {
+	MIPNumVars = getNumCols();
 	setup();
 
 #if ACS_VERBOSE == DEBUG

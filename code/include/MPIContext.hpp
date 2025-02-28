@@ -10,24 +10,28 @@
 
 using namespace Utils;
 
-class MPIController {
+class MPIContext {
 
 public:
-	MPIController(int& argc, char**& argv);
-	MPIController(const MPIController&) = delete;
-	MPIController& operator=(const MPIController&) = delete;
+	MPIContext(int& argc, char**& argv);
+	MPIContext(const MPIContext&) = delete;
+	MPIContext& operator=(const MPIContext&) = delete;
 
-	~MPIController();
+	~MPIContext();
 
-	MPIController& addMPIBarrier() {
+	MPIContext& barrier() {
 		MPI_Barrier(MPI_COMM_WORLD);
 		return *this;
 	};
 
-	MPIController& abort() {
+	MPIContext& abort() {
 		MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
 		return *this;
 	};
+
+	MPIContext& broadcast(std::string& value);
+	MPIContext& broadcast(int& value);
+	MPIContext& broadcast(double& value);
 
 	[[nodiscard]]
 	const bool isMasterProcess() { return rank == MASTER; };

@@ -1,18 +1,29 @@
 #include "../include/FMIP.hpp"
 #include "../include/FixPolicy.hpp"
-#include "../include/MPIController.hpp"
+#include "../include/MPIContext.hpp"
 #include "../include/OMIP.hpp"
 
 int main(int argc, char* argv[]) {
-	MPIController MPIEnv(argc, argv);
+	MPIContext MPIEnv(argc, argv);
 
 	try {
-		ArgsParser CLIEnv{ argc, argv };
+		if (MPIEnv.isMasterProcess()) {
+			CLIParser::getInstance(argc, argv);
+		}
+		MPIEnv.barrier();
+
+		auto& CLIEnv = CLIParser::getInstance();
 		Random::setSeed(CLIEnv.getSeed());
 
 		MIP	 originalMIP(CLIEnv.getFileName());
-		FMIP fMIP(CLIEnv.getFileName());
-		OMIP oMIP(CLIEnv.getFileName());
+		FMIP fMIP(originalMIP);
+		OMIP oMIP(originalMIP);
+		if (MPIEnv.isMasterProcess()) {
+			std::cout << originalMIP.getNumCols() << "\n";
+			std::cout << "FMIP - OG VARS: " << fMIP.getMIPNumVars() << "\t vs " << fMIP.getNumCols() << "\n";
+			std::cout << "OMPI - OG VARS: " << oMIP.getMIPNumVars() << "\t vs " << oMIP.getNumCols() << "\n";
+		}
+		return 0;
 
 #if ACS_VERBOSE == DEBUG
 		originalMIP.saveModel();
@@ -47,7 +58,7 @@ int main(int argc, char* argv[]) {
 	} catch (const ArgsParserException& ArgsparserEx) {
 		if (MPIEnv.isMasterProcess())
 			Logger::print(Logger::LogLevel::ERROR, ArgsparserEx.what());
-	} catch (const MIPException& MIPEx){
+	} catch (const MIPException& MIPEx) {
 		if (MPIEnv.isMasterProcess())
 			Logger::print(Logger::LogLevel::ERROR, MIPEx.what());
 	}

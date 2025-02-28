@@ -4,6 +4,7 @@
 #define OMIP_BUD_CONST_SENSE 'L'
 
 OMIP::OMIP(const std::string fileName) : MIP(fileName) {
+	MIPNumVars = getNumCols();
 	setup();
 
 #if ACS_VERBOSE == DEBUG
@@ -13,6 +14,7 @@ OMIP::OMIP(const std::string fileName) : MIP(fileName) {
 }
 
 OMIP::OMIP(const OMIP& otherOMIP) : MIP(otherOMIP) {
+	MIPNumVars = getNumCols();
 
 #if ACS_VERBOSE == DEBUG
 	this->fileName += "_OMIP";
@@ -21,6 +23,7 @@ OMIP::OMIP(const OMIP& otherOMIP) : MIP(otherOMIP) {
 }
 
 OMIP::OMIP(const MIP& otherMIP) : MIP(otherMIP) {
+	MIPNumVars = getNumCols();
 	setup();
 
 #if ACS_VERBOSE == DEBUG
@@ -57,11 +60,10 @@ void OMIP::setup() {
 	addBudgetConstr(CPX_INFBOUND);
 }
 
-OMIP& OMIP::addBudgetConstr(double rhs) {
+void OMIP::addBudgetConstr(double rhs) {
 	std::vector<double> budConstr(getNumCols(), 0);
 	int					start{ getNumCols() - 2 * getNumRows() };
 	for (size_t i{ static_cast<size_t>(start) }; i < getNumCols(); i++)
 		budConstr[i] = 1;
 	addRow(budConstr, OMIP_BUD_CONST_SENSE, rhs);
-	return *this;
 }

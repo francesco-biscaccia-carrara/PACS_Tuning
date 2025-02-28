@@ -88,9 +88,9 @@ add_library(
 )
 
 add_library(
-    MPIController
-    source/MPIController.cpp
-    include/MPIController.hpp
+    MPIContext
+    source/MPIContext.cpp
+    include/MPIContext.hpp
 )
 
 add_library(
@@ -123,7 +123,7 @@ target_link_libraries(
     MIP
     FMIP
     OMIP
-    MPIController
+    MPIContext
     FixPol
     Utils
     # Link MPI explicitly
