@@ -13,6 +13,40 @@ using namespace Utils;
 #define MIP_DUAL_PRIM_GAP_TOL 1e-4
 #define MIP_GAP_TOL 0.0
 
+class MIPException : public std::runtime_error {
+
+public:
+	enum class ExceptionType {
+		General,
+		ModelCreation,
+		OutOfBound,
+		MIPOptimizationError,
+		LPOptimizationError,
+		WrongTimeLimit,
+		FileNotFound,
+		InputSizeError,
+		_count // Helper for array size
+	};
+
+	explicit MIPException(ExceptionType type, const std::string& message) : std::runtime_error(formatMessage(type, message)){};
+
+private:
+	static constexpr std::array<const char*, static_cast<size_t>(ExceptionType::_count)> typeNames = {
+		"_general-ex_",
+		"ModelCreation",
+		"OutOfBounds",
+		"MIPOptimizationError",
+		"LPOptimizationError",
+		"WrongTimeLimit",
+		"FileNotFound",
+		"InputSizeError"
+	};
+
+	static std::string formatMessage(ExceptionType type, const std::string& message) {
+		return "MIPException: [" + std::string(typeNames[static_cast<size_t>(type)]) + "] - " + std::string(message);
+	}
+};
+
 class MIP {
 
 public:
@@ -34,9 +68,9 @@ public:
 	std::vector<double> getSol();
 
 	[[nodiscard]]
-	inline int getNumCols() { return CPXgetnumcols(env, model); }; // num cols = num var
+	inline int getNumCols() noexcept { return CPXgetnumcols(env, model); }; // num cols = num var
 	[[nodiscard]]
-	inline int getNumRows() { return CPXgetnumrows(env, model); }; // num rows = num constr
+	inline int getNumRows() noexcept { return CPXgetnumrows(env, model); }; // num rows = num constr
 
 	MIP& addCol(const std::vector<double>& newCol, const double objCoef, const double lb, const double ub, const std::string name);
 	MIP& addRow(const std::vector<double>& newRow, const char sense, const double rhs);
@@ -52,17 +86,17 @@ public:
 	MIP& setVarsValues(const std::vector<double>& values);
 
 #if ACS_VERBOSE == DEBUG
-	inline MIP& saveModel() {
+	inline MIP& saveModel() noexcept{
 		CPXwriteprob(env, model, (MIP_LOG_DIR + fileName + "_" + id + ".lp").c_str(), NULL);
 		return *this;
 	};
-	inline MIP& saveLog() {
+	inline MIP& saveLog() noexcept{
 		CPXsetlogfilename(env, (CPLEX_LOG_DIR + fileName + "_" + id + ".log").c_str(), "w");
 		return *this;
 	}
 #endif
 
-	~MIP();
+	~MIP() noexcept;
 
 protected:
 	CPXLPptr  model;

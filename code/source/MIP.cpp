@@ -1,6 +1,7 @@
 #include "../include/MIP.hpp"
 
 #define BOTH_BOUNDS 'B'
+using MIPEx = MIPException::ExceptionType;
 
 MIP::MIP(const std::string fileName) {
 #if ACS_VERBOSE == DEBUG
@@ -13,11 +14,11 @@ MIP::MIP(const std::string fileName) {
 	env = CPXopenCPLEX(&status);
 	model = CPXcreateprob(env, &status, "MIP");
 	if (status)
-		Logger::print(Logger::LogLevel::ERROR, "Model not created!");
+		throw MIPException(MIPEx::ModelCreation, "Model not created!");
 
 	status = CPXreadcopyprob(env, model, (INST_DIR + fileName + ".mps").c_str(), "MPS");
 	if (status)
-		Logger::print(Logger::LogLevel::ERROR, "Failed to read the problem from file! %d", status);
+		throw MIPException(MIPEx::FileNotFound, "Failed to read the problem from file!\t" + std::to_string(status));
 
 	CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
 	CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
@@ -41,7 +42,7 @@ MIP::MIP(const MIP& otherMIP) {
 	model = CPXcloneprob(env, otherMIP.model, &status);
 
 	if (status)
-		Logger::print(Logger::LogLevel::ERROR, "Model not cloned!");
+		throw MIPException(MIPEx::ModelCreation, "Model not cloned!");
 
 	CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
 	CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
@@ -55,14 +56,14 @@ MIP::MIP(const MIP& otherMIP) {
 
 MIP& MIP::setNumCores(const int numCores) {
 	if (CPXsetintparam(env, CPX_PARAM_THREADS, numCores))
-		Logger::print(Logger::LogLevel::ERROR, "CPX_PARAM_THREADS not cahanged!");
+		throw MIPException(MIPEx::General, "Number of dedicated cores not changed!");
 	return *this;
 }
 
 int MIP::solve(const double timeLimit) {
 
 	if (timeLimit < EPSILON)
-		Logger::print(Logger::LogLevel::ERROR, "Time-limit (%10.4f) is too short!", timeLimit);
+		throw MIPException(MIPEx::WrongTimeLimit, "Time-limit too short!\t" + std::to_string(timeLimit));
 
 	if (timeLimit < CPX_INFBOUND) [[likely]]
 		CPXsetdblparam(env, CPX_PARAM_TILIM, timeLimit);
@@ -72,7 +73,7 @@ int MIP::solve(const double timeLimit) {
 	changeProbType(CPXPROB_MILP);
 
 	if (int error{ CPXmipopt(env, model) })
-		Logger::print(Logger::LogLevel::ERROR, "CPLEX cannot solve this problem! %d", error);
+		throw MIPException(MIPEx::MIPOptimizationError, "CPLEX cannot solve this problem!\t" + std::to_string(error));
 
 	return CPXgetstat(env, model);
 }
@@ -80,9 +81,9 @@ int MIP::solve(const double timeLimit) {
 int MIP::solveRelaxation(const double timeLimit) {
 
 	if (timeLimit < EPSILON)
-		Logger::print(Logger::LogLevel::ERROR, "Time-limit (%10.4f) is too short!", timeLimit);
+		throw MIPException(MIPEx::WrongTimeLimit, "Time-limit too short!\t" + std::to_string(timeLimit));
 
-	if (timeLimit < CPX_INFBOUND)
+	if (timeLimit < CPX_INFBOUND) [[likely]]
 		CPXsetdblparam(env, CPX_PARAM_TILIM, timeLimit);
 
 	changeProbType(CPXPROB_MILP); // Necessary to get vars type
@@ -95,7 +96,7 @@ int MIP::solveRelaxation(const double timeLimit) {
 	changeProbType(CPXPROB_LP);
 
 	if (int error{ CPXlpopt(env, model) })
-		Logger::print(Logger::LogLevel::ERROR, "CPLEX cannot solve the problem relaxation! %d", error);
+		throw MIPException(MIPEx::LPOptimizationError, "CPLEX cannot solve the relaxed problem!\t" + std::to_string(error));
 
 	return CPXgetstat(env, model);
 }
@@ -103,7 +104,7 @@ int MIP::solveRelaxation(const double timeLimit) {
 double MIP::getObjValue() {
 	double objValue;
 	if (int error{ CPXgetobjval(env, model, &objValue) })
-		Logger::print(Logger::LogLevel::ERROR, "Unable to obtain obj value! %d", error);
+		throw MIPException(MIPEx::General, "Unable to obtain obj value!\t" + std::to_string(error));
 	return objValue;
 }
 
@@ -111,7 +112,7 @@ std::vector<double> MIP::getObjFunction() {
 	int		numCols{ getNumCols() };
 	double* objFun{ (double*)calloc(numCols, sizeof(double)) };
 	if (CPXgetobj(env, model, objFun, 0, numCols - 1))
-		Logger::print(Logger::LogLevel::ERROR, "Unable to get obj. coefficients!");
+		throw MIPException(MIPEx::General, "Unable to get obj_function coefficients!");
 	std::vector<double> obj(objFun, objFun + numCols);
 	free(objFun);
 	return obj;
@@ -120,13 +121,13 @@ std::vector<double> MIP::getObjFunction() {
 MIP& MIP::setObjFunction(const std::vector<double>& newObj) {
 	int numCols{ getNumCols() };
 	if (newObj.size() != numCols)
-		Logger::print(Logger::LogLevel::ERROR, "No suitable obj_function coefficients"); // TODO: Assert type
+		throw MIPException(MIPEx::InputSizeError, "Wrong new obj_function size");
 
 	int* indices{ (int*)malloc(numCols * sizeof(int)) };
 	for (size_t i{ 0 }; i < numCols; i++)
 		indices[i] = i;
 	if (CPXchgobj(env, model, numCols, indices, &newObj[0]))
-		Logger::print(Logger::LogLevel::ERROR, "obj_function not changed");
+		throw MIPException(MIPEx::General, "obj_function not changed");
 	free(indices);
 	return *this;
 }
@@ -135,7 +136,7 @@ std::vector<double> MIP::getSol() {
 	int		numCols{ getNumCols() };
 	double* xStar{ (double*)calloc(numCols, sizeof(double)) };
 	if (CPXgetx(env, model, xStar, 0, numCols - 1))
-		Logger::print(Logger::LogLevel::ERROR, "Unable to obtain the solution!");
+		throw MIPException(MIPEx::General, "Unable to obtain the solution!");
 	std::vector<double> sol(xStar, xStar + numCols);
 	free(xStar);
 	return sol;
@@ -145,7 +146,7 @@ MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef, const 
 	int numRow{ getNumRows() };
 
 	if (newCol.size() != numRow)
-		Logger::print(Logger::LogLevel::ERROR, "Wrong column size!"); // TODO: Assert type
+		throw MIPException(MIPEx::InputSizeError, "Wrong new column size");
 
 	char** cname{ (char**)calloc(1, sizeof(char*)) };
 	char   colName[name.length()];
@@ -163,7 +164,7 @@ MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef, const 
 	}
 
 	if (CPXaddcols(env, model, 1, nnz, &objCoef, &start, indices, values, &lb, &ub, &cname[0]))
-		Logger::print(Logger::LogLevel::ERROR, "No Column added!");
+		throw MIPException(MIPEx::General, "No column added!");
 	free(cname);
 	free(indices);
 	free(values);
@@ -174,7 +175,7 @@ MIP& MIP::addRow(const std::vector<double>& newRow, const char sense, const doub
 	int numCols{ getNumCols() };
 
 	if (newRow.size() != numCols)
-		Logger::print(Logger::LogLevel::ERROR, "Wrong row size!"); // TODO: Assert type exe
+		throw MIPException(MIPEx::InputSizeError, "Wrong new row size");
 
 	int*	indices{ (int*)malloc(numCols * sizeof(int)) };
 	double* values{ (double*)malloc(numCols * sizeof(double)) };
@@ -188,7 +189,7 @@ MIP& MIP::addRow(const std::vector<double>& newRow, const char sense, const doub
 	}
 
 	if (CPXaddrows(env, model, 0, 1, nnz, &rhs, &sense, &start, indices, values, NULL, NULL))
-		Logger::print(Logger::LogLevel::ERROR, "No Column added!");
+		throw MIPException(MIPEx::General, "No row added!");
 	free(indices);
 	free(values);
 	return *this;
@@ -196,56 +197,56 @@ MIP& MIP::addRow(const std::vector<double>& newRow, const char sense, const doub
 
 MIP& MIP::removeRow(const int index) {
 	if (index < 0 || index > getNumRows() - 1)
-		Logger::print(Logger::LogLevel::ERROR, "Wrong index removeRow()!");
+		throw MIPException(MIPEx::OutOfBound, "Wrong index removeRow()!");
 
 	if (CPXdelrows(env, model, index, index))
-		Logger::print(Logger::LogLevel::ERROR, "Row not removed!");
+		throw MIPException(MIPEx::General, "Row not removed!");
 	return *this;
 }
 
 MIP& MIP::removeCol(const int index) {
 	if (index < 0 || index > getNumCols() - 1)
-		Logger::print(Logger::LogLevel::ERROR, "Wrong index removeCol()!");
+		throw MIPException(MIPEx::OutOfBound, "Wrong index removeCol()!");
 
 	if (CPXdelcols(env, model, index, index))
-		Logger::print(Logger::LogLevel::ERROR, "Row not removed!");
+		throw MIPException(MIPEx::General, "Column not removed!");
 	return *this;
 }
 
 VarBounds MIP::getVarBounds(const int index) {
 	if (index < 0 || index > getNumCols() - 1)
-		Logger::print(Logger::LogLevel::ERROR, "Wrong index getVarBounds()!");
-
+		throw MIPException(MIPEx::OutOfBound, "Wrong index getVarBounds()!");
 	double lb = CPX_INFBOUND, ub = CPX_INFBOUND;
 	if (CPXgetlb(env, model, &lb, index, index))
-		Logger::print(Logger::LogLevel::ERROR, "Unable to get the var lower_bound!");
+		throw MIPException(MIPEx::General, "Unable to get the var lower_bound!");
+
 	if (CPXgetub(env, model, &ub, index, index))
-		Logger::print(Logger::LogLevel::ERROR, "Unable to get the var upper_bound!");
+		throw MIPException(MIPEx::General, "Unable to get the var upper_bound!");
 	return VarBounds{ .lowerBound{ lb }, .upperBound{ ub } };
 }
 
 char MIP::getVarType(const int index) {
 	if (index < 0 || index > getNumCols() - 1)
-		Logger::print(Logger::LogLevel::ERROR, "Wrong index getVarType()!");
+		throw MIPException(MIPEx::OutOfBound, "Wrong index getVarType()!");
 
 	char type;
 	if (int error{ CPXgetctype(env, model, &type, index, index) })
-		Logger::print(Logger::LogLevel::ERROR, "Unable to get var %d type! %d", index, error);
+		throw MIPException(MIPEx::General, "Unable to get var " + std::to_string(index) + "type!\t" + std::to_string(error));
 	return type;
 }
 
 MIP& MIP::changeVarType(const int index, const char type) {
 	if (index < 0 || index > getNumCols() - 1)
-		Logger::print(Logger::LogLevel::ERROR, "Wrong index changeVarType()!");
+		throw MIPException(MIPEx::OutOfBound, "Wrong index changeVarType()!");
 
 	if (CPXchgctype(env, model, 1, &index, &type))
-		Logger::print(Logger::LogLevel::ERROR, "Type of var %d not changed!", index);
+		throw MIPException(MIPEx::General, "Type of var" + std::to_string(index) + "not changed!");
 	return *this;
 }
 
 MIP& MIP::setVarValues(const int index, const double val) {
 	if (index < 0 || index > getNumCols() - 1)
-		Logger::print(Logger::LogLevel::ERROR, "Wrong index in setVarValues()!");
+		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarValues()!");
 
 	char bound{ BOTH_BOUNDS };
 	CPXchgbds(env, model, 1, &index, &bound, &val);
@@ -256,7 +257,7 @@ MIP& MIP::setVarsValues(const std::vector<double>& values) {
 	int numCols{ getNumCols() };
 
 	if (values.size() != numCols)
-		Logger::print(Logger::LogLevel::ERROR, "Wrong values size!");
+		throw MIPException(MIPEx::InputSizeError, "Wrong new values_array size!");
 	for (size_t i{ 0 }; i < numCols; i++)
 		if (values[i] < CPX_INFBOUND / 2)
 			setVarValues(i, values[i]);
@@ -270,6 +271,7 @@ MIP::~MIP() {
 
 MIP& MIP::changeProbType(const int type) {
 	if (CPXchgprobtype(env, model, type))
-		Logger::print(Logger::LogLevel::ERROR, "Problem type not changed");
+		throw MIPException(MIPEx::General, "Problem type not changed!");
+
 	return *this;
 }

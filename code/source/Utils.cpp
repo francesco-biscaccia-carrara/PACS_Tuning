@@ -8,14 +8,14 @@ static std::mt19937_64 rng{ std::random_device{}() };
 
 static bool isSeedSet{ false };
 
-static void printHelp() {
-	Logger::print(Logger::LogLevel::ERROR, "Usage: ./main [OPTIONS]\
+static std::string printHelp() {
+	return "Usage: ./main [OPTIONS]\
         \n '-h  / --help'\t\t\t Show help message\
         \n '-f  / --filename <string>'\t Input file\
         \n '-tl / --timelimit <double>'\t Max execution time;\
         \n '-th / --theta <double (0,1)>'\t %% of vars to fix in the initially;\
         \n '-rh / --rho <double (0,1)>'\t %% of vars to fix per ACS iteration;\
-        \n '-sd / --seed <u long long>'\t Random seed;");
+        \n '-sd / --seed <u long long>'\t Random seed;";
 }
 
 #pragma endregion
@@ -71,11 +71,6 @@ void Logger::print(LogLevel typeMsg, const char* format, ...) {
 	va_end(args);
 
 	printf("%s\n", ANSI_COLOR_RESET);
-
-	fflush(stdout);
-
-	if (typeMsg == LogLevel::ERROR)
-		std::exit(1);
 }
 
 double Clock::getTime() {
@@ -115,7 +110,7 @@ ArgsParser::ArgsParser(int argc, char* argv[]) : fileName{ "" }, timeLimit{ 0.0 
 
 	for (int i = 1; i < argc; ++i) {
 		if (std::string(argv[i]) == "-h" || std::string(argv[i]) == "-help")
-			printHelp();
+			throw ArgsParserException(printHelp());
 	}
 
 	for (int i = 1; i < argc - 1; i++) {
@@ -144,7 +139,7 @@ ArgsParser::ArgsParser(int argc, char* argv[]) : fileName{ "" }, timeLimit{ 0.0 
 	}
 
 	if (fileName.empty() || !timeLimit || !theta || !rho || !seed)
-		printHelp();
+		throw ArgsParserException(printHelp());
 
 #if ACS_VERBOSE >= VERBOSE
 	Logger::print(Logger::LogLevel::INFO, "Parsed Arguments:\

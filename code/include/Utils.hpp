@@ -4,11 +4,13 @@
 #include <algorithm>
 #include <array>
 #include <cstdarg>
+#include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <random>
 #include <set>
 #include <sstream>
+#include <stdexcept>
 #include <string.h>
 #include <string>
 #include <sys/time.h>
@@ -37,7 +39,7 @@ namespace Utils {
 		enum class LogLevel { ERROR,
 							  WARN,
 							  INFO,
-							  OUT};
+							  OUT };
 
 		void print(LogLevel typeMsg, const char* msg, ...);
 
@@ -58,6 +60,12 @@ namespace Utils {
 		static double timeElapsed(const double initTime);
 	};
 
+	class ArgsParserException : public std::runtime_error {
+
+	public:
+		explicit ArgsParserException(const std::string& message) : std::runtime_error("ArgsParserException: " + message){};
+	};
+
 	class ArgsParser {
 
 	public:
@@ -65,11 +73,11 @@ namespace Utils {
 		ArgsParser(const ArgsParser&) = delete;
 		ArgsParser& operator=(const ArgsParser&) = delete;
 
-		inline std::string		  getFileName() { return fileName; };
-		inline double			  getTimeLimit() { return timeLimit; };
-		inline double			  getTheta() { return theta; };
-		inline double			  getRho() { return rho; };
-		inline unsigned long long getSeed() { return seed; };
+		inline std::string		  getFileName() noexcept { return fileName; };
+		inline double			  getTimeLimit() noexcept { return timeLimit; };
+		inline double			  getTheta() noexcept { return theta; };
+		inline double			  getRho() noexcept { return rho; };
+		inline unsigned long long getSeed() noexcept { return seed; };
 
 		~ArgsParser() = default;
 
