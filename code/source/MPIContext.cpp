@@ -37,6 +37,20 @@ MPIContext& MPIContext::broadcast(double& value) {
 	return *this;
 }
 
+MPIContext& MPIContext::broadcast(unsigned long long& value) {
+	MPI_Bcast(&value, 1, MPI_UNSIGNED_LONG_LONG, MASTER, MPI_COMM_WORLD);
+	return *this;
+}
+
+MPIContext& MPIContext::broadcast(Args& CLIargs) {
+	broadcast(CLIargs.fileName);
+	broadcast(CLIargs.timeLimit);
+	broadcast(CLIargs.theta);
+	broadcast(CLIargs.rho);
+	broadcast(CLIargs.seed);
+	return *this;
+}
+
 MPIContext::~MPIContext() {
 #if ACS_VERBOSE >= VERBOSE
 	if (rank == MASTER)

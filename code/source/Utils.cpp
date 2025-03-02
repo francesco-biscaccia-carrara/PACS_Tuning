@@ -25,6 +25,12 @@ void Random::setSeed(unsigned long long newSeed) {
 	isSeedSet = true;
 }
 
+#if ACS_VERBOSE >= VERBOSE
+unsigned long long Random::getSeed() {
+	return rng();
+}
+#endif
+
 // MIN and MAX are included
 int Random::Int(int min, int max) {
 	if (!isSeedSet)
@@ -87,33 +93,26 @@ double Clock::timeElapsed(const double initTime) {
 	return ((double)tv.tv_sec) + ((double)tv.tv_usec / 1e+6) - initTime;
 }
 
-bool CLIParser::init = false;
+CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName{ "" }, .timeLimit{ 0.0 }, .theta{ 0.0 }, .rho{ 0.0 }, .seed{ 0 } } {
+	if (argc > 0 && argv != nullptr) {
 
-CLIParser& CLIParser::getInstance(int argc, char* argv[]) {
-	static CLIParser instance(argc, argv);
-	return instance;
-}
-
-CLIParser::CLIParser(int argc, char* argv[]) : fileName{ "" }, timeLimit{ 0.0 }, theta{ 0.0 }, rho{ 0.0 }, seed{ 0 } {
-	if (argc > 0 && argv != nullptr && !init) {
-
-		constexpr std::array<std::pair<const char*, std::string CLIParser::*>, 2> stringArgs{ {
-			{ "-f", &CLIParser::fileName },
-			{ "--filename", &CLIParser::fileName },
+		constexpr std::array<std::pair<const char*, std::string Args::*>, 2> stringArgs{ {
+			{ "-f", &Args::fileName },
+			{ "--filename", &Args::fileName },
 		} };
 
-		constexpr std::array<std::pair<const char*, double CLIParser::*>, 6> doubleArgs{ {
-			{ "-tl", &CLIParser::timeLimit },
-			{ "--timelimit", &CLIParser::timeLimit },
-			{ "-th", &CLIParser::theta },
-			{ "--theta", &CLIParser::theta },
-			{ "-rh", &CLIParser::rho },
-			{ "--rho", &CLIParser::rho },
+		constexpr std::array<std::pair<const char*, double Args::*>, 6> doubleArgs{ {
+			{ "-tl", &Args::timeLimit },
+			{ "--timelimit", &Args::timeLimit },
+			{ "-th", &Args::theta },
+			{ "--theta", &Args::theta },
+			{ "-rh", &Args::rho },
+			{ "--rho", &Args::rho },
 		} };
 
-		constexpr std::array<std::pair<const char*, unsigned long long CLIParser::*>, 2> ullongArgs{ {
-			{ "-sd", &CLIParser::seed },
-			{ "--seed", &CLIParser::seed },
+		constexpr std::array<std::pair<const char*, unsigned long long Args::*>, 2> ullongArgs{ {
+			{ "-sd", &Args::seed },
+			{ "--seed", &Args::seed },
 		} };
 
 		for (int i = 1; i < argc; ++i) {
@@ -126,27 +125,27 @@ CLIParser::CLIParser(int argc, char* argv[]) : fileName{ "" }, timeLimit{ 0.0 },
 
 			for (const auto& [flag, member] : stringArgs) {
 				if (key == flag) {
-					this->*member = argv[++i];
+					args.*member = argv[++i];
 					break;
 				}
 			}
 
 			for (const auto& [flag, member] : doubleArgs) {
 				if (key == flag) {
-					this->*member = std::strtod(argv[++i], nullptr);
+					args.*member = std::strtod(argv[++i], nullptr);
 					break;
 				}
 			}
 
 			for (const auto& [flag, member] : ullongArgs) {
 				if (key == flag) {
-					this->*member = std::strtoull(argv[++i], nullptr, 10);
+					args.*member = std::strtoull(argv[++i], nullptr, 10);
 					break;
 				}
 			}
 		}
 
-		if (fileName.empty() || !timeLimit || !theta || !rho || !seed)
+		if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed)
 			throw ArgsParserException(printHelp());
 
 #if ACS_VERBOSE >= VERBOSE
@@ -156,8 +155,9 @@ CLIParser::CLIParser(int argc, char* argv[]) : fileName{ "" }, timeLimit{ 0.0 },
                             \n\t - Theta : \t\t%f\
                             \n\t - Rho : \t\t%f\
                             \n\t - Seed : \t\t%d",
-					  fileName.c_str(), timeLimit, theta, rho, seed);
+					  args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed);
 #endif
-		init = true;
+	} else {
+		throw ArgsParserException(printHelp());
 	}
 }

@@ -30,7 +30,16 @@ namespace Utils {
 		double upperBound;
 	};
 
+	struct Args {
+		std::string		   fileName;
+		double			   timeLimit, theta, rho;
+		unsigned long long seed;
+	};
+
 	namespace Random {
+#if ACS_VERBOSE >= VERBOSE
+		unsigned long long getSeed();
+#endif
 		void setSeed(unsigned long long newSeed);
 		int	 Int(int min, int max);
 	}; // namespace Random
@@ -69,26 +78,17 @@ namespace Utils {
 	class CLIParser {
 
 	public:
-		static CLIParser& getInstance(int argc = 0, char* argv[] = nullptr);
+		CLIParser(int argc = 0, char* argv[] = nullptr);
 		CLIParser(const CLIParser&) = delete;
 		CLIParser& operator=(const CLIParser&) = delete;
+		CLIParser(const CLIParser&&) = delete;
+		CLIParser& operator=(const CLIParser&&) = delete;
 
-		inline std::string		  getFileName() noexcept { return fileName; };
-		inline double			  getTimeLimit() noexcept { return timeLimit; };
-		inline double			  getTheta() noexcept { return theta; };
-		inline double			  getRho() noexcept { return rho; };
-		inline unsigned long long getSeed() noexcept { return seed; };
-
+		inline Args getArgs() { return args; }
 		~CLIParser() = default;
 
 	private:
-		CLIParser(int argc = 0, char* argv[] = nullptr);
-		std::string		   fileName;
-		double			   timeLimit;
-		double			   theta;
-		double			   rho;
-		unsigned long long seed;
-		static bool		   init; // Singleton initilization
+		Args args;
 	};
 
 } // namespace Utils

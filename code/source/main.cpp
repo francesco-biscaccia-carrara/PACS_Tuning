@@ -7,54 +7,58 @@ int main(int argc, char* argv[]) {
 	MPIContext MPIEnv(argc, argv);
 
 	try {
+		Args CLIArgs;
+		std::vector<double> initIntegerSol;
+
 		if (MPIEnv.isMasterProcess()) {
-			CLIParser::getInstance(argc, argv);
+			CLIParser CLIEnv(argc, argv);
+			CLIArgs = CLIEnv.getArgs();
+			Random::setSeed(CLIArgs.seed);
+			FMIP initFMIP(CLIArgs.fileName);
+			std::vector<double> initSol(initFMIP.getMIPNumVars(),CPX_INFBOUND);
+			FixPolicy::firstThetaFixing(initFMIP,initSol,CLIArgs.theta,CLIArgs.timeLimit);
 		}
 		MPIEnv.barrier();
 
-		auto& CLIEnv = CLIParser::getInstance();
-		Random::setSeed(CLIEnv.getSeed());
+		MPIEnv.broadcast(CLIArgs).barrier();
 
-		MIP	 originalMIP(CLIEnv.getFileName());
-		FMIP fMIP(originalMIP);
-		OMIP oMIP(originalMIP);
-		if (MPIEnv.isMasterProcess()) {
-			std::cout << originalMIP.getNumCols() << "\n";
-			std::cout << "FMIP - OG VARS: " << fMIP.getMIPNumVars() << "\t vs " << fMIP.getNumCols() << "\n";
-			std::cout << "OMPI - OG VARS: " << oMIP.getMIPNumVars() << "\t vs " << oMIP.getNumCols() << "\n";
-		}
+		if(!MPIEnv.isMasterProcess())
+			Random::setSeed(CLIArgs.seed+MPIEnv.getRank());
+
+		FMIP fMIP(CLIArgs.fileName);
+		
 		return 0;
 
-#if ACS_VERBOSE == DEBUG
-		originalMIP.saveModel();
-		fMIP.saveModel().saveLog();
-		oMIP.saveModel().saveLog();
-#endif
+		// #if ACS_VERBOSE == DEBUG
+		// 		originalMIP.saveModel();
+		// 		fMIP.saveModel().saveLog();
+		// 		oMIP.saveModel().saveLog();
+		// #endif
 
-		int					xLength = originalMIP.getNumCols();
-		std::vector<double> initSol(xLength, CPX_INFBOUND);
-		FixPolicy::fixTest(initSol);
+		// 		int					xLength = originalMIP.getNumCols();
+		// 		std::vector<double> initSol(xLength, CPX_INFBOUND);
+		// 		FixPolicy::fixTest(initSol);
 
-		double FMIPCost = CPX_INFBOUND;
-		double initTime = Clock::getTime();
+		// 		double FMIPCost = CPX_INFBOUND;
+		// 		double initTime = Clock::getTime();
 
-		while ((FMIPCost < -EPSILON || FMIPCost > EPSILON) &&
-			   Clock::timeElapsed(initTime) < CLIEnv.getTimeLimit()) {
-			FixPolicy::randomRhoFix(initSol, CLIEnv.getRho());
-			initSol.resize(fMIP.getNumCols(), CPX_INFBOUND);
-			fMIP.setVarsValues(initSol);
-			fMIP.solve(CLIEnv.getTimeLimit());
-			FMIPCost = fMIP.getObjValue();
-			std::cout << "FMIP cost:" << FMIPCost << std::endl;
-			std::vector<double> first_sol = fMIP.getSol();
-			FixPolicy::randomRhoFix(first_sol, CLIEnv.getRho());
-			first_sol.resize(fMIP.getNumCols(), CPX_INFBOUND);
-			oMIP.setVarsValues(first_sol);
-			oMIP.updateBudgetConstr(fMIP.getObjValue());
-			oMIP.solve(CLIEnv.getTimeLimit());
-			std::cout << "OMIP cost:" << oMIP.getObjValue() << std::endl;
-			initSol = oMIP.getSol();
-		}
+		// 		while ((FMIPCost < -EPSILON || FMIPCost > EPSILON) &&
+		// 			   Clock::timeElapsed(initTime) < CLIEnv.getTimeLimit()) {
+		// 			FixPolicy::randomRhoFix(initSol, CLIEnv.getRho());
+		// 			initSol.resize(fMIP.getNumCols(), CPX_INFBOUND);
+		// 			fMIP.setVarsValues(initSol);
+		// 			fMIP.solve(CLIEnv.getTimeLimit());
+		// 			FMIPCost = fMIP.getObjValue();
+		// 			std::cout << "FMIP cost:" << FMIPCost << std::endl;
+		// 			std::vector<double> first_sol = fMIP.getSol();
+		// 			FixPolicy::randomRhoFix(first_sol, CLIEnv.getRho());
+		// 			first_sol.resize(fMIP.getNumCols(), CPX_INFBOUND);
+		// 			oMIP.setVarsValues(first_sol);
+		// 			oMIP.updateBudgetConstr(fMIP.getObjValue());
+		// 			oMIP.solve(CLIEnv.getTimeLimit());
+		// 			std::cout << "OMIP cost:" << oMIP.getObjValue() << std::endl;
+		// 			initSol = oMIP.getSol();
+		// 		}
 	} catch (const ArgsParserException& ArgsparserEx) {
 		if (MPIEnv.isMasterProcess())
 			Logger::print(Logger::LogLevel::ERROR, ArgsparserEx.what());

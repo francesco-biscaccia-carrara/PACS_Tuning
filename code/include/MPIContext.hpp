@@ -32,6 +32,8 @@ public:
 	MPIContext& broadcast(std::string& value);
 	MPIContext& broadcast(int& value);
 	MPIContext& broadcast(double& value);
+	MPIContext& broadcast(unsigned long long& value);
+	MPIContext& broadcast(Args& CLIargs);
 
 	[[nodiscard]]
 	const bool isMasterProcess() { return rank == MASTER; };
