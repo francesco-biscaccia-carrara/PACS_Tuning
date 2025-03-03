@@ -42,12 +42,26 @@ MPIContext& MPIContext::broadcast(unsigned long long& value) {
 	return *this;
 }
 
-MPIContext& MPIContext::broadcast(Args& CLIargs) {
-	broadcast(CLIargs.fileName);
-	broadcast(CLIargs.timeLimit);
-	broadcast(CLIargs.theta);
-	broadcast(CLIargs.rho);
-	broadcast(CLIargs.seed);
+MPIContext& MPIContext::broadcast(Args& value) {
+	broadcast(value.fileName);
+	broadcast(value.timeLimit);
+	broadcast(value.theta);
+	broadcast(value.rho);
+	broadcast(value.seed);
+	return *this;
+}
+
+MPIContext& MPIContext::broadcast(std::vector<double>& value) {
+	if (rank == MASTER) {
+		int length = value.size();
+		MPI_Bcast(&length, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+		MPI_Bcast(value.data(), length, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+	} else {
+		int length;
+		MPI_Bcast(&length, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+		value.resize(length);
+		MPI_Bcast(value.data(), length, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+	}
 	return *this;
 }
 

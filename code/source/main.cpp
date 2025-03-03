@@ -7,27 +7,42 @@ int main(int argc, char* argv[]) {
 	MPIContext MPIEnv(argc, argv);
 
 	try {
-		Args CLIArgs;
+		Args				CLIArgs;
 		std::vector<double> initIntegerSol;
 
 		if (MPIEnv.isMasterProcess()) {
 			CLIParser CLIEnv(argc, argv);
 			CLIArgs = CLIEnv.getArgs();
 			Random::setSeed(CLIArgs.seed);
-			FMIP initFMIP(CLIArgs.fileName);
-			std::vector<double> initSol(initFMIP.getMIPNumVars(),CPX_INFBOUND);
-			FixPolicy::firstThetaFixing(initFMIP,initSol,CLIArgs.theta,CLIArgs.timeLimit);
+			FMIP				initFMIP(CLIArgs.fileName);
+			std::vector<double> initSol(initFMIP.getMIPNumVars(), CPX_INFBOUND);
+			FixPolicy::firstThetaFixing(initFMIP, initSol, CLIArgs.theta, CLIArgs.timeLimit);
+			initIntegerSol = initSol;
 		}
 		MPIEnv.barrier();
 
 		MPIEnv.broadcast(CLIArgs).barrier();
+		MPIEnv.broadcast(initIntegerSol).barrier();
 
-		if(!MPIEnv.isMasterProcess())
-			Random::setSeed(CLIArgs.seed+MPIEnv.getRank());
+		if (!MPIEnv.isMasterProcess())
+			Random::setSeed(CLIArgs.seed + MPIEnv.getRank());
 
-		FMIP fMIP(CLIArgs.fileName);
-		
-		return 0;
+		double FMIPCost = CPX_INFBOUND;
+		double initTime = Clock::getTime();
+
+		while ((FMIPCost < -EPSILON || FMIPCost > EPSILON) &&
+			   Clock::timeElapsed(initTime) < CLIArgs.timeLimit) {
+			double remainingTime{ CLIArgs.timeLimit - Clock::timeElapsed(initTime) };
+			FMIP   fMIP(CLIArgs.fileName);
+			fMIP.setNumCores(4);
+			FixPolicy::randomRhoFix(initIntegerSol, CLIArgs.rho, MPIEnv.getRank());
+			initIntegerSol.resize(fMIP.getNumCols(), CPX_INFBOUND);
+			fMIP.setVarsValues(initIntegerSol).solve(remainingTime / 2);
+			FMIPCost = fMIP.getObjValue();
+			Logger::print(Logger::LogLevel::OUT, "Proc: %3d - FeasMIP Objective: %20.2f", MPIEnv.getRank(), FMIPCost);
+		}
+
+		// 			fMIP.solve(CLIEnv.getTimeLimit());
 
 		// #if ACS_VERBOSE == DEBUG
 		// 		originalMIP.saveModel();
@@ -59,12 +74,10 @@ int main(int argc, char* argv[]) {
 		// 			std::cout << "OMIP cost:" << oMIP.getObjValue() << std::endl;
 		// 			initSol = oMIP.getSol();
 		// 		}
-	} catch (const ArgsParserException& ArgsparserEx) {
+	} catch (const std::runtime_error& ex) {
 		if (MPIEnv.isMasterProcess())
-			Logger::print(Logger::LogLevel::ERROR, ArgsparserEx.what());
-	} catch (const MIPException& MIPEx) {
-		if (MPIEnv.isMasterProcess())
-			Logger::print(Logger::LogLevel::ERROR, MIPEx.what());
+			Logger::print(Logger::LogLevel::ERROR, ex.what());
+		MPIEnv.abort();
 	}
 
 	/*
@@ -92,5 +105,5 @@ int main(int argc, char* argv[]) {
 			break;
 	}
 	*/
-	return 0;
+	return EXIT_SUCCESS;
 }
