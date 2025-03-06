@@ -85,6 +85,9 @@ public:
 	MIP& setVarValues(const int index, const double val);
 	MIP& setVarsValues(const std::vector<double>& values);
 
+	[[nodiscard]]
+	bool checkFeasibility(const std::vector<double>& sol);
+
 #if ACS_VERBOSE == DEBUG
 	inline MIP& saveModel() noexcept{
 		CPXwriteprob(env, model, (MIP_LOG_DIR + fileName + "_" + id + ".lp").c_str(), NULL);

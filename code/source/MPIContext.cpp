@@ -65,6 +65,28 @@ MPIContext& MPIContext::broadcast(std::vector<double>& value) {
 	return *this;
 }
 
+MPIContext& MPIContext::gather(std::vector<double>& source, std::vector<double>& dest) {
+	int				 length = source.size();
+	std::vector<int> lengths(rank == MASTER ? size : 0);
+	MPI_Gather(&length, 1, MPI_INT, lengths.data(), 1, MPI_INT, MASTER, MPI_COMM_WORLD);
+
+	std::vector<int> displs;
+	int				 totalSize = 0;
+	if (rank == MASTER) {
+		displs.resize(size);
+		displs[0] = 0;
+
+		for (int i = 0; i < size; ++i) {
+			displs[i] = displs[i - 1] + lengths[i - 1];
+			totalSize += lengths[i];
+		}
+		dest.resize(totalSize);
+	}
+
+	MPI_Gatherv(source.data(), length, MPI_DOUBLE, rank == MASTER ? dest.data() : nullptr, lengths.data(), displs.data(), MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+	return *this;
+}
+
 MPIContext::~MPIContext() {
 #if ACS_VERBOSE >= VERBOSE
 	if (rank == MASTER)

@@ -34,49 +34,34 @@ int main(int argc, char* argv[]) {
 			   Clock::timeElapsed(initTime) < CLIArgs.timeLimit) {
 			double remainingTime{ CLIArgs.timeLimit - Clock::timeElapsed(initTime) };
 			FMIP   fMIP(CLIArgs.fileName);
-			fMIP.setNumCores(4);
 			FixPolicy::randomRhoFix(initIntegerSol, CLIArgs.rho, MPIEnv.getRank());
 			initIntegerSol.resize(fMIP.getNumCols(), CPX_INFBOUND);
 			fMIP.setVarsValues(initIntegerSol).solve(remainingTime / 2);
+
 			FMIPCost = fMIP.getObjValue();
 			Logger::print(Logger::LogLevel::OUT, "Proc: %3d - FeasMIP Objective: %20.2f", MPIEnv.getRank(), FMIPCost);
+
+			initIntegerSol = fMIP.getSol();
+			// initIntegerSol.resize(fMIP.getMIPNumVars());
+		}
+		MPIEnv.barrier();
+
+		std::vector<double> collectedSol;
+		if (MPIEnv.isMasterProcess()) {
+			std::vector<double> collectedSol_root;
+			collectedSol_root.reserve((MPIEnv.getRank() * initIntegerSol.size()));
+			collectedSol = collectedSol_root;
 		}
 
-		// 			fMIP.solve(CLIEnv.getTimeLimit());
-
-		// #if ACS_VERBOSE == DEBUG
-		// 		originalMIP.saveModel();
-		// 		fMIP.saveModel().saveLog();
-		// 		oMIP.saveModel().saveLog();
-		// #endif
-
-		// 		int					xLength = originalMIP.getNumCols();
-		// 		std::vector<double> initSol(xLength, CPX_INFBOUND);
-		// 		FixPolicy::fixTest(initSol);
-
-		// 		double FMIPCost = CPX_INFBOUND;
-		// 		double initTime = Clock::getTime();
-
-		// 		while ((FMIPCost < -EPSILON || FMIPCost > EPSILON) &&
-		// 			   Clock::timeElapsed(initTime) < CLIEnv.getTimeLimit()) {
-		// 			FixPolicy::randomRhoFix(initSol, CLIEnv.getRho());
-		// 			initSol.resize(fMIP.getNumCols(), CPX_INFBOUND);
-		// 			fMIP.setVarsValues(initSol);
-		// 			fMIP.solve(CLIEnv.getTimeLimit());
-		// 			FMIPCost = fMIP.getObjValue();
-		// 			std::cout << "FMIP cost:" << FMIPCost << std::endl;
-		// 			std::vector<double> first_sol = fMIP.getSol();
-		// 			FixPolicy::randomRhoFix(first_sol, CLIEnv.getRho());
-		// 			first_sol.resize(fMIP.getNumCols(), CPX_INFBOUND);
-		// 			oMIP.setVarsValues(first_sol);
-		// 			oMIP.updateBudgetConstr(fMIP.getObjValue());
-		// 			oMIP.solve(CLIEnv.getTimeLimit());
-		// 			std::cout << "OMIP cost:" << oMIP.getObjValue() << std::endl;
-		// 			initSol = oMIP.getSol();
-		// 		}
+		MPIEnv.barrier();
+		MPIEnv.gather(initIntegerSol, collectedSol).barrier();
+		if (MPIEnv.isMasterProcess()) {
+			// TODO: Merging the solutions and find a fixing set
+		}
 	} catch (const std::runtime_error& ex) {
 		if (MPIEnv.isMasterProcess())
 			Logger::print(Logger::LogLevel::ERROR, ex.what());
+
 		MPIEnv.abort();
 	}
 

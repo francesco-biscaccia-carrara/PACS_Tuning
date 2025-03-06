@@ -259,9 +259,18 @@ MIP& MIP::setVarsValues(const std::vector<double>& values) {
 	if (values.size() != numCols)
 		throw MIPException(MIPEx::InputSizeError, "Wrong new values_array size!");
 	for (size_t i{ 0 }; i < numCols; i++)
-		if (values[i] < CPX_INFBOUND / 2)
+		if (values[i] < CPX_INFBOUND)
 			setVarValues(i, values[i]);
 	return *this;
+}
+
+bool MIP::checkFeasibility(const std::vector<double>& sol) {
+	if (sol.size() != getNumCols())
+		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
+
+	setVarsValues(sol);
+	int status{ solve(CPX_INFBOUND) };
+	return status == CPXMIP_OPTIMAL_TOL || status == CPXMIP_OPTIMAL;
 }
 
 MIP::~MIP() {
