@@ -126,7 +126,7 @@ MIP& MIP::setObjFunction(const std::vector<double>& newObj) {
 	int* indices{ (int*)malloc(numCols * sizeof(int)) };
 	for (size_t i{ 0 }; i < numCols; i++)
 		indices[i] = i;
-	if (CPXchgobj(env, model, numCols, indices, &newObj[0]))
+	if (CPXchgobj(env, model, numCols, indices, newObj.data()))
 		throw MIPException(MIPEx::General, "obj_function not changed");
 	free(indices);
 	return *this;

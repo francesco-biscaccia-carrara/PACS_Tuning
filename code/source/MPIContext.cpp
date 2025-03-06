@@ -17,12 +17,12 @@ MPIContext& MPIContext::broadcast(std::string& value) {
 	if (rank == MASTER) {
 		int length = value.size();
 		MPI_Bcast(&length, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
-		MPI_Bcast(&value[0], length, MPI_CHAR, MASTER, MPI_COMM_WORLD);
+		MPI_Bcast(value.data(), length, MPI_CHAR, MASTER, MPI_COMM_WORLD);
 	} else {
 		int length;
 		MPI_Bcast(&length, 1, MPI_INT, MASTER, MPI_COMM_WORLD);
 		value.resize(length);
-		MPI_Bcast(&value[0], length, MPI_CHAR, MASTER, MPI_COMM_WORLD);
+		MPI_Bcast(value.data(), length, MPI_CHAR, MASTER, MPI_COMM_WORLD);
 	}
 	return *this;
 }
@@ -66,6 +66,18 @@ MPIContext& MPIContext::broadcast(std::vector<double>& value) {
 }
 
 MPIContext& MPIContext::gather(std::vector<double>& source, std::vector<double>& dest) {
+	int length = source.size();
+
+	if (rank == MASTER) {
+		dest.resize(length*size);
+	}
+
+	MPI_Gather(source.data(), length, MPI_DOUBLE, rank == MASTER ? dest.data() : nullptr,length,MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+	return *this;
+}
+
+/* Gather on root std:.vector of double of differnt size
+MPIContext& MPIContext::gatherV(std::vector<double>& source, std::vector<double>& dest) {
 	int				 length = source.size();
 	std::vector<int> lengths(rank == MASTER ? size : 0);
 	MPI_Gather(&length, 1, MPI_INT, lengths.data(), 1, MPI_INT, MASTER, MPI_COMM_WORLD);
@@ -85,7 +97,7 @@ MPIContext& MPIContext::gather(std::vector<double>& source, std::vector<double>&
 
 	MPI_Gatherv(source.data(), length, MPI_DOUBLE, rank == MASTER ? dest.data() : nullptr, lengths.data(), displs.data(), MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
 	return *this;
-}
+}*/
 
 MPIContext::~MPIContext() {
 #if ACS_VERBOSE >= VERBOSE
