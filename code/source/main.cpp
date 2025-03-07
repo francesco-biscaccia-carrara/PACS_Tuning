@@ -20,9 +20,10 @@ int main(int argc, char* argv[]) {
 			initIntegerSol = initSol;
 		}
 		MPIEnv.barrier();
-
+		
 		MPIEnv.broadcast(CLIArgs).barrier();
 		MPIEnv.broadcast(initIntegerSol).barrier();
+		//MIP ogProb(CLIArgs.fileName);
 
 		if (!MPIEnv.isMasterProcess())
 			Random::setSeed(CLIArgs.seed + MPIEnv.getRank());
@@ -39,12 +40,13 @@ int main(int argc, char* argv[]) {
 			fMIP.setVarsValues(initIntegerSol).solve(remainingTime / 2);
 
 			FMIPCost = fMIP.getObjValue();
-			Logger::print(Logger::LogLevel::OUT, "Proc: %3d - FeasMIP Objective: %20.2f", MPIEnv.getRank(), FMIPCost);
+			Logger::print(Logger::LogLevel::OUT, "Proc: %3d - FeasMIP Objective: %20.2f %s", MPIEnv.getRank(), FMIPCost, (FMIPCost > -EPSILON && FMIPCost < EPSILON)? "<-":"");
 
 			initIntegerSol = fMIP.getSol();
-			// initIntegerSol.resize(fMIP.getMIPNumVars());
 		}
 		MPIEnv.barrier();
+		
+		//assert(ogProb.checkFeasibility(initIntegerSol)==true);
 
 		std::vector<double> collectedSol;
 		if (MPIEnv.isMasterProcess()) {
