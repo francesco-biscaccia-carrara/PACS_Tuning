@@ -99,6 +99,13 @@ add_library(
     include/FixPolicy.hpp
 )
 
+add_library(
+    MerPol
+    source/MergePolicy.cpp
+    include/MergePolicy.hpp
+)
+
+
 # ...
 
 find_library(CPLEX_LIBRARY
@@ -125,6 +132,7 @@ target_link_libraries(
     OMIP
     MPIContext
     FixPol
+    MerPol
     Utils
     # Link MPI explicitly
     MPI::MPI_CXX

@@ -55,6 +55,8 @@ public:
 	MIP& operator=(const MIP&) = delete;
 
 	MIP& setNumCores(const int numCores);
+	MIP& setTerminate(int* p);
+	
 	int	 solve(const double timeLimit);
 	int	 solveRelaxation(const double timeLimit);
 
@@ -76,6 +78,7 @@ public:
 	MIP& addRow(const std::vector<double>& newRow, const char sense, const double rhs);
 	MIP& removeRow(const int index);
 	MIP& removeCol(const int index);
+	
 
 	VarBounds getVarBounds(const int index);
 

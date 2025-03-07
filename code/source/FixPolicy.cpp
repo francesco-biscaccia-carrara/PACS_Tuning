@@ -89,7 +89,10 @@ void FixPolicy::randomRhoFix(std::vector<double>& x, double rho, const int cpu) 
 	const size_t start = Random::Int(0, numVars - 1);
 
 #if ACS_VERBOSE >= VERBOSE
-	Logger::print(Logger::LogLevel::INFO, "Proc: %3d FixPolicy::randomRhoFix - %zu vars hard-fixed",cpu, numFixedVars);
+	if(cpu > 0)
+		Logger::print(Logger::LogLevel::INFO, "Proc: %3d FixPolicy::randomRhoFix - %zu vars hard-fixed",cpu, numFixedVars);
+	else
+		Logger::print(Logger::LogLevel::INFO, "FixPolicy::randomRhoFix - %zu vars hard-fixed",numFixedVars);
 #endif
 
 	// SPARSE FIXING

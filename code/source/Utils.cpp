@@ -80,17 +80,11 @@ void Logger::print(LogLevel typeMsg, const char* format, ...) {
 }
 
 double Clock::getTime() {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-
-	return ((double)tv.tv_sec) + ((double)tv.tv_usec / 1e+6);
+	return MPI_Wtime();
 }
 
 double Clock::timeElapsed(const double initTime) {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-
-	return ((double)tv.tv_sec) + ((double)tv.tv_usec / 1e+6) - initTime;
+	return MPI_Wtime() - initTime;
 }
 
 CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName{ "" }, .timeLimit{ 0.0 }, .theta{ 0.0 }, .rho{ 0.0 }, .seed{ 0 } } {

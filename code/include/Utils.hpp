@@ -15,6 +15,7 @@
 #include <string>
 #include <sys/time.h>
 #include <vector>
+#include <mpi.h>
 
 #define NO_VER -1
 #define DEFAULT 0

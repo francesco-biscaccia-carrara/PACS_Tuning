@@ -54,12 +54,18 @@ MIP::MIP(const MIP& otherMIP) {
 	restoreVarType.reserve(getNumCols());
 }
 
+
 MIP& MIP::setNumCores(const int numCores) {
 	if (CPXsetintparam(env, CPX_PARAM_THREADS, numCores))
 		throw MIPException(MIPEx::General, "Number of dedicated cores not changed!");
 	return *this;
 }
 
+MIP& MIP::setTerminate(int* p){
+	if(CPXsetterminate(env,p))
+		throw MIPException(MIPEx::General, "Unable to set terminate condition!");
+	return *this;
+}
 int MIP::solve(const double timeLimit) {
 
 	if (timeLimit < EPSILON)
