@@ -30,7 +30,7 @@ namespace FixPolicy {
 		};
 
 	void firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double theta, double timeLimit);
-	void randomRhoFix(std::vector<double>& x, double rho, const int cpu);
+	void randomRhoFix(std::vector<double>& x, double rho, const int cpu, const char* type) ;
 }; // namespace FixPolicy
 
 #endif

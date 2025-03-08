@@ -37,6 +37,11 @@ namespace Utils {
 		unsigned long long seed;
 	};
 
+	struct Solution{
+		std::vector<double> sol;
+		double slackSum;
+	};
+
 	namespace Random {
 #if ACS_VERBOSE >= VERBOSE
 		unsigned long long getSeed();

@@ -3,7 +3,7 @@
 #define BOTH_BOUNDS 'B'
 using MIPEx = MIPException::ExceptionType;
 
-MIP::MIP(const std::string fileName) {
+MIP::MIP(const std::string fileName,bool relaxable) {
 #if ACS_VERBOSE == DEBUG
 	std::ostringstream oss;
 	this->fileName = fileName;
@@ -22,6 +22,7 @@ MIP::MIP(const std::string fileName) {
 
 	CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
 	CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
+	CPXsetintparam(env, CPXPARAM_MIP_Pool_Capacity, MIP_STORE_INCUMBENT);
 #if ACS_VERBOSE == DEBUG
 	CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
@@ -30,7 +31,7 @@ MIP::MIP(const std::string fileName) {
 	restoreVarType.reserve(getNumCols());
 }
 
-MIP::MIP(const MIP& otherMIP) {
+MIP::MIP(const MIP& otherMIP,bool relaxable) {
 #if ACS_VERBOSE == DEBUG
 	std::ostringstream oss;
 	this->fileName = otherMIP.fileName;
@@ -46,6 +47,7 @@ MIP::MIP(const MIP& otherMIP) {
 
 	CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
 	CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
+	CPXsetintparam(env, CPXPARAM_MIP_Pool_Capacity, MIP_STORE_INCUMBENT);
 #if ACS_VERBOSE == DEBUG
 	CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
@@ -61,11 +63,6 @@ MIP& MIP::setNumCores(const int numCores) {
 	return *this;
 }
 
-MIP& MIP::setTerminate(int* p){
-	if(CPXsetterminate(env,p))
-		throw MIPException(MIPEx::General, "Unable to set terminate condition!");
-	return *this;
-}
 int MIP::solve(const double timeLimit) {
 
 	if (timeLimit < EPSILON)

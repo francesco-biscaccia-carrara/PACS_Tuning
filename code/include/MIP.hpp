@@ -12,6 +12,7 @@ using namespace Utils;
 
 #define MIP_DUAL_PRIM_GAP_TOL 1e-4
 #define MIP_GAP_TOL 0.0
+#define MIP_STORE_INCUMBENT 1
 
 class MIPException : public std::runtime_error {
 
@@ -50,13 +51,12 @@ private:
 class MIP {
 
 public:
-	MIP(const std::string fileName);
-	MIP(const MIP& otherMIP);
+	MIP(const std::string fileName, bool relaxable =false);
+	MIP(const MIP& otherMIP,bool relaxable =false);
 	MIP& operator=(const MIP&) = delete;
 
 	MIP& setNumCores(const int numCores);
-	MIP& setTerminate(int* p);
-	
+
 	int	 solve(const double timeLimit);
 	int	 solveRelaxation(const double timeLimit);
 
@@ -79,7 +79,6 @@ public:
 	MIP& removeRow(const int index);
 	MIP& removeCol(const int index);
 	
-
 	VarBounds getVarBounds(const int index);
 
 	[[nodiscard]]
@@ -114,6 +113,7 @@ protected:
 #endif
 
 private:
+	//TODO: Make it std::optional<std::vector<char>>
 	std::vector<char> restoreVarType;
 
 	MIP& changeProbType(const int type);

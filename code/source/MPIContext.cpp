@@ -51,6 +51,12 @@ MPIContext& MPIContext::broadcast(Args& value) {
 	return *this;
 }
 
+MPIContext& MPIContext::broadcast(Solution& value){
+	broadcast(value.sol);
+	broadcast(value.slackSum);
+	return *this;
+}
+
 MPIContext& MPIContext::broadcast(std::vector<double>& value) {
 	if (rank == MASTER) {
 		int length = value.size();

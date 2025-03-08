@@ -2,7 +2,7 @@
 
 using MPEx = MergePolicy::MergePolicyException::ExceptionType;
 
-std::vector<std::pair<int,double>> MergePolicy::recombine(std::vector<double>& x, int numProc){
+std::vector<std::pair<int,double>> MergePolicy::recombine(std::vector<double>& x, int numProc,const char* phase){
     std::vector<std::pair<int,double>> rtn;
     int subArraysLenght{static_cast<int>(x.size()/numProc)};
     for(size_t i{0}; i< subArraysLenght; i++){
@@ -16,7 +16,7 @@ std::vector<std::pair<int,double>> MergePolicy::recombine(std::vector<double>& x
         if(commonValue) rtn.emplace_back(i,x[i]);
     }
 #if ACS_VERBOSE >= VERBOSE
-Logger::print(Logger::LogLevel::INFO, "MergePolicy::recombine - %zu common vars",rtn.size());
+Logger::print(Logger::LogLevel::INFO, "[%s] - MergePolicy::recombine - %zu common vars",phase,rtn.size());
 #endif
     return rtn;
 }

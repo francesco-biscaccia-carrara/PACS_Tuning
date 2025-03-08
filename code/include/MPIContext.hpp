@@ -35,7 +35,9 @@ public:
 	MPIContext& broadcast(unsigned long long& value);
 	MPIContext& broadcast(Args& value);
 	MPIContext& broadcast(std::vector<double>& value);
+	MPIContext& broadcast(Solution& value);
 	MPIContext& gather(std::vector<double>& source, std::vector<double>& dest);
+	
 
 	[[nodiscard]]
 	const bool isMasterProcess() { return rank == MASTER; };

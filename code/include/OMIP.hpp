@@ -15,7 +15,9 @@ public:
 	OMIP& operator=(const OMIP&) = delete;
 
 	OMIP& updateBudgetConstr(double rhs);
-
+	
+	[[nodiscard]]
+	double getSlackSum();
 	[[nodiscard]]
 	std::vector<double> getSol();
 	[[nodiscard]]
