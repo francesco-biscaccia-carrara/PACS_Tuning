@@ -12,7 +12,6 @@ using namespace Utils;
 
 #define MIP_DUAL_PRIM_GAP_TOL 1e-4
 #define MIP_GAP_TOL 0.0
-#define MIP_STORE_INCUMBENT 1
 
 class MIPException : public std::runtime_error {
 

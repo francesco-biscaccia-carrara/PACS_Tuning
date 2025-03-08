@@ -77,7 +77,7 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double thet
 	}
 }
 
-void FixPolicy::randomRhoFix(std::vector<double>& x, double rho, const int cpu,const char* type) {
+void FixPolicy::randomRhoFix(std::vector<double>& x, double rho, const int cpu, const char* type) {
 	if (rho < EPSILON || rho >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Rho par. must be within (0,1)!");
 

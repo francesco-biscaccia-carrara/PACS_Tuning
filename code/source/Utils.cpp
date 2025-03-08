@@ -5,7 +5,7 @@ using namespace Utils;
 #pragma region STATIC
 
 static std::mt19937_64 rng{ std::random_device{}() };
-
+static unsigned long long storedSeed {0};
 static bool isSeedSet{ false };
 
 static std::string printHelp() {
@@ -22,12 +22,13 @@ static std::string printHelp() {
 
 void Random::setSeed(unsigned long long newSeed) {
 	rng.seed(newSeed);
+	storedSeed = newSeed;
 	isSeedSet = true;
 }
 
 #if ACS_VERBOSE >= VERBOSE
 unsigned long long Random::getSeed() {
-	return rng();
+	return storedSeed;
 }
 #endif
 
@@ -37,7 +38,7 @@ int Random::Int(int min, int max) {
 		Logger::print(Logger::LogLevel::WARN, "Using OS generated seed!");
 
 	if (min > max)
-		Random::Int(max, min);
+		return Random::Int(max, min);
 	std::uniform_int_distribution get{ min, max };
 	return get(rng);
 }

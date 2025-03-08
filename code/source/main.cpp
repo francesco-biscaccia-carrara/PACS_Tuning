@@ -4,6 +4,8 @@
 #include "../include/MPIContext.hpp"
 #include "../include/OMIP.hpp"
 
+//FIXME: Need to exit if no improvement found or solution merging too high
+
 int main(int argc, char* argv[]) {
 	MPIContext MPIEnv(argc, argv);
 
@@ -68,13 +70,9 @@ int main(int argc, char* argv[]) {
 					auto commonValues = MergePolicy::recombine(gatheredSol,MPIEnv.getSize(),"1_Phase");	
 					FMIP MergeFMIP(CLIArgs.fileName);
 			
-					std::vector<double> varToFix(MergeFMIP.getNumCols(),CPX_INFBOUND);
 					for(auto [i,value]: commonValues)
-						varToFix[i]=value;
-					
-					//if(commonValues.size()<=MergeFMIP.getMIPNumVars()*0.5)
-					MergeFMIP.setVarsValues(varToFix);
-			
+						MergeFMIP.setVarValues(i,value);
+	
 					MergeFMIP.solve(abs(CLIArgs.timeLimit - Clock::timeElapsed(initTime)));
 	
 					tmpSol.sol = MergeFMIP.getSol();
@@ -107,11 +105,10 @@ int main(int argc, char* argv[]) {
 				auto commonValues = MergePolicy::recombine(gatheredSol,MPIEnv.getSize(),"2_Phase");
 				OMIP MergeOMIP(CLIArgs.fileName);	
 
-				std::vector<double> varToFix(MergeOMIP.getNumCols(),CPX_INFBOUND);
 				for(auto [i,value]: commonValues)
-					varToFix[i]=value;
+					MergeOMIP.setVarValues(i,value);
 
-				MergeOMIP.updateBudgetConstr(slackSumUB).setVarsValues(varToFix);
+				MergeOMIP.updateBudgetConstr(slackSumUB);
 				MergeOMIP.solve(abs(CLIArgs.timeLimit - Clock::timeElapsed(initTime)));
 
 				tmpSol.sol  = MergeOMIP.getSol();

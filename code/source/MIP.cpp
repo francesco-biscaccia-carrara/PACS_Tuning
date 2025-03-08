@@ -22,7 +22,6 @@ MIP::MIP(const std::string fileName,bool relaxable) {
 
 	CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
 	CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
-	CPXsetintparam(env, CPXPARAM_MIP_Pool_Capacity, MIP_STORE_INCUMBENT);
 #if ACS_VERBOSE == DEBUG
 	CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
@@ -47,7 +46,6 @@ MIP::MIP(const MIP& otherMIP,bool relaxable) {
 
 	CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
 	CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
-	CPXsetintparam(env, CPXPARAM_MIP_Pool_Capacity, MIP_STORE_INCUMBENT);
 #if ACS_VERBOSE == DEBUG
 	CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
