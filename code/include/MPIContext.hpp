@@ -32,6 +32,7 @@ public:
 	MPIContext& broadcast(std::string& value);
 	MPIContext& broadcast(int& value);
 	MPIContext& broadcast(double& value);
+	MPIContext& broadcast(unsigned long& value);
 	MPIContext& broadcast(unsigned long long& value);
 	MPIContext& broadcast(Args& value);
 	MPIContext& broadcast(std::vector<double>& value);

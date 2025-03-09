@@ -43,6 +43,7 @@ int main(int argc, char* argv[]) {
 			if(tmpSol.slackSum > EPSILON){
 				//<-- FMIP in parallel
 				FMIP   fMIP(CLIArgs.fileName);
+				fMIP.setNumCores(CLIArgs.CPLEXCpus);
 				
 				FixPolicy::randomRhoFix(tmpSol.sol, CLIArgs.rho, MPIEnv.getRank(),"FMIP");
 				tmpSol.sol.resize(fMIP.getNumCols(), CPX_INFBOUND);
@@ -86,6 +87,7 @@ int main(int argc, char* argv[]) {
 			double slackSumUB{tmpSol.slackSum};
 			//<-- OMIP in parallel
 			OMIP   oMIP(CLIArgs.fileName);
+			oMIP.setNumCores(CLIArgs.CPLEXCpus);
 			FixPolicy::randomRhoFix(tmpSol.sol, CLIArgs.rho, MPIEnv.getRank(),"OMIP");
 			tmpSol.sol.resize(oMIP.getNumCols(), CPX_INFBOUND);
 

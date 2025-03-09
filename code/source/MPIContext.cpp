@@ -37,6 +37,11 @@ MPIContext& MPIContext::broadcast(double& value) {
 	return *this;
 }
 
+MPIContext& MPIContext::broadcast(unsigned long& value) {
+	MPI_Bcast(&value, 1, MPI_UNSIGNED_LONG, MASTER, MPI_COMM_WORLD);
+	return *this;
+}
+
 MPIContext& MPIContext::broadcast(unsigned long long& value) {
 	MPI_Bcast(&value, 1, MPI_UNSIGNED_LONG_LONG, MASTER, MPI_COMM_WORLD);
 	return *this;
@@ -48,6 +53,7 @@ MPIContext& MPIContext::broadcast(Args& value) {
 	broadcast(value.theta);
 	broadcast(value.rho);
 	broadcast(value.seed);
+	broadcast(value.CPLEXCpus);
 	return *this;
 }
 

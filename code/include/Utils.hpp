@@ -34,6 +34,7 @@ namespace Utils {
 	struct Args {
 		std::string		   fileName;
 		double			   timeLimit, theta, rho;
+		unsigned long		CPLEXCpus;
 		unsigned long long seed;
 	};
 
