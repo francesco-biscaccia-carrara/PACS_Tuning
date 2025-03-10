@@ -50,14 +50,14 @@ private:
 class MIP {
 
 public:
-	MIP(const std::string fileName, bool relaxable =false);
-	MIP(const MIP& otherMIP,bool relaxable =false);
+	MIP(const std::string fileName, bool relaxable = false);
+	MIP(const MIP& otherMIP, bool relaxable = false);
 	MIP& operator=(const MIP&) = delete;
 
 	MIP& setNumCores(const int numCores);
 
-	int	 solve(const double timeLimit);
-	int	 solveRelaxation(const double timeLimit);
+	int solve(const double timeLimit);
+	int solveRelaxation(const double timeLimit);
 
 	[[nodiscard]]
 	double getObjValue();
@@ -77,24 +77,24 @@ public:
 	MIP& addRow(const std::vector<double>& newRow, const char sense, const double rhs);
 	MIP& removeRow(const int index);
 	MIP& removeCol(const int index);
-	
+
 	VarBounds getVarBounds(const int index);
 
 	[[nodiscard]]
 	char getVarType(const int index);
 	MIP& changeVarType(const int index, const char type);
-	MIP& setVarValues(const int index, const double val);
+	MIP& setVarValue(const int index, const double val);
 	MIP& setVarsValues(const std::vector<double>& values);
 
 	[[nodiscard]]
 	bool checkFeasibility(const std::vector<double>& sol);
 
 #if ACS_VERBOSE == DEBUG
-	inline MIP& saveModel() noexcept{
+	inline MIP& saveModel() noexcept {
 		CPXwriteprob(env, model, (MIP_LOG_DIR + fileName + "_" + id + ".lp").c_str(), NULL);
 		return *this;
 	};
-	inline MIP& saveLog() noexcept{
+	inline MIP& saveLog() noexcept {
 		CPXsetlogfilename(env, (CPLEX_LOG_DIR + fileName + "_" + id + ".log").c_str(), "w");
 		return *this;
 	}
@@ -112,7 +112,7 @@ protected:
 #endif
 
 private:
-	//TODO: Make it std::optional<std::vector<char>>
+	// TODO: Make it std::optional<std::vector<char>>
 	std::vector<char> restoreVarType;
 
 	MIP& changeProbType(const int type);

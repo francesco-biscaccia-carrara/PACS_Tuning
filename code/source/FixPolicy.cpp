@@ -77,50 +77,26 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double thet
 	}
 }
 
-void FixPolicy::randomRhoFix(std::vector<double>& x, double rho, const int cpu, const char* type) {
+std::vector<size_t> FixPolicy::randomRhoFix(std::vector<double>& x, double rho, const int cpu, const char* type) {
 	if (rho < EPSILON || rho >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Rho par. must be within (0,1)!");
 
 	const size_t numVars = x.size();
-	if (numVars == 0)
-		return;
-		
+
 	const size_t numFixedVars = static_cast<size_t>(rho * numVars);
 	const size_t start = Random::Int(0, numVars - 1);
 
 #if ACS_VERBOSE >= VERBOSE
-	if(cpu >= 0)
-		Logger::print(Logger::LogLevel::INFO, "Proc: %3d [%s] - FixPolicy::randomRhoFix - %zu vars hard-fixed",cpu, type,numFixedVars);
+	if (cpu >= 0)
+		Logger::print(Logger::LogLevel::INFO, "Proc: %3d [%s] - FixPolicy::randomRhoFix - %zu vars hard-fixed", cpu, type, numFixedVars);
 	else
-		Logger::print(Logger::LogLevel::INFO, "FixPolicy::randomRhoFix - %zu vars hard-fixed",numFixedVars);
+		Logger::print(Logger::LogLevel::INFO, "FixPolicy::randomRhoFix - %zu vars hard-fixed", numFixedVars);
 #endif
+	std::vector<size_t> rtn;
 
-	// SPARSE FIXING
-	if (numFixedVars < numVars / SPARSE_THRESHOLD) {
-		std::vector<std::pair<size_t, double>> fixedValues;
-		fixedValues.reserve(numFixedVars);
-
-		for (size_t i = 0; i < numFixedVars; ++i) {
-			const size_t idx = (start + i) % numVars;
-			fixedValues.emplace_back(idx, x[idx]);
-		}
-
-		std::fill(x.begin(), x.end(), CPX_INFBOUND);
-
-		for (const auto& [i, value] : fixedValues)
-			x[i] = value;
-
+	for (size_t i{ 0 }; i < numFixedVars; i++) {
+		rtn.emplace_back((start + i) % numVars);
 	}
-	// DENSE FIXING
-	else {
-		std::vector<bool> fixedVarFlag(numVars, false);
-		fixedVarFlag.reserve(numVars);
 
-		for (size_t i = 0; i < numFixedVars; i++)
-			fixedVarFlag[(start + i) % numVars] = true;
-
-		for (size_t i = 0; i < numVars; i++)
-			if (!fixedVarFlag[i])
-				x[i] = CPX_INFBOUND;
-	}
+	return rtn;
 }

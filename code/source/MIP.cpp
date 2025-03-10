@@ -3,7 +3,7 @@
 #define BOTH_BOUNDS 'B'
 using MIPEx = MIPException::ExceptionType;
 
-MIP::MIP(const std::string fileName,bool relaxable) {
+MIP::MIP(const std::string fileName, bool relaxable) {
 #if ACS_VERBOSE == DEBUG
 	std::ostringstream oss;
 	this->fileName = fileName;
@@ -30,7 +30,7 @@ MIP::MIP(const std::string fileName,bool relaxable) {
 	restoreVarType.reserve(getNumCols());
 }
 
-MIP::MIP(const MIP& otherMIP,bool relaxable) {
+MIP::MIP(const MIP& otherMIP, bool relaxable) {
 #if ACS_VERBOSE == DEBUG
 	std::ostringstream oss;
 	this->fileName = otherMIP.fileName;
@@ -53,7 +53,6 @@ MIP::MIP(const MIP& otherMIP,bool relaxable) {
 
 	restoreVarType.reserve(getNumCols());
 }
-
 
 MIP& MIP::setNumCores(const int numCores) {
 	if (CPXsetintparam(env, CPX_PARAM_THREADS, numCores))
@@ -106,7 +105,7 @@ double MIP::getObjValue() {
 	double objValue;
 	if (int error{ CPXgetobjval(env, model, &objValue) })
 		throw MIPException(MIPEx::General, "Unable to obtain obj value!\t" + std::to_string(error));
-	return objValue;
+	return (abs(objValue) < EPSILON) ? 0 : objValue;
 }
 
 std::vector<double> MIP::getObjFunction() {
@@ -245,9 +244,9 @@ MIP& MIP::changeVarType(const int index, const char type) {
 	return *this;
 }
 
-MIP& MIP::setVarValues(const int index, const double val) {
+MIP& MIP::setVarValue(const int index, const double val) {
 	if (index < 0 || index > getNumCols() - 1)
-		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarValues()!");
+		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarValue()!");
 
 	char bound{ BOTH_BOUNDS };
 	CPXchgbds(env, model, 1, &index, &bound, &val);
@@ -261,7 +260,7 @@ MIP& MIP::setVarsValues(const std::vector<double>& values) {
 		throw MIPException(MIPEx::InputSizeError, "Wrong new values_array size!");
 	for (size_t i{ 0 }; i < numCols; i++)
 		if (values[i] < CPX_INFBOUND)
-			setVarValues(i, values[i]);
+			setVarValue(i, values[i]);
 	return *this;
 }
 

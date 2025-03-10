@@ -1,15 +1,14 @@
 #include "../include/Utils.hpp"
 
-#define ARGS_CONV_BASE 10 
+#define ARGS_CONV_BASE 10
 
 using namespace Utils;
 
-
 #pragma region STATIC
 
-static std::mt19937_64 rng{ std::random_device{}() };
-static unsigned long long storedSeed {0};
-static bool isSeedSet{ false };
+static std::mt19937_64	  rng{ std::random_device{}() };
+static unsigned long long storedSeed{ 0 };
+static bool				  isSeedSet{ false };
 
 static std::string printHelp() {
 	return "Usage: ./main [OPTIONS]\
@@ -92,7 +91,7 @@ double Clock::timeElapsed(const double initTime) {
 	return MPI_Wtime() - initTime;
 }
 
-CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName{ "" }, .timeLimit{ 0.0 }, .theta{ 0.0 }, .rho{ 0.0 }, .seed{ 0 }, .CPLEXCpus{0}} {
+CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName{ "" }, .timeLimit{ 0.0 }, .theta{ 0.0 }, .rho{ 0.0 }, .CPLEXCpus{ 0 }, .seed{ 0 } } {
 	if (argc > 0 && argv != nullptr) {
 
 		constexpr std::array<std::pair<const char*, std::string Args::*>, 2> stringArgs{ {
@@ -100,7 +99,7 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName{ "" }, .timeLimit
 			{ "--filename", &Args::fileName },
 		} };
 
-		constexpr std::array<std::pair<const char*,unsigned long Args::*>, 2> uLongArgs{ {
+		constexpr std::array<std::pair<const char*, unsigned long Args::*>, 2> uLongArgs{ {
 			{ "-cpus", &Args::CPLEXCpus },
 			{ "--CPLEXCpus", &Args::CPLEXCpus },
 		} };
@@ -143,14 +142,14 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName{ "" }, .timeLimit
 
 			for (const auto& [flag, member] : uLongArgs) {
 				if (key == flag) {
-					args.*member = std::strtoul(argv[++i], nullptr,ARGS_CONV_BASE);
+					args.*member = std::strtoul(argv[++i], nullptr, ARGS_CONV_BASE);
 					break;
 				}
 			}
 
 			for (const auto& [flag, member] : ullongArgs) {
 				if (key == flag) {
-					args.*member = std::strtoull(argv[++i], nullptr,ARGS_CONV_BASE);
+					args.*member = std::strtoull(argv[++i], nullptr, ARGS_CONV_BASE);
 					break;
 				}
 			}
@@ -167,7 +166,7 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName{ "" }, .timeLimit
                             \n\t - Rho : \t\t%f\
 							\n\t - Seed : \t\t%d\
 							\n\t - CPLEX CPUs : \t%d",
-					  args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed,args.CPLEXCpus);
+					  args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.CPLEXCpus);
 #endif
 	} else {
 		throw ArgsParserException(printHelp());

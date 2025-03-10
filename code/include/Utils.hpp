@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <mpi.h>
 #include <random>
 #include <set>
 #include <sstream>
@@ -15,7 +16,6 @@
 #include <string>
 #include <sys/time.h>
 #include <vector>
-#include <mpi.h>
 
 #define NO_VER -1
 #define DEFAULT 0
@@ -34,13 +34,13 @@ namespace Utils {
 	struct Args {
 		std::string		   fileName;
 		double			   timeLimit, theta, rho;
-		unsigned long		CPLEXCpus;
+		unsigned long	   CPLEXCpus;
 		unsigned long long seed;
 	};
 
-	struct Solution{
+	struct Solution {
 		std::vector<double> sol;
-		double slackSum;
+		double				slackSum;
 	};
 
 	namespace Random {

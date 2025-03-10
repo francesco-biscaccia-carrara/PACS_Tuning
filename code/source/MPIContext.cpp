@@ -57,7 +57,7 @@ MPIContext& MPIContext::broadcast(Args& value) {
 	return *this;
 }
 
-MPIContext& MPIContext::broadcast(Solution& value){
+MPIContext& MPIContext::broadcast(Solution& value) {
 	broadcast(value.sol);
 	broadcast(value.slackSum);
 	return *this;
@@ -81,10 +81,10 @@ MPIContext& MPIContext::gather(std::vector<double>& source, std::vector<double>&
 	int length = source.size();
 
 	if (rank == MASTER) {
-		dest.resize(length*size);
+		dest.resize(length * size);
 	}
 
-	MPI_Gather(source.data(), length, MPI_DOUBLE, rank == MASTER ? dest.data() : nullptr,length,MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
+	MPI_Gather(source.data(), length, MPI_DOUBLE, rank == MASTER ? dest.data() : nullptr, length, MPI_DOUBLE, MASTER, MPI_COMM_WORLD);
 	return *this;
 }
 
