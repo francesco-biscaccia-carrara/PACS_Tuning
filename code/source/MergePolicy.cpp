@@ -20,7 +20,7 @@ std::vector<std::pair<int, double>> MergePolicy::recombine(const std::vector<dou
 			rtn.emplace_back(i, x[i]);
 	}
 #if ACS_VERBOSE >= VERBOSE
-	Logger::print(Logger::LogLevel::INFO, "[%s] - MergePolicy::recombine - %zu common vars", phase, rtn.size());
+	PRINT_INFO("[%s] - MergePolicy::recombine - %zu common vars", phase, rtn.size());
 #endif
 	return rtn;
 }

@@ -58,7 +58,7 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double thet
 		}
 
 #if ACS_VERBOSE >= VERBOSE
-		Logger::print(Logger::LogLevel::INFO, "FixPolicy::firstThetaFixing - %zu vars hard-fixed", varsToFix);
+		PRINT_INFO("FixPolicy::firstThetaFixing - %zu vars hard-fixed", varsToFix);
 #endif
 
 		std::vector<double> tmp(x);
@@ -87,10 +87,7 @@ std::vector<size_t> FixPolicy::randomRhoFix(std::vector<double>& x, double rho, 
 	const size_t start = Random::Int(0, numVars - 1);
 
 #if ACS_VERBOSE >= VERBOSE
-	if (cpu >= 0)
-		Logger::print(Logger::LogLevel::INFO, "Proc: %3d [%s] - FixPolicy::randomRhoFix - %zu vars hard-fixed", cpu, type, numFixedVars);
-	else
-		Logger::print(Logger::LogLevel::INFO, "FixPolicy::randomRhoFix - %zu vars hard-fixed", numFixedVars);
+	PRINT_INFO("Proc: %3d [%s] - FixPolicy::randomRhoFix - %zu vars hard-fixed", cpu, type, numFixedVars);
 #endif
 	std::vector<size_t> rtn;
 

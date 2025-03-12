@@ -9,7 +9,6 @@ OMIP::OMIP(const std::string fileName) : MIP(fileName) {
 
 #if ACS_VERBOSE == DEBUG
 	this->fileName += "_OMIP";
-	Logger::print(Logger::LogLevel::INFO, "OMIP-ID:\t%s", id.c_str());
 #endif
 }
 
@@ -18,7 +17,6 @@ OMIP::OMIP(const OMIP& otherOMIP) : MIP(otherOMIP) {
 
 #if ACS_VERBOSE == DEBUG
 	this->fileName += "_OMIP";
-	Logger::print(Logger::LogLevel::INFO, "OMIP-ID:\t%s", id.c_str());
 #endif
 }
 
@@ -28,7 +26,6 @@ OMIP::OMIP(const MIP& otherMIP) : MIP(otherMIP) {
 
 #if ACS_VERBOSE == DEBUG
 	this->fileName += "_OMIP";
-	Logger::print(Logger::LogLevel::INFO, "OMIP-ID:\t%s", id.c_str());
 #endif
 }
 

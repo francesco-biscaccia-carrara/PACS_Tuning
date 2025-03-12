@@ -9,7 +9,7 @@ MPIContext::MPIContext(int& argc, char**& argv) {
 	size = static_cast<unsigned int>(s);
 #if ACS_VERBOSE >= VERBOSE
 	if (rank == MASTER)
-		Logger::print(Logger::LogLevel::INFO, "MPI_Env: Initialized --- Num. process: %u", size);
+		PRINT_INFO("MPI_Env: Initialized --- Num. process: %u", size);
 #endif
 }
 
@@ -52,6 +52,7 @@ MPIContext& MPIContext::broadcast(Args& value) {
 	broadcast(value.timeLimit);
 	broadcast(value.theta);
 	broadcast(value.rho);
+	broadcast(value.LNStimeLimit);
 	broadcast(value.seed);
 	broadcast(value.CPLEXCpus);
 	return *this;
@@ -114,7 +115,7 @@ MPIContext& MPIContext::gatherV(std::vector<double>& source, std::vector<double>
 MPIContext::~MPIContext() {
 #if ACS_VERBOSE >= VERBOSE
 	if (rank == MASTER)
-		Logger::print(Logger::LogLevel::INFO, "MPI_Env: Closed");
+		PRINT_INFO("MPI_Env: Closed");
 #endif
 	MPI_Finalize();
 }

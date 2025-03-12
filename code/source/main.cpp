@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
 
 			tmpSol.sol = initSol;
 			tmpSol.slackSum = initFMIP.getObjValue();
-			Logger::print(Logger::LogLevel::OUT, "Init FeasMIP solution cost: %20.2f", tmpSol.slackSum);
+			PRINT_OUT("Init FeasMIP solution cost: %20.2f", tmpSol.slackSum);
 		}
 
 		MPIEnv.barrier().broadcast(tmpSol).barrier();
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 		while (Clock::timeElapsed(initTime) < CLIArgs.timeLimit) {
 			if (tmpSol.slackSum > EPSILON) {
 				//<-- FMIP in parallel
-				FMIP fMIP(CLIArgs.fileName);
+				FMIP fMIP{CLIArgs.fileName};
 				fMIP.setNumCores(CLIArgs.CPLEXCpus);
 
 				std::vector<size_t> varsToFix = FixPolicy::randomRhoFix(tmpSol.sol, CLIArgs.rho, MPIEnv.getRank(), "FMIP");
@@ -52,11 +52,11 @@ int main(int argc, char* argv[]) {
 					fMIP.setVarValue(i, tmpSol.sol[i]);
 				}
 
-				fMIP.solve(abs(CLIArgs.timeLimit - Clock::timeElapsed(initTime)) / 2);
+				fMIP.solve(CLIArgs.LNStimeLimit);
 
 				tmpSol.sol = fMIP.getSol();
 				tmpSol.slackSum = fMIP.getObjValue();
-				Logger::print(Logger::LogLevel::OUT, "Proc: %3d - FeasMIP Objective: %20.2f", MPIEnv.getRank(), tmpSol.slackSum);
+				PRINT_OUT("Proc: %3d - FeasMIP Objective: %20.2f", MPIEnv.getRank(), tmpSol.slackSum);
 
 				MPIEnv.barrier();
 				//<-- end
@@ -77,11 +77,11 @@ int main(int argc, char* argv[]) {
 					for (auto [i, value] : commonValues)
 						MergeFMIP.setVarValue(i, value);
 
-					MergeFMIP.solve(abs(CLIArgs.timeLimit - Clock::timeElapsed(initTime)));
+					MergeFMIP.solve(CLIArgs.LNStimeLimit);
 
 					tmpSol.sol = MergeFMIP.getSol();
 					tmpSol.slackSum = MergeFMIP.getObjValue();
-					Logger::print(Logger::LogLevel::OUT, "FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
+					PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
 				}
 				//<-- end
 				MPIEnv.barrier().broadcast(tmpSol).barrier();
@@ -89,24 +89,21 @@ int main(int argc, char* argv[]) {
 
 			double slackSumUB{ tmpSol.slackSum };
 			//<-- OMIP in parallel
-			OMIP oMIP(CLIArgs.fileName);
+			OMIP oMIP{CLIArgs.fileName};
 			oMIP.setNumCores(CLIArgs.CPLEXCpus);
 
-			do {
-				std::vector<size_t> varsToFix = FixPolicy::randomRhoFix(tmpSol.sol, CLIArgs.rho, MPIEnv.getRank(), "OMIP");
-				for (auto i : varsToFix) {
-					oMIP.setVarValue(i, tmpSol.sol[i]);
-				}
 
-				oMIP.updateBudgetConstr(slackSumUB);
-				int solveCode{ oMIP.solve(abs(CLIArgs.timeLimit - Clock::timeElapsed(initTime)) / 2) };
-				if (solveCode != CPXMIP_TIME_LIM_INFEAS && solveCode != CPXMIP_OPTIMAL_INFEAS)
-					break;
-			} while (true);
+			std::vector<size_t> varsToFix = FixPolicy::randomRhoFix(tmpSol.sol, CLIArgs.rho, MPIEnv.getRank(), "OMIP");
+			for (auto i : varsToFix) {
+				oMIP.setVarValue(i, tmpSol.sol[i]);
+			}
+
+			oMIP.updateBudgetConstr(slackSumUB);
+			oMIP.solve(CLIArgs.LNStimeLimit);
 
 			tmpSol.sol = oMIP.getSol();
 
-			Logger::print(Logger::LogLevel::OUT, "Proc: %3d - OptMIP Objective: %20.2f", MPIEnv.getRank(), oMIP.getObjValue());
+			PRINT_OUT("Proc: %3d - OptMIP Objective: %20.2f", MPIEnv.getRank(), oMIP.getObjValue());
 			MPIEnv.barrier();
 			//<-- end
 
@@ -121,11 +118,12 @@ int main(int argc, char* argv[]) {
 					MergeOMIP.setVarValue(i, value);
 
 				MergeOMIP.updateBudgetConstr(slackSumUB);
-				MergeOMIP.solve(abs(CLIArgs.timeLimit - Clock::timeElapsed(initTime)));
+				MergeOMIP.solve(CLIArgs.LNStimeLimit);
 
 				tmpSol.sol = MergeOMIP.getSol();
 				tmpSol.slackSum = MergeOMIP.getSlackSum();
-				Logger::print(Logger::LogLevel::OUT, "OptMIP Objective/SlackSum after merging: %12.2f|%-10.2f", MergeOMIP.getObjValue(), tmpSol.slackSum);
+
+				PRINT_OUT("OptMIP Objective/SlackSum after merging: %12.2f|%-10.2f", MergeOMIP.getObjValue(), tmpSol.slackSum);
 			}
 
 			MPIEnv.barrier().broadcast(tmpSol).barrier();
@@ -134,38 +132,13 @@ int main(int argc, char* argv[]) {
 		if (MPIEnv.isMasterProcess()) {
 			MIP og(CLIArgs.fileName);
 			assert(og.checkFeasibility(tmpSol.sol) == true);
-			Logger::print(Logger::LogLevel::WARN, "[FEASIBILITY_TEST]: PASSED");
+			PRINT_WARN("[FEASIBILITY_TEST]: PASSED");
 		}
 
 	} catch (const std::runtime_error& ex) {
-		Logger::print(Logger::LogLevel::ERROR, ex.what());
+		PRINT_ERR(ex.what());
 		MPIEnv.abort();
 	}
 
-	/*
-	switch (STATE) {
-		case CPXMIP_TIME_LIM_FEAS:      // exceeded time limit, found intermediate
-	solution Logger::print(WARN,"exceeded time limit, intermediate solution
-	found."); break; case CPXMIP_TIME_LIM_INFEAS:    // exceeded time limit, no
-	intermediate solution found Logger::print(WARN,"exceeded time limit, no
-	intermediate solution found."); break; case CPXMIP_INFEASIBLE:         //
-	proven to be infeasible Logger::print(Logger::LogLevel::ERROR,"infeasible problem."); break;
-		case CPXMIP_ABORT_FEAS:         // terminated by user, found solution
-			Logger::print(WARN,"terminated by user, found solution found.");
-			break;
-		case CPXMIP_ABORT_INFEAS:       // terminated by user, not found solution
-			Logger::print(WARN,"terminated by user, no solution found.");
-			break;
-		case CPXMIP_OPTIMAL_TOL:        // found optimal within the tollerance
-			Logger::print(WARN,"found optimal within the tollerance.");
-			break;
-		case CPXMIP_OPTIMAL:            // found optimal
-			Logger::print(WARN,"found optimal.");
-			break;
-		default:                        // unhandled status
-			Logger::print(Logger::LogLevel::ERROR,"Unhandled cplex status: %d", STATE);
-			break;
-	}
-	*/
 	return EXIT_SUCCESS;
 }

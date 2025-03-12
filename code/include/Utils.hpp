@@ -24,6 +24,11 @@
 
 #define EPSILON 1e-7
 
+#define PRINT_ERR(format, ...)  Logger::print(Logger::LogLevel::ERROR, format, ##__VA_ARGS__)
+#define PRINT_WARN(format, ...)  Logger::print(Logger::LogLevel::WARN, format, ##__VA_ARGS__)
+#define PRINT_INFO(format, ...) Logger::print(Logger::LogLevel::INFO, format, ##__VA_ARGS__)
+#define PRINT_OUT(format, ...)  Logger::print(Logger::LogLevel::OUT, format, ##__VA_ARGS__)
+
 namespace Utils {
 
 	struct VarBounds {
@@ -33,7 +38,7 @@ namespace Utils {
 
 	struct Args {
 		std::string		   fileName;
-		double			   timeLimit, theta, rho;
+		double			   timeLimit, theta, rho, LNStimeLimit;
 		unsigned long	   CPLEXCpus;
 		unsigned long long seed;
 	};

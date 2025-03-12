@@ -58,6 +58,7 @@ public:
 
 	int solve(const double timeLimit);
 	int solveRelaxation(const double timeLimit);
+	MIP& addMIPStart(const std::vector<double>& MIPStart, bool CPLEXCheck = false);
 
 	[[nodiscard]]
 	double getObjValue();
@@ -98,6 +99,7 @@ public:
 		CPXsetlogfilename(env, (CPLEX_LOG_DIR + fileName + "_" + id + ".log").c_str(), "w");
 		return *this;
 	}
+	std::string getId(){return id;}
 #endif
 
 	~MIP() noexcept;

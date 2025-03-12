@@ -101,11 +101,26 @@ int MIP::solveRelaxation(const double timeLimit) {
 	return CPXgetstat(env, model);
 }
 
+MIP& MIP::addMIPStart(const std::vector<double>& MIPStart, bool CPLEXCheck){
+	int numCols{ getNumCols() };
+	if (MIPStart.size() != numCols)
+		throw MIPException(MIPEx::InputSizeError, "Wrong MIP start length");
+	
+	int start_index = 0;
+	int effort_level = (CPLEXCheck) ? CPX_MIPSTART_CHECKFEAS: CPX_MIPSTART_NOCHECK;
+
+	std::vector<int> indices(MIPStart.size(),0);
+	std::iota(indices.begin(),indices.end(),0);
+	
+	if(int error{CPXaddmipstarts(env,model, 1, MIPStart.size(), &start_index, indices.data(), MIPStart.data(), &effort_level, NULL)})
+		throw MIPException(MIPEx::General, "Unable to set the MIP start!\t" + std::to_string(error));
+}
+
 double MIP::getObjValue() {
 	double objValue;
 	if (int error{ CPXgetobjval(env, model, &objValue) })
 		throw MIPException(MIPEx::General, "Unable to obtain obj value!\t" + std::to_string(error));
-	return (abs(objValue) < EPSILON) ? 0 : objValue;
+	return (abs(objValue) <= EPSILON) ? 0 : objValue;
 }
 
 std::vector<double> MIP::getObjFunction() {
@@ -222,7 +237,7 @@ VarBounds MIP::getVarBounds(const int index) {
 
 	if (CPXgetub(env, model, &ub, index, index))
 		throw MIPException(MIPEx::General, "Unable to get the var upper_bound!");
-	return VarBounds{ .lowerBound{ lb }, .upperBound{ ub } };
+	return VarBounds{ .lowerBound = lb , .upperBound = ub};
 }
 
 char MIP::getVarType(const int index) {
@@ -273,7 +288,7 @@ bool MIP::checkFeasibility(const std::vector<double>& sol) {
 	return status == CPXMIP_OPTIMAL_TOL || status == CPXMIP_OPTIMAL;
 }
 
-MIP::~MIP() {
+MIP::~MIP() noexcept{
 	CPXfreeprob(env, &model);
 	CPXcloseCPLEX(&env);
 }

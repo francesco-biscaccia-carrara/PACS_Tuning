@@ -9,7 +9,6 @@ FMIP::FMIP(const std::string fileName) : MIP(fileName) {
 
 #if ACS_VERBOSE == DEBUG
 	this->fileName += "_FMIP";
-	Logger::print(Logger::LogLevel::INFO, "FMIP-ID:\t%s", id.c_str());
 #endif
 }
 
@@ -18,7 +17,6 @@ FMIP::FMIP(const FMIP& otherFMIP) : MIP(otherFMIP) {
 
 #if ACS_VERBOSE == DEBUG
 	this->fileName += "_FMIP";
-	Logger::print(Logger::LogLevel::INFO, "FMIP-ID:\t%s", id.c_str());
 #endif
 }
 
@@ -28,7 +26,6 @@ FMIP::FMIP(const MIP& otherMIP) : MIP(otherMIP) {
 
 #if ACS_VERBOSE == DEBUG
 	this->fileName += "_FMIP";
-	Logger::print(Logger::LogLevel::INFO, "FMIP-ID:\t%s", id.c_str());
 #endif
 }
 

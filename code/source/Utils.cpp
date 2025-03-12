@@ -18,7 +18,9 @@ static std::string printHelp() {
         \n '-th / --theta <double (0,1)>'\t %% of vars to fix in the initially;\
         \n '-rh / --rho <double (0,1)>'\t %% of vars to fix per ACS iteration;\
         \n '-sd / --seed <u long long>'\t Random seed;\
-		\n '-cpus/ --CPLEXCpus <u long>'\t Number of CPUs for an instance of CPLEX;";
+		\n '-cpus/ --CPLEXCpus <u long>'\t Number of CPUs for an instance of CPLEX;\
+		\n '-LNSt/ --LNStimelimt <double>\t Execution time for each LNS instance'";
+
 }
 
 #pragma endregion
@@ -38,7 +40,7 @@ unsigned long long Random::getSeed() {
 // MIN and MAX are included
 int Random::Int(int min, int max) {
 	if (!isSeedSet)
-		Logger::print(Logger::LogLevel::WARN, "Using OS generated seed!");
+		PRINT_WARN("Using OS generated seed!");
 
 	if (min > max)
 		return Random::Int(max, min);
@@ -91,7 +93,7 @@ double Clock::timeElapsed(const double initTime) {
 	return MPI_Wtime() - initTime;
 }
 
-CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName{ "" }, .timeLimit{ 0.0 }, .theta{ 0.0 }, .rho{ 0.0 }, .CPLEXCpus{ 0 }, .seed{ 0 } } {
+CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "" , .timeLimit = 0.0 , .theta =0.0 , .rho = 0.0 , .CPLEXCpus = 0 , .seed = 0 } {
 	if (argc > 0 && argv != nullptr) {
 
 		constexpr std::array<std::pair<const char*, std::string Args::*>, 2> stringArgs{ {
@@ -104,13 +106,15 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName{ "" }, .timeLimit
 			{ "--CPLEXCpus", &Args::CPLEXCpus },
 		} };
 
-		constexpr std::array<std::pair<const char*, double Args::*>, 6> doubleArgs{ {
+		constexpr std::array<std::pair<const char*, double Args::*>, 8> doubleArgs{ {
 			{ "-tl", &Args::timeLimit },
 			{ "--timelimit", &Args::timeLimit },
 			{ "-th", &Args::theta },
 			{ "--theta", &Args::theta },
 			{ "-rh", &Args::rho },
 			{ "--rho", &Args::rho },
+			{ "-LNSt", &Args::LNStimeLimit },
+			{ "--LNStimelimt", &Args::LNStimeLimit }
 		} };
 
 		constexpr std::array<std::pair<const char*, unsigned long long Args::*>, 2> ullongArgs{ {
@@ -155,18 +159,20 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName{ "" }, .timeLimit
 			}
 		}
 
-		if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.CPLEXCpus)
+		if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.LNStimeLimit ||!args.seed || !args.CPLEXCpus)
 			throw ArgsParserException(printHelp());
 
 #if ACS_VERBOSE >= VERBOSE
-		Logger::print(Logger::LogLevel::INFO, "Parsed Arguments:\
+		PRINT_INFO("Parsed Arguments:\
                             \n\t - File Name :  \t%s \
                             \n\t - Time Limit : \t%f\
                             \n\t - Theta : \t\t%f\
                             \n\t - Rho : \t\t%f\
 							\n\t - Seed : \t\t%d\
-							\n\t - CPLEX CPUs : \t%d",
-					  args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.CPLEXCpus);
+							\n\t - CPLEX CPUs : \t%d\
+							\n\t - LNS Time Limt : \t%f",
+		
+					  args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.CPLEXCpus,args.LNStimeLimit);
 #endif
 	} else {
 		throw ArgsParserException(printHelp());
