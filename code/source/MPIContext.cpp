@@ -52,9 +52,9 @@ MPIContext& MPIContext::broadcast(Args& value) {
 	broadcast(value.timeLimit);
 	broadcast(value.theta);
 	broadcast(value.rho);
-	broadcast(value.LNStimeLimit);
+	broadcast(value.LNSDtimeLimit);
 	broadcast(value.seed);
-	broadcast(value.CPLEXCpus);
+	broadcast(value.numsubMIPs);
 	return *this;
 }
 

@@ -15,7 +15,7 @@ bool allInteger(std::vector<double>& x) {
 	return true;
 }
 
-void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double theta, double timeLimit) {
+void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double theta) {
 	if (theta < EPSILON || theta >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Theta par. must be within (0,1)!");
 
@@ -64,7 +64,7 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double thet
 		std::vector<double> tmp(x);
 		tmp.resize(fMIP.getNumCols(), CPX_INFBOUND);
 		fMIP.setVarsValues(tmp);
-		fMIP.solveRelaxation(timeLimit);
+		fMIP.solveRelaxation();
 
 		std::vector<double> lpSol = fMIP.getSol();
 		for (size_t i = 0; i < lpSol.size(); ++i) {

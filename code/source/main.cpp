@@ -5,8 +5,6 @@
 #include "../include/OMIP.hpp"
 #include <assert.h>
 
-// FIXME: Need to exit if no improvement found or solution merging too high
-
 int main(int argc, char* argv[]) {
 	MPIContext MPIEnv(argc, argv);
 
@@ -29,7 +27,7 @@ int main(int argc, char* argv[]) {
 			FMIP initFMIP(CLIArgs.fileName);
 			tmpSol.sol.reserve(initFMIP.getMIPNumVars());
 			std::vector<double> initSol(initFMIP.getMIPNumVars(), CPX_INFBOUND);
-			FixPolicy::firstThetaFixing(initFMIP, initSol, CLIArgs.theta, CPX_INFBOUND);
+			FixPolicy::firstThetaFixing(initFMIP, initSol, CLIArgs.theta);
 
 			tmpSol.sol = initSol;
 			tmpSol.slackSum = initFMIP.getObjValue();
@@ -45,14 +43,14 @@ int main(int argc, char* argv[]) {
 			if (tmpSol.slackSum > EPSILON) {
 				//<-- FMIP in parallel
 				FMIP fMIP{CLIArgs.fileName};
-				fMIP.setNumCores(CLIArgs.CPLEXCpus);
+				fMIP.setNumCores(CLIArgs.numsubMIPs);
 
 				std::vector<size_t> varsToFix = FixPolicy::randomRhoFix(tmpSol.sol, CLIArgs.rho, MPIEnv.getRank(), "FMIP");
 				for (auto i : varsToFix) {
 					fMIP.setVarValue(i, tmpSol.sol[i]);
 				}
 
-				fMIP.solve(CLIArgs.LNStimeLimit);
+				fMIP.solve(CLIArgs.LNSDtimeLimit);
 
 				tmpSol.sol = fMIP.getSol();
 				tmpSol.slackSum = fMIP.getObjValue();
@@ -77,7 +75,7 @@ int main(int argc, char* argv[]) {
 					for (auto [i, value] : commonValues)
 						MergeFMIP.setVarValue(i, value);
 
-					MergeFMIP.solve(CLIArgs.LNStimeLimit);
+					MergeFMIP.solve(CLIArgs.LNSDtimeLimit);
 
 					tmpSol.sol = MergeFMIP.getSol();
 					tmpSol.slackSum = MergeFMIP.getObjValue();
@@ -90,7 +88,7 @@ int main(int argc, char* argv[]) {
 			double slackSumUB{ tmpSol.slackSum };
 			//<-- OMIP in parallel
 			OMIP oMIP{CLIArgs.fileName};
-			oMIP.setNumCores(CLIArgs.CPLEXCpus);
+			oMIP.setNumCores(CLIArgs.numsubMIPs);
 
 
 			std::vector<size_t> varsToFix = FixPolicy::randomRhoFix(tmpSol.sol, CLIArgs.rho, MPIEnv.getRank(), "OMIP");
@@ -99,7 +97,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			oMIP.updateBudgetConstr(slackSumUB);
-			oMIP.solve(CLIArgs.LNStimeLimit);
+			oMIP.solve(CLIArgs.LNSDtimeLimit);
 
 			tmpSol.sol = oMIP.getSol();
 
@@ -118,7 +116,7 @@ int main(int argc, char* argv[]) {
 					MergeOMIP.setVarValue(i, value);
 
 				MergeOMIP.updateBudgetConstr(slackSumUB);
-				MergeOMIP.solve(CLIArgs.LNStimeLimit);
+				MergeOMIP.solve(CLIArgs.LNSDtimeLimit);
 
 				tmpSol.sol = MergeOMIP.getSol();
 				tmpSol.slackSum = MergeOMIP.getSlackSum();

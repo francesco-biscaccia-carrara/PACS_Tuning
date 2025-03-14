@@ -18,8 +18,8 @@ static std::string printHelp() {
         \n '-th / --theta <double (0,1)>'\t %% of vars to fix in the initially;\
         \n '-rh / --rho <double (0,1)>'\t %% of vars to fix per ACS iteration;\
         \n '-sd / --seed <u long long>'\t Random seed;\
-		\n '-cpus/ --CPLEXCpus <u long>'\t Number of CPUs for an instance of CPLEX;\
-		\n '-LNSt/ --LNStimelimt <double>\t Execution time for each LNS instance'";
+		\n '-nSMIPS/ --numsubMIPs <u long>'\t Number of subMIP in paralle phase;\
+		\n '-LNSDt/ --LNSDtimelimit <double>\t Execution time for each LNS instance'";
 
 }
 
@@ -93,7 +93,7 @@ double Clock::timeElapsed(const double initTime) {
 	return MPI_Wtime() - initTime;
 }
 
-CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "" , .timeLimit = 0.0 , .theta =0.0 , .rho = 0.0 , .CPLEXCpus = 0 , .seed = 0 } {
+CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "" , .timeLimit = 0.0 , .theta =0.0 , .rho = 0.0 , .numsubMIPs = 0 , .seed = 0 } {
 	if (argc > 0 && argv != nullptr) {
 
 		constexpr std::array<std::pair<const char*, std::string Args::*>, 2> stringArgs{ {
@@ -102,8 +102,8 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "" , .timeLimit
 		} };
 
 		constexpr std::array<std::pair<const char*, unsigned long Args::*>, 2> uLongArgs{ {
-			{ "-cpus", &Args::CPLEXCpus },
-			{ "--CPLEXCpus", &Args::CPLEXCpus },
+			{ "-nSMIPS", &Args::numsubMIPs },
+			{ "--numsubMIPs", &Args::numsubMIPs },
 		} };
 
 		constexpr std::array<std::pair<const char*, double Args::*>, 8> doubleArgs{ {
@@ -113,8 +113,8 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "" , .timeLimit
 			{ "--theta", &Args::theta },
 			{ "-rh", &Args::rho },
 			{ "--rho", &Args::rho },
-			{ "-LNSt", &Args::LNStimeLimit },
-			{ "--LNStimelimt", &Args::LNStimeLimit }
+			{ "-LNSDt", &Args::LNSDtimeLimit },
+			{ "--LNSDtimelimit", &Args::LNSDtimeLimit }
 		} };
 
 		constexpr std::array<std::pair<const char*, unsigned long long Args::*>, 2> ullongArgs{ {
@@ -159,7 +159,7 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "" , .timeLimit
 			}
 		}
 
-		if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.LNStimeLimit ||!args.seed || !args.CPLEXCpus)
+		if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.LNSDtimeLimit ||!args.seed || !args.numsubMIPs)
 			throw ArgsParserException(printHelp());
 
 #if ACS_VERBOSE >= VERBOSE
@@ -170,9 +170,9 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "" , .timeLimit
                             \n\t - Rho : \t\t%f\
 							\n\t - Seed : \t\t%d\
 							\n\t - CPLEX CPUs : \t%d\
-							\n\t - LNS Time Limt : \t%f",
+							\n\t - LNS DTime Limiit : \t%f",
 		
-					  args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.CPLEXCpus,args.LNStimeLimit);
+					  args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs,args.LNSDtimeLimit);
 #endif
 	} else {
 		throw ArgsParserException(printHelp());

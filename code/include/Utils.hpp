@@ -38,14 +38,14 @@ namespace Utils {
 
 	struct Args {
 		std::string		   fileName;
-		double			   timeLimit, theta, rho, LNStimeLimit;
-		unsigned long	   CPLEXCpus;
+		double			   timeLimit, theta, rho, LNSDtimeLimit;
+		unsigned long	   numsubMIPs;
 		unsigned long long seed;
 	};
 
 	struct Solution {
 		std::vector<double> sol;
-		double				slackSum;
+		double				slackSum, oMIPCost;
 	};
 
 	namespace Random {

@@ -60,13 +60,16 @@ MIP& MIP::setNumCores(const int numCores) {
 	return *this;
 }
 
-int MIP::solve(const double timeLimit) {
+int MIP::solve(const double timeLimit, const double detTimeLimit) {
 
 	if (timeLimit < EPSILON)
 		throw MIPException(MIPEx::WrongTimeLimit, "Time-limit too short!\t" + std::to_string(timeLimit));
 
 	if (timeLimit < CPX_INFBOUND) [[likely]]
 		CPXsetdblparam(env, CPX_PARAM_TILIM, timeLimit);
+		
+	if (detTimeLimit < CPX_INFBOUND) [[likely]]
+		CPXsetdblparam(env,CPX_PARAM_DETTILIM, detTimeLimit);
 
 	for (size_t i{ 0 }; i < restoreVarType.size(); i++)
 		changeVarType(i, restoreVarType[i]);
@@ -114,6 +117,7 @@ MIP& MIP::addMIPStart(const std::vector<double>& MIPStart, bool CPLEXCheck){
 	
 	if(int error{CPXaddmipstarts(env,model, 1, MIPStart.size(), &start_index, indices.data(), MIPStart.data(), &effort_level, NULL)})
 		throw MIPException(MIPEx::General, "Unable to set the MIP start!\t" + std::to_string(error));
+	return *this;
 }
 
 double MIP::getObjValue() {

@@ -56,8 +56,8 @@ public:
 
 	MIP& setNumCores(const int numCores);
 
-	int solve(const double timeLimit);
-	int solveRelaxation(const double timeLimit);
+	int solve(const double timeLimit = CPX_INFBOUND, const double detTimeLimit = CPX_INFBOUND);
+	int solveRelaxation(const double timeLimit = CPX_INFBOUND);
 	MIP& addMIPStart(const std::vector<double>& MIPStart, bool CPLEXCheck = false);
 
 	[[nodiscard]]
