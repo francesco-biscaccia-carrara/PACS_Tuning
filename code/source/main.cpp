@@ -1,12 +1,49 @@
 #include "../include/FMIP.hpp"
 #include "../include/FixPolicy.hpp"
-#include "../include/MPIContext.hpp"
+#include "../include/MTContext.hpp"
 #include "../include/MergePolicy.hpp"
 #include "../include/OMIP.hpp"
 #include <assert.h>
 
 int main(int argc, char* argv[]) {
-	MPIContext MPIEnv(argc, argv);
+	try {
+		Args CLIArgs = CLIParser(argc,argv).getArgs();
+		MTContext MTEnv(CLIArgs.numsubMIPs,CLIArgs.seed);
+
+		Solution tmpSol={.sol = std::vector<double>(), .slackSum = CPX_INFBOUND,.oMIPCost = CPX_INFBOUND};
+
+		FMIP initFMIP(CLIArgs.fileName);
+		tmpSol.sol.reserve(initFMIP.getMIPNumVars());
+		std::vector<double> initSol(initFMIP.getMIPNumVars(), CPX_INFBOUND);
+		FixPolicy::firstThetaFixing(initFMIP, initSol, CLIArgs.theta, Random(CLIArgs.seed));
+
+		tmpSol.sol = initSol;
+		tmpSol.slackSum = initFMIP.getObjValue();
+		PRINT_OUT("Init FeasMIP solution cost: %20.2f", tmpSol.slackSum);
+
+		//"Send" the init sol to all threads as init sol
+		for(size_t i{0};i<CLIArgs.numsubMIPs;i++){
+			MTEnv.setTmpSolution(i,tmpSol);
+		}
+		double initTime = Clock::getTime();
+
+		while (Clock::timeElapsed(initTime) < CLIArgs.timeLimit) {
+			MTEnv.parallelFMIPOptimization( CLIArgs.timeLimit-Clock::timeElapsed(initTime), CLIArgs);
+
+		}
+		
+	
+	} catch (const std::runtime_error& ex) {
+		PRINT_ERR(ex.what());
+	}
+
+
+
+
+
+
+	
+/*	MPIContext MPIEnv(argc, argv);
 
 	try {
 		Args				CLIArgs;
@@ -137,6 +174,6 @@ int main(int argc, char* argv[]) {
 		PRINT_ERR(ex.what());
 		MPIEnv.abort();
 	}
-
+*/
 	return EXIT_SUCCESS;
 }

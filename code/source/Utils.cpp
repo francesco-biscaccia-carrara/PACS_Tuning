@@ -6,10 +6,6 @@ using namespace Utils;
 
 #pragma region STATIC
 
-static std::mt19937_64	  rng{ std::random_device{}() };
-static unsigned long long storedSeed{ 0 };
-static bool				  isSeedSet{ false };
-
 static std::string printHelp() {
 	return "Usage: ./main [OPTIONS]\
         \n '-h  / --help'\t\t\t Show help message\
@@ -18,32 +14,33 @@ static std::string printHelp() {
         \n '-th / --theta <double (0,1)>'\t %% of vars to fix in the initially;\
         \n '-rh / --rho <double (0,1)>'\t %% of vars to fix per ACS iteration;\
         \n '-sd / --seed <u long long>'\t Random seed;\
-		\n '-nSMIPS/ --numsubMIPs <u long>'\t Number of subMIP in paralle phase;\
+		\n '-nSMIPs/ --numsubMIPs <u long>'\t Number of subMIP in paralle phase;\
 		\n '-LNSDt/ --LNSDtimelimit <double>\t Execution time for each LNS instance'";
 
 }
 
 #pragma endregion
 
-void Random::setSeed(unsigned long long newSeed) {
+Random::Random(unsigned long long newSeed): seed{newSeed}{
 	rng.seed(newSeed);
-	storedSeed = newSeed;
-	isSeedSet = true;
 }
+
+// Random::Random(Random& otherRND){
+// 	Random(otherRND.seed);
+//}
+
 
 #if ACS_VERBOSE >= VERBOSE
 unsigned long long Random::getSeed() {
-	return storedSeed;
+	return seed;
 }
 #endif
 
 // MIN and MAX are included
 int Random::Int(int min, int max) {
-	if (!isSeedSet)
-		PRINT_WARN("Using OS generated seed!");
-
 	if (min > max)
 		return Random::Int(max, min);
+
 	std::uniform_int_distribution get{ min, max };
 	return get(rng);
 }
@@ -86,12 +83,19 @@ void Logger::print(LogLevel typeMsg, const char* format, ...) {
 }
 
 double Clock::getTime() {
-	return MPI_Wtime();
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+
+	return ((double)tv.tv_sec) + ((double)tv.tv_usec / 1e+6);
 }
 
 double Clock::timeElapsed(const double initTime) {
-	return MPI_Wtime() - initTime;
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+
+	return ((double)tv.tv_sec) + ((double)tv.tv_usec / 1e+6) - initTime;
 }
+
 
 CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "" , .timeLimit = 0.0 , .theta =0.0 , .rho = 0.0 , .numsubMIPs = 0 , .seed = 0 } {
 	if (argc > 0 && argv != nullptr) {
@@ -102,7 +106,7 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "" , .timeLimit
 		} };
 
 		constexpr std::array<std::pair<const char*, unsigned long Args::*>, 2> uLongArgs{ {
-			{ "-nSMIPS", &Args::numsubMIPs },
+			{ "-nSMIPs", &Args::numsubMIPs },
 			{ "--numsubMIPs", &Args::numsubMIPs },
 		} };
 
@@ -169,7 +173,7 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "" , .timeLimit
                             \n\t - Theta : \t\t%f\
                             \n\t - Rho : \t\t%f\
 							\n\t - Seed : \t\t%d\
-							\n\t - CPLEX CPUs : \t%d\
+							\n\t - Num sub-MIP : \t%d\
 							\n\t - LNS DTime Limiit : \t%f",
 		
 					  args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs,args.LNSDtimeLimit);

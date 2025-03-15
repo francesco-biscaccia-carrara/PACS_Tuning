@@ -15,7 +15,7 @@ bool allInteger(std::vector<double>& x) {
 	return true;
 }
 
-void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double theta) {
+void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double theta, Random rnd) {
 	if (theta < EPSILON || theta >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Theta par. must be within (0,1)!");
 
@@ -50,7 +50,7 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double thet
 				double clampedLower = std::max(-MAX_UB, lowerBound);
 				double clampedUpper = std::min(MAX_UB, upperBound);
 
-				x[idx] = Random::Int(clampedLower, clampedUpper);
+				x[idx] = rnd.Int(clampedLower, clampedUpper);
 				isFixed[idx] = true;
 				numFixedVars++;
 				fixedThisIteration++;
@@ -77,22 +77,20 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double thet
 	}
 }
 
-std::vector<size_t> FixPolicy::randomRhoFix(std::vector<double>& x, double rho, const int cpu, const char* type) {
+std::vector<size_t> FixPolicy::randomRhoFix(const size_t vectorSize, double rho, const char* type, Random rnd) {
 	if (rho < EPSILON || rho >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Rho par. must be within (0,1)!");
 
-	const size_t numVars = x.size();
-
-	const size_t numFixedVars = static_cast<size_t>(rho * numVars);
-	const size_t start = Random::Int(0, numVars - 1);
+	const size_t numFixedVars = static_cast<size_t>(rho * vectorSize);
+	const size_t start = rnd.Int(0, vectorSize - 1);
 
 #if ACS_VERBOSE >= VERBOSE
-	PRINT_INFO("Proc: %3d [%s] - FixPolicy::randomRhoFix - %zu vars hard-fixed", cpu, type, numFixedVars);
+	PRINT_INFO("Proc: %3d [%s] - FixPolicy::randomRhoFix - %zu vars hard-fixed", type, numFixedVars);
 #endif
 	std::vector<size_t> rtn;
 
 	for (size_t i{ 0 }; i < numFixedVars; i++) {
-		rtn.emplace_back((start + i) % numVars);
+		rtn.emplace_back((start + i) % vectorSize);
 	}
 
 	return rtn;

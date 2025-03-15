@@ -10,9 +10,6 @@ endif()
 
 project(main)
 
-# Find and set up MPI
-find_package(MPI REQUIRED)
-
 # setting flags for optimization and debug builds
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "-Og -ggdb")
@@ -60,7 +57,6 @@ endif()
 # build
 
 include_directories(include)
-include_directories(${MPI_INCLUDE_PATH})
 include_directories(${CPLEX_INCLUDE})
 
 add_library(
@@ -88,9 +84,9 @@ add_library(
 )
 
 add_library(
-    MPIContext
-    source/MPIContext.cpp
-    include/MPIContext.hpp
+    MTContext
+    source/MTContext.cpp
+    include/MTContext.hpp
 )
 
 add_library(
@@ -124,18 +120,16 @@ add_executable(
     source/main.cpp
 )
 
-# Link MPI and other libraries to the executable
+# Linking
 target_link_libraries(
     main
     MIP
     FMIP
     OMIP
-    MPIContext
+    MTContext
     FixPol
     MerPol
     Utils
-    # Link MPI explicitly
-    MPI::MPI_CXX
     # Link CPLEX library
     ${CPLEX_LIBRARY}
 )

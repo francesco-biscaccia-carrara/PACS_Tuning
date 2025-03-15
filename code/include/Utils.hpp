@@ -7,7 +7,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-#include <mpi.h>
 #include <random>
 #include <set>
 #include <sstream>
@@ -48,12 +47,22 @@ namespace Utils {
 		double				slackSum, oMIPCost;
 	};
 
-	namespace Random {
+	class Random {
+		public: 
+			Random(unsigned long long newSeed);
+			//FIXME Rewrite copy constructor
+			//Random(Random& otherRND);
+			
+
+			int	 Int(int min, int max);
 #if ACS_VERBOSE >= VERBOSE
-		unsigned long long getSeed();
+			unsigned long long getSeed();
 #endif
-		void setSeed(unsigned long long newSeed);
-		int	 Int(int min, int max);
+			~Random() = default;
+		private: 
+			std::mt19937_64	  rng;
+			unsigned long long seed;
+		
 	}; // namespace Random
 
 	namespace Logger {
