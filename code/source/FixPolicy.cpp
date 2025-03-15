@@ -77,7 +77,7 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double thet
 	}
 }
 
-std::vector<size_t> FixPolicy::randomRhoFix(const size_t vectorSize, double rho, const char* type, Random rnd) {
+std::vector<size_t> FixPolicy::randomRhoFix(const size_t vectorSize, const size_t threadID, double rho, const char* type, Random& rnd) {
 	if (rho < EPSILON || rho >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Rho par. must be within (0,1)!");
 
@@ -85,7 +85,7 @@ std::vector<size_t> FixPolicy::randomRhoFix(const size_t vectorSize, double rho,
 	const size_t start = rnd.Int(0, vectorSize - 1);
 
 #if ACS_VERBOSE >= VERBOSE
-	PRINT_INFO("Proc: %3d [%s] - FixPolicy::randomRhoFix - %zu vars hard-fixed", type, numFixedVars);
+	PRINT_INFO("Proc: %3d [%s] - FixPolicy::randomRhoFix - %zu vars hard-fixed",threadID, type, numFixedVars);
 #endif
 	std::vector<size_t> rtn;
 

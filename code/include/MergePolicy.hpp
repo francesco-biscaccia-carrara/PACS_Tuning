@@ -29,7 +29,7 @@ namespace MergePolicy {
 		}
 	};
 
-	std::vector<std::pair<int, double>> recombine(const std::vector<double>& x, int numProc, const char* phase);
+	std::vector<size_t> recombine(const std::vector<Solution>& x, const char* phase);
 }; // namespace MergePolicy
 
 #endif

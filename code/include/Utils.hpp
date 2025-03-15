@@ -23,10 +23,11 @@
 
 #define EPSILON 1e-7
 
-#define PRINT_ERR(format, ...)  Logger::print(Logger::LogLevel::ERROR, format, ##__VA_ARGS__)
-#define PRINT_WARN(format, ...)  Logger::print(Logger::LogLevel::WARN, format, ##__VA_ARGS__)
+#define PRINT_ERR(format, ...) Logger::print(Logger::LogLevel::ERROR, format, ##__VA_ARGS__)
+#define PRINT_WARN(format, ...) Logger::print(Logger::LogLevel::WARN, format, ##__VA_ARGS__)
 #define PRINT_INFO(format, ...) Logger::print(Logger::LogLevel::INFO, format, ##__VA_ARGS__)
-#define PRINT_OUT(format, ...)  Logger::print(Logger::LogLevel::OUT, format, ##__VA_ARGS__)
+#define PRINT_OUT(format, ...) Logger::print(Logger::LogLevel::OUT, format, ##__VA_ARGS__)
+#define PRINT_BEST(format, ...) Logger::print(Logger::LogLevel::BEST, format, ##__VA_ARGS__)
 
 namespace Utils {
 
@@ -48,28 +49,29 @@ namespace Utils {
 	};
 
 	class Random {
-		public: 
-			Random(unsigned long long newSeed);
-			//FIXME Rewrite copy constructor
-			//Random(Random& otherRND);
-			
+	public:
+		Random(unsigned long long newSeed);
+		// FIXME Rewrite copy constructor
+		// Random(Random& otherRND);
 
-			int	 Int(int min, int max);
+		int Int(int min, int max);
 #if ACS_VERBOSE >= VERBOSE
-			unsigned long long getSeed();
+		unsigned long long getSeed();
 #endif
-			~Random() = default;
-		private: 
-			std::mt19937_64	  rng;
-			unsigned long long seed;
-		
+		~Random() = default;
+
+	private:
+		std::mt19937_64	   rng;
+		unsigned long long seed;
+
 	}; // namespace Random
 
 	namespace Logger {
 		enum class LogLevel { ERROR,
 							  WARN,
 							  INFO,
-							  OUT };
+							  OUT,
+							  BEST };
 
 		void print(LogLevel typeMsg, const char* msg, ...);
 
