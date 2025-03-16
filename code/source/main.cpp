@@ -7,10 +7,10 @@
 
 int main(int argc, char* argv[]) {
 	try {
-		Args CLIArgs = CLIParser(argc,argv).getArgs();
-		MTContext MTEnv(CLIArgs.numsubMIPs,CLIArgs.seed);
+		Args	  CLIArgs = CLIParser(argc, argv).getArgs();
+		MTContext MTEnv(CLIArgs.numsubMIPs, CLIArgs.seed);
 
-		Solution tmpSol={.sol = std::vector<double>(), .slackSum = CPX_INFBOUND,.oMIPCost = CPX_INFBOUND};
+		Solution tmpSol = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
 
 		FMIP initFMIP(CLIArgs.fileName);
 		tmpSol.sol.reserve(initFMIP.getMIPNumVars());
@@ -21,159 +21,72 @@ int main(int argc, char* argv[]) {
 		tmpSol.slackSum = initFMIP.getObjValue();
 		PRINT_OUT("Init FeasMIP solution cost: %20.2f", tmpSol.slackSum);
 
-		//"Send" the init sol to all threads as init sol
-		for(size_t i{0};i<CLIArgs.numsubMIPs;i++){
-			MTEnv.setTmpSolution(i,tmpSol);
-		}
-		double initTime = Clock::getTime();
-
-		while (Clock::timeElapsed(initTime) < CLIArgs.timeLimit) {
-			MTEnv.parallelFMIPOptimization( CLIArgs.timeLimit-Clock::timeElapsed(initTime), CLIArgs);
-
-		}
-		
-	
-	} catch (const std::runtime_error& ex) {
-		PRINT_ERR(ex.what());
-	}
-
-
-
-
-
-
-	
-/*	MPIContext MPIEnv(argc, argv);
-
-	try {
-		Args				CLIArgs;
-		Solution			tmpSol;
-		std::vector<double> gatheredSol;
-
-		if (MPIEnv.isMasterProcess()) {
-			CLIParser CLIEnv(argc, argv);
-			CLIArgs = CLIEnv.getArgs();
-		}
-
-		MPIEnv.barrier().broadcast(CLIArgs).barrier();
-
-		Random::setSeed(CLIArgs.seed + MPIEnv.getRank());
-
-		//<-- Initialize [x,Slack] as IntegerSol
-		if (MPIEnv.isMasterProcess()) {
-			FMIP initFMIP(CLIArgs.fileName);
-			tmpSol.sol.reserve(initFMIP.getMIPNumVars());
-			std::vector<double> initSol(initFMIP.getMIPNumVars(), CPX_INFBOUND);
-			FixPolicy::firstThetaFixing(initFMIP, initSol, CLIArgs.theta);
-
-			tmpSol.sol = initSol;
-			tmpSol.slackSum = initFMIP.getObjValue();
-			PRINT_OUT("Init FeasMIP solution cost: %20.2f", tmpSol.slackSum);
-		}
-
-		MPIEnv.barrier().broadcast(tmpSol).barrier();
-		//<-- end
+		MTEnv.broadcastSol(tmpSol);
 
 		double initTime = Clock::getTime();
 
 		while (Clock::timeElapsed(initTime) < CLIArgs.timeLimit) {
-			if (tmpSol.slackSum > EPSILON) {
-				//<-- FMIP in parallel
-				FMIP fMIP{CLIArgs.fileName};
-				fMIP.setNumCores(CLIArgs.numsubMIPs);
+			if (MTEnv.getBestIncumbent().slackSum > EPSILON) {
 
-				std::vector<size_t> varsToFix = FixPolicy::randomRhoFix(tmpSol.sol, CLIArgs.rho, MPIEnv.getRank(), "FMIP");
-				for (auto i : varsToFix) {
-					fMIP.setVarValue(i, tmpSol.sol[i]);
-				}
+				MTEnv.parallelFMIPOptimization(abs(CLIArgs.timeLimit - Clock::timeElapsed(initTime)), CLIArgs);
 
-				fMIP.solve(CLIArgs.LNSDtimeLimit);
+				auto commonValues = MergePolicy::recombine(MTEnv.getTmpSolutions(), "1_Phase");
 
-				tmpSol.sol = fMIP.getSol();
-				tmpSol.slackSum = fMIP.getObjValue();
-				PRINT_OUT("Proc: %3d - FeasMIP Objective: %20.2f", MPIEnv.getRank(), tmpSol.slackSum);
+				FMIP MergeFMIP(CLIArgs.fileName);
+				MergeFMIP.setNumCores(CPLEX_CORE);
 
-				MPIEnv.barrier();
-				//<-- end
+				for (auto i : commonValues)
+					MergeFMIP.setVarValue(i, MTEnv.getTmpSolution(0).sol[i]);
 
-				if (MPIEnv.isMasterProcess()) {
-					std::vector<double> gatherSol_root;
-					gatherSol_root.reserve((MPIEnv.getRank() * tmpSol.sol.size()));
-					gatheredSol = gatherSol_root;
-				}
+				MergeFMIP.solve(abs(CLIArgs.timeLimit - Clock::timeElapsed(initTime)), CLIArgs.LNSDtimeLimit);
 
-				MPIEnv.barrier().gather(tmpSol.sol, gatheredSol).barrier();
+				tmpSol.sol = MergeFMIP.getSol();
+				tmpSol.slackSum = MergeFMIP.getObjValue();
+				PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
 
-				//<-- Recombination phase
-				if (MPIEnv.isMasterProcess()) {
-					auto commonValues = MergePolicy::recombine(gatheredSol, MPIEnv.getSize(), "1_Phase");
-					FMIP MergeFMIP(CLIArgs.fileName);
-
-					for (auto [i, value] : commonValues)
-						MergeFMIP.setVarValue(i, value);
-
-					MergeFMIP.solve(CLIArgs.LNSDtimeLimit);
-
-					tmpSol.sol = MergeFMIP.getSol();
-					tmpSol.slackSum = MergeFMIP.getObjValue();
-					PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
-				}
-				//<-- end
-				MPIEnv.barrier().broadcast(tmpSol).barrier();
+				MTEnv.broadcastSol(tmpSol);
 			}
 
-			double slackSumUB{ tmpSol.slackSum };
-			//<-- OMIP in parallel
-			OMIP oMIP{CLIArgs.fileName};
-			oMIP.setNumCores(CLIArgs.numsubMIPs);
+			MTEnv.parallelOMIPOptimization(abs(CLIArgs.timeLimit - Clock::timeElapsed(initTime)), CLIArgs, tmpSol.slackSum);
 
+			auto commonValues = MergePolicy::recombine(MTEnv.getTmpSolutions(), "2_Phase");
 
-			std::vector<size_t> varsToFix = FixPolicy::randomRhoFix(tmpSol.sol, CLIArgs.rho, MPIEnv.getRank(), "OMIP");
-			for (auto i : varsToFix) {
-				oMIP.setVarValue(i, tmpSol.sol[i]);
+			OMIP MergeOMIP(CLIArgs.fileName);
+			MergeOMIP.setNumCores(CPLEX_CORE);
+
+			for (auto i : commonValues)
+				MergeOMIP.setVarValue(i, MTEnv.getTmpSolution(0).sol[i]);
+
+			if (MTEnv.getBestIncumbent().slackSum < EPSILON) {
+				std::vector<double> MIPStart(MTEnv.getBestIncumbent().sol);
+				MIPStart.resize(MergeOMIP.getNumCols(), 0.0);
+				MergeOMIP.addMIPStart(MIPStart);
 			}
 
-			oMIP.updateBudgetConstr(slackSumUB);
-			oMIP.solve(CLIArgs.LNSDtimeLimit);
+			MergeOMIP.updateBudgetConstr(tmpSol.slackSum);
+			int rtnValue{ MergeOMIP.solve(abs(CLIArgs.timeLimit - Clock::timeElapsed(initTime)), CLIArgs.LNSDtimeLimit) };
 
-			tmpSol.sol = oMIP.getSol();
+			if (rtnValue == CPXMIP_TIME_LIM_INFEAS)
+				break;
 
-			PRINT_OUT("Proc: %3d - OptMIP Objective: %20.2f", MPIEnv.getRank(), oMIP.getObjValue());
-			MPIEnv.barrier();
-			//<-- end
+			tmpSol.sol = MergeOMIP.getSol();
+			tmpSol.slackSum = MergeOMIP.getSlackSum();
+			tmpSol.oMIPCost = MergeOMIP.getObjValue();
 
-			MPIEnv.gather(tmpSol.sol, gatheredSol).barrier();
-
-			//<-- Recombination phase
-			if (MPIEnv.isMasterProcess()) {
-				auto commonValues = MergePolicy::recombine(gatheredSol, MPIEnv.getSize(), "2_Phase");
-				OMIP MergeOMIP(CLIArgs.fileName);
-
-				for (auto [i, value] : commonValues)
-					MergeOMIP.setVarValue(i, value);
-
-				MergeOMIP.updateBudgetConstr(slackSumUB);
-				MergeOMIP.solve(CLIArgs.LNSDtimeLimit);
-
-				tmpSol.sol = MergeOMIP.getSol();
-				tmpSol.slackSum = MergeOMIP.getSlackSum();
-
-				PRINT_OUT("OptMIP Objective/SlackSum after merging: %12.2f|%-10.2f", MergeOMIP.getObjValue(), tmpSol.slackSum);
-			}
-
-			MPIEnv.barrier().broadcast(tmpSol).barrier();
+			PRINT_OUT("OptMIP Objective|SlackSum after merging: %12.2f|%-10.2f", MergeOMIP.getObjValue(), tmpSol.slackSum);
+			MTEnv.setBestIncumbent(tmpSol);
 		}
 
-		if (MPIEnv.isMasterProcess()) {
-			MIP og(CLIArgs.fileName);
-			assert(og.checkFeasibility(tmpSol.sol) == true);
-			PRINT_WARN("[FEASIBILITY_TEST]: PASSED");
+		MIP		 og(CLIArgs.fileName);
+		Solution incumbent = MTEnv.getBestIncumbent();
+		if (incumbent.sol.empty() || incumbent.slackSum > EPSILON) {
+			PRINT_ERR("NO FEASIBLE SOLUTION FIND");
+		} else {
+			assert(og.checkFeasibility(incumbent.sol) == true);
+			PRINT_BEST("BEST INCUMBENT: %12.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
 		}
-
 	} catch (const std::runtime_error& ex) {
 		PRINT_ERR(ex.what());
-		MPIEnv.abort();
 	}
-*/
 	return EXIT_SUCCESS;
 }

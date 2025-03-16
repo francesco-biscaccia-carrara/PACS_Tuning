@@ -56,8 +56,8 @@ public:
 
 	MIP& setNumCores(const int numCores);
 
-	int solve(const double timeLimit = CPX_INFBOUND, const double detTimeLimit = CPX_INFBOUND);
-	int solveRelaxation(const double timeLimit = CPX_INFBOUND);
+	int	 solve(const double timeLimit = CPX_INFBOUND, const double detTimeLimit = CPX_INFBOUND);
+	int	 solveRelaxation(const double timeLimit = CPX_INFBOUND);
 	MIP& addMIPStart(const std::vector<double>& MIPStart, bool CPLEXCheck = false);
 
 	[[nodiscard]]
@@ -99,7 +99,7 @@ public:
 		CPXsetlogfilename(env, (CPLEX_LOG_DIR + fileName + "_" + id + ".log").c_str(), "w");
 		return *this;
 	}
-	std::string getId(){return id;}
+	std::string getId() { return id; }
 #endif
 
 	~MIP() noexcept;

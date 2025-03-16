@@ -3,7 +3,7 @@
 using MPEx = MergePolicy::MergePolicyException::ExceptionType;
 
 std::vector<size_t> MergePolicy::recombine(const std::vector<Solution>& x, const char* phase) {
-	if(x.empty())
+	if (x.empty())
 		throw MergePolicyException(MPEx::InputSizeError, "Empty vector passed to function");
 
 	std::vector<size_t> rtn;

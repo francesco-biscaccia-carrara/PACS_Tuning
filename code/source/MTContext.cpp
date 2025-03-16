@@ -121,13 +121,11 @@ void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, doubl
 	}
 
 	oMIP.updateBudgetConstr(slackSumUB);
-	if (bestIncumbent.slackSum < EPSILON){
+	if (bestIncumbent.slackSum < EPSILON) {
 		std::vector<double> MIPStart(bestIncumbent.sol);
 		MIPStart.resize(oMIP.getNumCols(), 0.0);
 		oMIP.addMIPStart(MIPStart);
 	}
-
-		
 
 	int solveCode{ oMIP.solve(remTime, CLIArgs.LNSDtimeLimit) };
 

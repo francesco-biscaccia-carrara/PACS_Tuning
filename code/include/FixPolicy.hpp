@@ -29,8 +29,8 @@ namespace FixPolicy {
 		}
 	};
 
-	void				firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double theta,Random rnd);
-	std::vector<size_t> randomRhoFix(const size_t vectorSize, const size_t threadID, double rho, const char* type,Random& rnd);
+	void				firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double theta, Random rnd);
+	std::vector<size_t> randomRhoFix(const size_t vectorSize, const size_t threadID, double rho, const char* type, Random& rnd);
 }; // namespace FixPolicy
 
 #endif

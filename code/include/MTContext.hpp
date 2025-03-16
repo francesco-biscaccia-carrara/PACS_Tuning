@@ -30,16 +30,16 @@ public:
 
 	[[nodiscard]]
 	inline std::vector<Solution> getTmpSolutions() { return tmpSolutions; }
-    [[nodiscard]]
-    inline Solution getTmpSolution(int index) { return tmpSolutions[index]; }
-	MTContext&					 setTmpSolution(int index, Solution& tmpSol);
-	MTContext&					 broadcastSol(Solution& tmpSol);
+	[[nodiscard]]
+	inline Solution getTmpSolution(int index) { return tmpSolutions[index]; }
+	MTContext&		setTmpSolution(int index, Solution& tmpSol);
+	MTContext&		broadcastSol(Solution& tmpSol);
 
 	[[nodiscard]]
 	inline size_t getNumThreads() { return threadIDs.size(); }
 
 	MTContext& parallelFMIPOptimization(double remTime, Args CLIArgs);
-	MTContext& parallelOMIPOptimization(double remTime, Args CLIArgs,double slackSumUB);
+	MTContext& parallelOMIPOptimization(double remTime, Args CLIArgs, double slackSumUB);
 
 	~MTContext();
 
@@ -53,7 +53,7 @@ private:
 
 	void waitAllJobs();
 	void FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs);
-    void OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs,double slackSumUB);
+	void OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, double slackSumUB);
 };
 
 #endif

@@ -85,7 +85,7 @@ std::vector<size_t> FixPolicy::randomRhoFix(const size_t vectorSize, const size_
 	const size_t start = rnd.Int(0, vectorSize - 1);
 
 #if ACS_VERBOSE >= VERBOSE
-	PRINT_INFO("Proc: %3d [%s] - FixPolicy::randomRhoFix - %zu vars hard-fixed",threadID, type, numFixedVars);
+	PRINT_INFO("Proc: %3d [%s] - FixPolicy::randomRhoFix - %zu vars hard-fixed", threadID, type, numFixedVars);
 #endif
 	std::vector<size_t> rtn;
 

@@ -16,19 +16,17 @@ static std::string printHelp() {
         \n '-sd / --seed <u long long>'\t Random seed;\
 		\n '-nSMIPs/ --numsubMIPs <u long>'\t Number of subMIP in paralle phase;\
 		\n '-LNSDt/ --LNSDtimelimit <double>\t Execution time for each LNS instance'";
-
 }
 
 #pragma endregion
 
-Random::Random(unsigned long long newSeed): seed{newSeed}{
+Random::Random(unsigned long long newSeed) : seed{ newSeed } {
 	rng.seed(newSeed);
 }
 
 // Random::Random(Random& otherRND){
 // 	Random(otherRND.seed);
 //}
-
 
 #if ACS_VERBOSE >= VERBOSE
 unsigned long long Random::getSeed() {
@@ -100,8 +98,7 @@ double Clock::timeElapsed(const double initTime) {
 	return ((double)tv.tv_sec) + ((double)tv.tv_usec / 1e+6) - initTime;
 }
 
-
-CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "" , .timeLimit = 0.0 , .theta =0.0 , .rho = 0.0 , .numsubMIPs = 0 , .seed = 0 } {
+CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "", .timeLimit = 0.0, .theta = 0.0, .rho = 0.0, .numsubMIPs = 0, .seed = 0 } {
 	if (argc > 0 && argv != nullptr) {
 
 		constexpr std::array<std::pair<const char*, std::string Args::*>, 2> stringArgs{ {
@@ -114,16 +111,14 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "" , .timeLimit
 			{ "--numsubMIPs", &Args::numsubMIPs },
 		} };
 
-		constexpr std::array<std::pair<const char*, double Args::*>, 8> doubleArgs{ {
-			{ "-tl", &Args::timeLimit },
-			{ "--timelimit", &Args::timeLimit },
-			{ "-th", &Args::theta },
-			{ "--theta", &Args::theta },
-			{ "-rh", &Args::rho },
-			{ "--rho", &Args::rho },
-			{ "-LNSDt", &Args::LNSDtimeLimit },
-			{ "--LNSDtimelimit", &Args::LNSDtimeLimit }
-		} };
+		constexpr std::array<std::pair<const char*, double Args::*>, 8> doubleArgs{ { { "-tl", &Args::timeLimit },
+																					  { "--timelimit", &Args::timeLimit },
+																					  { "-th", &Args::theta },
+																					  { "--theta", &Args::theta },
+																					  { "-rh", &Args::rho },
+																					  { "--rho", &Args::rho },
+																					  { "-LNSDt", &Args::LNSDtimeLimit },
+																					  { "--LNSDtimelimit", &Args::LNSDtimeLimit } } };
 
 		constexpr std::array<std::pair<const char*, unsigned long long Args::*>, 2> ullongArgs{ {
 			{ "-sd", &Args::seed },
@@ -167,7 +162,7 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "" , .timeLimit
 			}
 		}
 
-		if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.LNSDtimeLimit ||!args.seed || !args.numsubMIPs)
+		if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.LNSDtimeLimit || !args.seed || !args.numsubMIPs)
 			throw ArgsParserException(printHelp());
 
 #if ACS_VERBOSE >= VERBOSE
@@ -179,8 +174,8 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "" , .timeLimit
 							\n\t - Seed : \t\t%d\
 							\n\t - Num sub-MIP : \t%d\
 							\n\t - LNS DTime Limiit : \t%f",
-		
-					  args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs,args.LNSDtimeLimit);
+
+				   args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs, args.LNSDtimeLimit);
 #endif
 	} else {
 		throw ArgsParserException(printHelp());
