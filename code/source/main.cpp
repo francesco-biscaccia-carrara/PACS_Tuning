@@ -106,13 +106,14 @@ int main(int argc, char* argv[]) {
 			PRINT_ERR("NO FEASIBLE SOLUTION FIND");
 		} else {
 			assert(og.checkFeasibility(incumbent.sol) == true);
-			PRINT_BEST("BEST INCUMBENT: %12.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
+			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
 		}
 #if LOG
 		Logger::closeFileLog();
 #endif
 	} catch (const std::runtime_error& ex) {
 		PRINT_ERR(ex.what());
+		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;

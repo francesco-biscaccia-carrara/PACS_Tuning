@@ -81,7 +81,7 @@ void Logger::print(LogLevel typeMsg, const char* format, ...) {
 			break;
 		case LogLevel::BEST:
 			msgClr = ANSI_COLOR_GREEN;
-			msgPref = "[ BEST ]";
+			msgPref = "[ OUT* ]";
 			break;
 		default:
 			msgClr = ANSI_COLOR_RESET;
