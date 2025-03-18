@@ -1,7 +1,9 @@
 #include "../include/MTContext.hpp"
 
-MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : numMIPs{ subMIPNum }, bestIncumbent{ .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND } {
+MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : numMIPs{ subMIPNum } {
 
+	bestIncumbent = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
+	bestFMIPIncumbent = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = 0.0 };
 	tmpSolutions = std::vector<Solution>();
 	threads = std::vector<std::thread>();
 
@@ -20,7 +22,7 @@ MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : numMIPs{
 #endif
 }
 
-MTContext& MTContext::setBestIncumbent(Solution sol) {
+MTContext& MTContext::setBestIncumbent(Solution& sol) {
 	if (abs(sol.slackSum) > EPSILON) {
 		return *this;
 	}
@@ -34,6 +36,19 @@ MTContext& MTContext::setBestIncumbent(Solution sol) {
 
 	PRINT_BEST("New incumbent found %12.2f|%-10.2f\t [*]", bestIncumbent.oMIPCost, bestIncumbent.slackSum);
 
+	return *this;
+}
+
+MTContext& MTContext::setBestFMIPIncumbent(Solution& sol) {
+	if (sol.slackSum >= bestFMIPIncumbent.slackSum) {
+		return *this;
+	}
+
+	std::lock_guard<std::mutex> lock(updateSolMTX);
+	bestFMIPIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = 0.0 };
+#if ACS_VERBOSE >= VERBOSE
+	PRINT_INFO("New FMIPIncumbent found %12.2f\t", bestIncumbent.slackSum);
+#endif
 	return *this;
 }
 
@@ -105,7 +120,7 @@ void MTContext::FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs) {
 	}
 
 	int solveCode{ fMIP.solve(remTime, CLIArgs.LNSDtimeLimit) };
-	if (solveCode == CPXMIP_TIME_LIM_INFEAS)
+	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS)
 		return;
 
 	tmpSolutions[thID].sol = fMIP.getSol();
@@ -118,7 +133,7 @@ void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, doubl
 	OMIP oMIP{ CLIArgs.fileName };
 	oMIP.setNumCores(CPLEX_CORE);
 
-	std::vector<size_t> varsToFix = randomRhoFix(tmpSolutions[thID].sol.size(), thID, CLIArgs.rho, "FMIP", rndGens[thID]);
+	std::vector<size_t> varsToFix = randomRhoFix(tmpSolutions[thID].sol.size(), thID, CLIArgs.rho, "OMIP", rndGens[thID]);
 	for (auto i : varsToFix) {
 		oMIP.setVarValue(i, tmpSolutions[thID].sol[i]);
 	}
@@ -132,7 +147,7 @@ void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, doubl
 
 	int solveCode{ oMIP.solve(remTime, CLIArgs.LNSDtimeLimit) };
 
-	if (solveCode == CPXMIP_TIME_LIM_INFEAS)
+	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS)
 		return;
 
 	tmpSolutions[thID].sol = oMIP.getSol();

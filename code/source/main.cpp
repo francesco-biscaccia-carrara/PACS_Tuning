@@ -5,6 +5,8 @@
 #include "../include/OMIP.hpp"
 #include <assert.h>
 
+//FIXME Need MIPstart on FMIP and parallelFMIP
+ 
 int main(int argc, char* argv[]) {
 	try {
 		Clock::initTime = Clock::getTime();
@@ -43,12 +45,14 @@ int main(int argc, char* argv[]) {
 
 				for (auto i : commonValues)
 					MergeFMIP.setVarValue(i, MTEnv.getTmpSolution(0).sol[i]);
+
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
 #if ACS_VERBOSE >= VERBOSE
 					PRINT_INFO("TIME_LIMIT REACHED");
 #endif
 					break;
 				}
+
 				MergeFMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), CLIArgs.LNSDtimeLimit);
 
 				tmpSol.sol = MergeFMIP.getSol();
@@ -57,12 +61,14 @@ int main(int argc, char* argv[]) {
 
 				MTEnv.broadcastSol(tmpSol);
 			}
+
 			if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
 #if ACS_VERBOSE >= VERBOSE
 				PRINT_INFO("TIME_LIMIT REACHED");
 #endif
 				break;
 			}
+
 			MTEnv.parallelOMIPOptimization(Clock::timeRemaining(CLIArgs.timeLimit), CLIArgs, tmpSol.slackSum);
 
 			auto commonValues = MergePolicy::recombine(MTEnv.getTmpSolutions(), "2_Phase");
@@ -108,13 +114,14 @@ int main(int argc, char* argv[]) {
 			assert(og.checkFeasibility(incumbent.sol) == true);
 			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
 		}
-#if LOG
-		Logger::closeFileLog();
-#endif
+
 	} catch (const std::runtime_error& ex) {
 		PRINT_ERR(ex.what());
 		return EXIT_FAILURE;
 	}
+#if LOG
+	Logger::closeFileLog();
+#endif
 
 	return EXIT_SUCCESS;
 }

@@ -50,7 +50,7 @@ private:
 class MIP {
 
 public:
-	MIP(const std::string fileName, bool relaxable = false);
+	MIP(const std::string fileName);
 	MIP(const MIP& otherMIP, bool relaxable = false);
 	MIP& operator=(const MIP&) = delete;
 
@@ -75,6 +75,7 @@ public:
 	inline int getNumRows() noexcept { return CPXgetnumrows(env, model); }; // num rows = num constr
 
 	MIP& addCol(const std::vector<double>& newCol, const double objCoef, const double lb, const double ub, const std::string name);
+	MIP& addCol(const size_t index, const double value, const double objCoef, const double lb, const double ub, const std::string name);
 	MIP& addRow(const std::vector<double>& newRow, const char sense, const double rhs);
 	MIP& removeRow(const int index);
 	MIP& removeCol(const int index);

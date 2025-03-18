@@ -26,7 +26,8 @@ public:
 
 	[[nodiscard]]
 	inline Solution getBestIncumbent() { return bestIncumbent; }
-	MTContext&		setBestIncumbent(Solution sol);
+	MTContext&		setBestIncumbent(Solution& sol);
+	MTContext&		setBestFMIPIncumbent(Solution& sol);
 
 	[[nodiscard]]
 	inline std::vector<Solution> getTmpSolutions() { return tmpSolutions; }
@@ -49,6 +50,7 @@ private:
 	std::vector<std::thread> threads;
 	std::vector<Random>		 rndGens;
 	Solution				 bestIncumbent;
+	Solution				 bestFMIPIncumbent;
 	std::mutex				 updateSolMTX;
 
 	void waitAllJobs();

@@ -3,7 +3,7 @@
 #define BOTH_BOUNDS 'B'
 using MIPEx = MIPException::ExceptionType;
 
-MIP::MIP(const std::string fileName, bool relaxable) {
+MIP::MIP(const std::string fileName) {
 #if ACS_VERBOSE == DEBUG
 	std::ostringstream oss;
 	this->fileName = fileName;
@@ -154,8 +154,8 @@ MIP& MIP::setObjFunction(const std::vector<double>& newObj) {
 std::vector<double> MIP::getSol() {
 	int		numCols{ getNumCols() };
 	double* xStar{ (double*)calloc(numCols, sizeof(double)) };
-	if (CPXgetx(env, model, xStar, 0, numCols - 1))
-		throw MIPException(MIPEx::General, "Unable to obtain the solution!");
+	if (int error{CPXgetx(env, model, xStar, 0, numCols - 1)})
+		throw MIPException(MIPEx::General, "Unable to obtain the solution!" + std::to_string(error));
 	std::vector<double> sol(xStar, xStar + numCols);
 	free(xStar);
 	return sol;
@@ -187,6 +187,25 @@ MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef, const 
 	free(cname);
 	free(indices);
 	free(values);
+	return *this;
+}
+
+MIP& MIP::addCol(const size_t index, const double value, const double objCoef, const double lb, const double ub, const std::string name){
+	if (index < 0 || index > getNumRows() - 1)
+		throw MIPException(MIPEx::OutOfBound, "Wrong index addCol()!");
+	
+	char** cname{ (char**)calloc(1, sizeof(char*)) };
+	char   colName[name.length()+1];
+	strcpy(colName, name.c_str());
+	cname[0] = colName;
+
+	int		tmpIndex{ static_cast<int>(index)};
+	double	tmpValue{ value };
+	int		start{0}, nnz{ 1 };
+
+	if (CPXaddcols(env, model, 1, nnz, &objCoef, &start, &tmpIndex, &tmpValue, &lb, &ub, &cname[0]))
+		throw MIPException(MIPEx::General, "No column added!");
+	free(cname);
 	return *this;
 }
 
