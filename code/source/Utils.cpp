@@ -6,27 +6,22 @@ using namespace Utils;
 
 #pragma region STATIC
 
-static std::string printHelp() {
-	return "Usage: ./main [OPTIONS]\
-        \n '-h  / --help'\t\t\t Show help message\
-        \n '-f  / --filename <string>'\t Input file\
-        \n '-tl / --timelimit <double>'\t Max execution time;\
-        \n '-th / --theta <double (0,1)>'\t %% of vars to fix in the initially;\
-        \n '-rh / --rho <double (0,1)>'\t %% of vars to fix per ACS iteration;\
-        \n '-sd / --seed <u long long>'\t Random seed;\
-		\n '-nSMIPs/ --numsubMIPs <u long>'\t Number of subMIP in paralle phase;\
-		\n '-LNSDt/ --LNSDtimelimit <double>\t Execution time for each LNS instance'";
-}
+constexpr const char* HELP="Usage: ./main <PARS>\
+        \n '-h  / --help'\t\t\t\t Show help message\
+        \n '-f  / --filename <string>'\t\t Input file\
+        \n '-tl / --timelimit <double>'\t\t Max execution time\
+        \n '-th / --theta <double (0,1)>'\t\t %% of vars to fix in the initially vector\
+        \n '-rh / --rho <double (0,1)>'\t\t %% of vars to fix per ACS iteration\
+        \n '-sd / --seed <u long long>'\t\t Random seed\
+		\n '-nSMIPs/ --numsubMIPs <u long>'\t Number of subMIP in the parallel phase\
+		\n '-LNSDt/ --LNSDtimelimit <double>'\t Execution time for each LNS instance";
+
 
 #pragma endregion
 
 Random::Random(unsigned long long newSeed) : seed{ newSeed } {
 	rng.seed(newSeed);
 }
-
-// Random::Random(Random& otherRND){
-// 	Random(otherRND.seed);
-//}
 
 #if ACS_VERBOSE >= VERBOSE
 unsigned long long Random::getSeed() {
@@ -158,7 +153,7 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "", .timeLimit 
 
 		for (int i = 1; i < argc; ++i) {
 			if (std::string(argv[i]) == "-h" || std::string(argv[i]) == "-help")
-				throw ArgsParserException(printHelp());
+				throw ArgsParserException(HELP);
 		}
 
 		for (int i = 1; i < argc - 1; i++) {
@@ -197,7 +192,7 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "", .timeLimit 
 		Logger::setFileLogName(args);
 #endif
 		if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.LNSDtimeLimit || !args.seed || !args.numsubMIPs)
-			throw ArgsParserException(printHelp());
+			throw ArgsParserException(HELP);
 
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Parsed Arguments:\
@@ -211,6 +206,6 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "", .timeLimit 
 				   args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs, args.LNSDtimeLimit);
 #endif
 	} else {
-		throw ArgsParserException(printHelp());
+		throw ArgsParserException(HELP);
 	}
 }
