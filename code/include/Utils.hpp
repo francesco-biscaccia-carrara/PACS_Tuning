@@ -65,6 +65,15 @@ namespace Utils {
 	}; // namespace Random
 
 	namespace Logger {
+#if LOG
+		inline FILE* logFile{ nullptr };
+	 	void		 setFileLogName(Args CLIArgs);
+		inline void		 closeFileLog() {
+			if (Logger::logFile != nullptr)
+				fclose(Logger::logFile);
+		}
+#endif
+
 		enum class LogLevel { ERROR,
 							  WARN,
 							  INFO,
@@ -85,9 +94,9 @@ namespace Utils {
 
 	namespace Clock {
 		inline double initTime{ 0.0 };
-		double getTime();
-		double timeElapsed(const double newInitTime = initTime);
-		double timeRemaining(const double timeLimit);
+		double		  getTime();
+		double		  timeElapsed(const double newInitTime = initTime);
+		double		  timeRemaining(const double timeLimit);
 	}; // namespace Clock
 
 	class ArgsParserException : public std::runtime_error {

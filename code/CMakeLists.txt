@@ -136,7 +136,7 @@ target_link_libraries(
 )
 
 # adding definitions
-add_definitions(-D ACS_HOME_DIR="${HOME_DIR}" -D ACS_VERBOSE=${VERBOSE} -D ACS_WARN=${WARN} -D ACS_INTCHECK=${INTCHECK}) #ACS for us
+add_definitions(-D ACS_HOME_DIR="${HOME_DIR}" -D ACS_VERBOSE=${VERBOSE} -D ACS_WARN=${WARN} -D ACS_INTCHECK=${INTCHECK} -D LOG=${LOG}) #ACS for us
 
 # custom builds
 add_custom_target(opt

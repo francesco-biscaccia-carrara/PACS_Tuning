@@ -43,6 +43,21 @@ int Random::Int(int min, int max) {
 	return get(rng);
 }
 
+#if LOG
+void Logger::setFileLogName(Args args) {
+	std::ostringstream oss;
+	oss << "../log/" << args.fileName
+		<< "_tl-" << args.timeLimit
+		<< "_th-" << args.theta
+		<< "_rh-" << args.rho
+		<< "_Dtl-" << args.LNSDtimeLimit
+		<< "_nMIP-" << args.numsubMIPs
+		<< "_sd" << args.seed
+		<< ".log";
+	Logger::logFile = fopen(oss.str().c_str(), "w+");
+}
+#endif
+
 void Logger::print(LogLevel typeMsg, const char* format, ...) {
 	const char* msgClr;
 	const char* msgPref;
@@ -73,15 +88,27 @@ void Logger::print(LogLevel typeMsg, const char* format, ...) {
 			msgPref = "";
 			break;
 	}
-
-	printf("%s\033[1m\033[4m%s%s%s|%8.2f|", msgClr, msgPref, ANSI_COLOR_RESET, msgClr,Clock::timeElapsed());
+#if LOG
+	fprintf(Logger::logFile, "%s|%8.2f|", msgPref, Clock::timeElapsed());
+#else
+	printf("%s\033[1m\033[4m%s%s%s|%8.2f|", msgClr, msgPref, ANSI_COLOR_RESET, msgClr, Clock::timeElapsed());
+#endif
 
 	va_list args;
 	va_start(args, format);
+#if LOG
+	vfprintf(Logger::logFile, format, args);
+#else
 	vfprintf(stdout, format, args);
+#endif
+
 	va_end(args);
 
+#if LOG
+	fprintf(Logger::logFile, "\n");
+#else
 	printf("%s\n", ANSI_COLOR_RESET);
+#endif
 }
 
 double Clock::getTime() {
@@ -98,7 +125,7 @@ double Clock::timeElapsed(const double initTime) {
 	return ((double)tv.tv_sec) + ((double)tv.tv_usec / 1e+6) - initTime;
 }
 
-double Clock::timeRemaining(const double timeLimit){
+double Clock::timeRemaining(const double timeLimit) {
 	return timeLimit - timeElapsed();
 }
 

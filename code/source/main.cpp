@@ -7,10 +7,12 @@
 
 int main(int argc, char* argv[]) {
 	try {
-
 		Clock::initTime = Clock::getTime();
 
-		Args	  CLIArgs = CLIParser(argc, argv).getArgs();
+		Args CLIArgs = CLIParser(argc, argv).getArgs();
+#if LOG
+		Logger::setFileLogName(CLIArgs);
+#endif
 		MTContext MTEnv(CLIArgs.numsubMIPs, CLIArgs.seed);
 
 		Solution tmpSol = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
@@ -112,5 +114,8 @@ int main(int argc, char* argv[]) {
 	} catch (const std::runtime_error& ex) {
 		PRINT_ERR(ex.what());
 	}
+#if LOG
+	Logger::closeFileLog();
+#endif
 	return EXIT_SUCCESS;
 }
