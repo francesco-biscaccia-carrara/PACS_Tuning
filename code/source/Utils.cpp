@@ -193,6 +193,9 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "", .timeLimit 
 			}
 		}
 
+#if LOG
+		Logger::setFileLogName(args);
+#endif
 		if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.LNSDtimeLimit || !args.seed || !args.numsubMIPs)
 			throw ArgsParserException(printHelp());
 
@@ -205,7 +208,6 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "", .timeLimit 
 							\n\t - Seed : \t\t%d\
 							\n\t - Num sub-MIP : \t%d\
 							\n\t - LNS DTime Limiit : \t%f",
-
 				   args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs, args.LNSDtimeLimit);
 #endif
 	} else {

@@ -67,10 +67,10 @@ namespace Utils {
 	namespace Logger {
 #if LOG
 		inline FILE* logFile{ nullptr };
-	 	void		 setFileLogName(Args CLIArgs);
-		inline void		 closeFileLog() {
-			if (Logger::logFile != nullptr)
-				fclose(Logger::logFile);
+		void		 setFileLogName(Args CLIArgs);
+		inline void	 closeFileLog() {
+			 if (Logger::logFile != nullptr)
+				 fclose(Logger::logFile);
 		}
 #endif
 
@@ -115,6 +115,7 @@ namespace Utils {
 		CLIParser& operator=(const CLIParser&&) = delete;
 
 		inline Args getArgs() { return args; }
+
 		~CLIParser() = default;
 
 	private:

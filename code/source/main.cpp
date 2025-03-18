@@ -9,10 +9,7 @@ int main(int argc, char* argv[]) {
 	try {
 		Clock::initTime = Clock::getTime();
 
-		Args CLIArgs = CLIParser(argc, argv).getArgs();
-#if LOG
-		Logger::setFileLogName(CLIArgs);
-#endif
+		Args	  CLIArgs = CLIParser(argc, argv).getArgs();
 		MTContext MTEnv(CLIArgs.numsubMIPs, CLIArgs.seed);
 
 		Solution tmpSol = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
@@ -111,11 +108,12 @@ int main(int argc, char* argv[]) {
 			assert(og.checkFeasibility(incumbent.sol) == true);
 			PRINT_BEST("BEST INCUMBENT: %12.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
 		}
+#if LOG
+		Logger::closeFileLog();
+#endif
 	} catch (const std::runtime_error& ex) {
 		PRINT_ERR(ex.what());
 	}
-#if LOG
-	Logger::closeFileLog();
-#endif
+
 	return EXIT_SUCCESS;
 }
