@@ -51,8 +51,6 @@ namespace Utils {
 	class Random {
 	public:
 		Random(unsigned long long newSeed);
-		// FIXME Rewrite copy constructor
-		// Random(Random& otherRND);
 
 		int Int(int min, int max);
 #if ACS_VERBOSE >= VERBOSE
@@ -85,12 +83,12 @@ namespace Utils {
 
 	}; // namespace Logger
 
-	class Clock {
-
-	public:
-		static double getTime();
-		static double timeElapsed(const double initTime);
-	};
+	namespace Clock {
+		inline double initTime{ 0.0 };
+		double getTime();
+		double timeElapsed(const double newInitTime = initTime);
+		double timeRemaining(const double timeLimit);
+	}; // namespace Clock
 
 	class ArgsParserException : public std::runtime_error {
 

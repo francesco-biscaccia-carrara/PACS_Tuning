@@ -74,7 +74,7 @@ void Logger::print(LogLevel typeMsg, const char* format, ...) {
 			break;
 	}
 
-	printf("%s\033[1m\033[4m%s%s%s: ", msgClr, msgPref, ANSI_COLOR_RESET, msgClr);
+	printf("%s\033[1m\033[4m%s%s%s|%8.2f|", msgClr, msgPref, ANSI_COLOR_RESET, msgClr,Clock::timeElapsed());
 
 	va_list args;
 	va_start(args, format);
@@ -96,6 +96,10 @@ double Clock::timeElapsed(const double initTime) {
 	gettimeofday(&tv, NULL);
 
 	return ((double)tv.tv_sec) + ((double)tv.tv_usec / 1e+6) - initTime;
+}
+
+double Clock::timeRemaining(const double timeLimit){
+	return timeLimit - timeElapsed();
 }
 
 CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "", .timeLimit = 0.0, .theta = 0.0, .rho = 0.0, .numsubMIPs = 0, .seed = 0 } {

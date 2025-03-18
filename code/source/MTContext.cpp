@@ -1,23 +1,22 @@
 #include "../include/MTContext.hpp"
 
-MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : bestIncumbent{ .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND } {
+MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : numMIPs{ subMIPNum }, bestIncumbent{ .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND } {
 
 	tmpSolutions = std::vector<Solution>();
 	threads = std::vector<std::thread>();
 
-	threads.reserve(subMIPNum);
-	tmpSolutions.reserve(subMIPNum);
-	threadIDs.reserve(subMIPNum);
-	rndGens.reserve(subMIPNum);
+	threads.reserve(numMIPs);
+	tmpSolutions.reserve(numMIPs);
+	rndGens.reserve(numMIPs);
 
-	for (size_t i{ 0 }; i < subMIPNum; i++) {
-		threadIDs.push_back(i);
+	for (size_t i{ 0 }; i < numMIPs; i++) {
+
 		rndGens.emplace_back(intialSeed + (i + 1));
 		tmpSolutions.push_back({ .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND });
 	}
 
 #if ACS_VERBOSE >= VERBOSE
-	PRINT_INFO("MT Context: Initialized -- Num schedulable jobs: %d", threadIDs.size());
+	PRINT_INFO("MT Context: Initialized -- Num schedulable jobs: %d", numMIPs);
 #endif
 }
 
@@ -33,7 +32,7 @@ MTContext& MTContext::setBestIncumbent(Solution sol) {
 	std::lock_guard<std::mutex> lock(updateSolMTX);
 	bestIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = sol.oMIPCost };
 
-	PRINT_BEST("***\tNew incumbent found %12.2f|%-10.2f\t***", bestIncumbent.oMIPCost, bestIncumbent.slackSum);
+	PRINT_BEST("New incumbent found %12.2f|%-10.2f\t [*]", bestIncumbent.oMIPCost, bestIncumbent.slackSum);
 
 	return *this;
 }
@@ -44,9 +43,13 @@ MTContext& MTContext::setTmpSolution(int index, Solution& tmpSol) {
 }
 
 MTContext& MTContext::broadcastSol(Solution& tmpSol) {
-	for (size_t i{ 0 }; i < tmpSolutions.size(); i++) {
-		setTmpSolution(i, tmpSol);
+	waitAllJobs();
+
+	for (size_t i{ 0 }; i < numMIPs; i++) {
+		threads.emplace_back(&MTContext::setTmpSolution, this, i, std::ref(tmpSol));
 	}
+
+	waitAllJobs();
 #if ACS_VERBOSE >= VERBOSE
 	PRINT_INFO("MT Context: Broadcasting main sol to all threads");
 #endif
@@ -65,8 +68,8 @@ void MTContext::waitAllJobs() {
 MTContext& MTContext::parallelFMIPOptimization(double remTime, Args CLIArgs) {
 	waitAllJobs();
 
-	for (size_t i = 0; i < CLIArgs.numsubMIPs; i++) {
-		threads.emplace_back(&MTContext::FMIPInstanceJob, this, threadIDs[i], remTime, CLIArgs);
+	for (size_t i{ 0 }; i < CLIArgs.numsubMIPs; i++) {
+		threads.emplace_back(&MTContext::FMIPInstanceJob, this, i, remTime, CLIArgs);
 	}
 
 	waitAllJobs();
@@ -76,8 +79,8 @@ MTContext& MTContext::parallelFMIPOptimization(double remTime, Args CLIArgs) {
 MTContext& MTContext::parallelOMIPOptimization(double remTime, Args CLIArgs, double slackSumUB) {
 	waitAllJobs();
 
-	for (size_t i = 0; i < CLIArgs.numsubMIPs; i++) {
-		threads.emplace_back(&MTContext::OMIPInstanceJob, this, threadIDs[i], remTime, CLIArgs, slackSumUB);
+	for (size_t i{ 0 }; i < CLIArgs.numsubMIPs; i++) {
+		threads.emplace_back(&MTContext::OMIPInstanceJob, this, i, remTime, CLIArgs, slackSumUB);
 	}
 
 	waitAllJobs();

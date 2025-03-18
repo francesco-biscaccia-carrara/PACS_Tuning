@@ -168,7 +168,7 @@ MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef, const 
 		throw MIPException(MIPEx::InputSizeError, "Wrong new column size");
 
 	char** cname{ (char**)calloc(1, sizeof(char*)) };
-	char   colName[name.length()];
+	char   colName[name.length()+1];
 	strcpy(colName, name.c_str());
 	cname[0] = colName;
 	int*	indices{ (int*)malloc(numRow * sizeof(int)) };

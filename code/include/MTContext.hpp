@@ -36,7 +36,7 @@ public:
 	MTContext&		broadcastSol(Solution& tmpSol);
 
 	[[nodiscard]]
-	inline size_t getNumThreads() { return threadIDs.size(); }
+	inline size_t getNumThreads() { return numMIPs; }
 
 	MTContext& parallelFMIPOptimization(double remTime, Args CLIArgs);
 	MTContext& parallelOMIPOptimization(double remTime, Args CLIArgs, double slackSumUB);
@@ -44,9 +44,9 @@ public:
 	~MTContext();
 
 private:
+	size_t					 numMIPs;
 	std::vector<Solution>	 tmpSolutions;
 	std::vector<std::thread> threads;
-	std::vector<size_t>		 threadIDs;
 	std::vector<Random>		 rndGens;
 	Solution				 bestIncumbent;
 	std::mutex				 updateSolMTX;

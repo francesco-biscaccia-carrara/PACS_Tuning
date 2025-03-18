@@ -16,6 +16,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-Og -ggdb")
 
 # setting the default verbose/warn/intchecks (edited with the -D flag)
 set(VERBOSE "1" CACHE STRING "Verbose setting set from command line")
+set(LOG "0" CACHE STRING "Flag to enable log on file")
 #set(WARN "0" CACHE STRING "Flag to enable warning messages")
 #set(INTCHECK "0" CACHE STRING "Flag to enable integrity checks")
 set(CPLEX_DIR "/opt/ibm/ILOG/CPLEX_Studio2212/cplex/lib/x86-64_linux/static_pic" CACHE STRING "Path to the CPLEX library") #application for Mac, opt/ibm for linux

@@ -7,6 +7,9 @@
 
 int main(int argc, char* argv[]) {
 	try {
+
+		Clock::initTime = Clock::getTime();
+
 		Args	  CLIArgs = CLIParser(argc, argv).getArgs();
 		MTContext MTEnv(CLIArgs.numsubMIPs, CLIArgs.seed);
 
@@ -19,16 +22,20 @@ int main(int argc, char* argv[]) {
 
 		tmpSol.sol = initSol;
 		tmpSol.slackSum = initFMIP.getObjValue();
-		PRINT_OUT("Init FeasMIP solution cost: %20.2f", tmpSol.slackSum);
+		PRINT_OUT("Init FeasMIP solution cost: %25.2f", tmpSol.slackSum);
 
 		MTEnv.broadcastSol(tmpSol);
 
-		double initTime = Clock::getTime();
-
-		while (Clock::timeElapsed(initTime) < CLIArgs.timeLimit) {
+		while (Clock::timeElapsed() < CLIArgs.timeLimit) {
 			if (MTEnv.getBestIncumbent().slackSum > EPSILON) {
 
-				MTEnv.parallelFMIPOptimization(abs(CLIArgs.timeLimit - Clock::timeElapsed(initTime)), CLIArgs);
+				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
+#if ACS_VERBOSE >= VERBOSE
+					PRINT_INFO("TIME_LIMIT REACHED");
+#endif
+					break;
+				}
+				MTEnv.parallelFMIPOptimization(Clock::timeRemaining(CLIArgs.timeLimit), CLIArgs);
 
 				auto commonValues = MergePolicy::recombine(MTEnv.getTmpSolutions(), "1_Phase");
 
@@ -37,8 +44,13 @@ int main(int argc, char* argv[]) {
 
 				for (auto i : commonValues)
 					MergeFMIP.setVarValue(i, MTEnv.getTmpSolution(0).sol[i]);
-
-				MergeFMIP.solve(abs(CLIArgs.timeLimit - Clock::timeElapsed(initTime)), CLIArgs.LNSDtimeLimit);
+				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
+#if ACS_VERBOSE >= VERBOSE
+					PRINT_INFO("TIME_LIMIT REACHED");
+#endif
+					break;
+				}
+				MergeFMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), CLIArgs.LNSDtimeLimit);
 
 				tmpSol.sol = MergeFMIP.getSol();
 				tmpSol.slackSum = MergeFMIP.getObjValue();
@@ -46,8 +58,13 @@ int main(int argc, char* argv[]) {
 
 				MTEnv.broadcastSol(tmpSol);
 			}
-
-			MTEnv.parallelOMIPOptimization(abs(CLIArgs.timeLimit - Clock::timeElapsed(initTime)), CLIArgs, tmpSol.slackSum);
+			if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
+#if ACS_VERBOSE >= VERBOSE
+				PRINT_INFO("TIME_LIMIT REACHED");
+#endif
+				break;
+			}
+			MTEnv.parallelOMIPOptimization(Clock::timeRemaining(CLIArgs.timeLimit), CLIArgs, tmpSol.slackSum);
 
 			auto commonValues = MergePolicy::recombine(MTEnv.getTmpSolutions(), "2_Phase");
 
@@ -64,7 +81,13 @@ int main(int argc, char* argv[]) {
 			}
 
 			MergeOMIP.updateBudgetConstr(tmpSol.slackSum);
-			int rtnValue{ MergeOMIP.solve(abs(CLIArgs.timeLimit - Clock::timeElapsed(initTime)), CLIArgs.LNSDtimeLimit) };
+			if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
+#if ACS_VERBOSE >= VERBOSE
+				PRINT_INFO("TIME_LIMIT REACHED");
+#endif
+				break;
+			}
+			int rtnValue{ MergeOMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), CLIArgs.LNSDtimeLimit) };
 
 			if (rtnValue == CPXMIP_TIME_LIM_INFEAS)
 				break;
@@ -75,6 +98,7 @@ int main(int argc, char* argv[]) {
 
 			PRINT_OUT("OptMIP Objective|SlackSum after merging: %12.2f|%-10.2f", MergeOMIP.getObjValue(), tmpSol.slackSum);
 			MTEnv.setBestIncumbent(tmpSol);
+			MTEnv.broadcastSol(tmpSol);
 		}
 
 		MIP		 og(CLIArgs.fileName);
