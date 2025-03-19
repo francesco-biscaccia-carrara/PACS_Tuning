@@ -26,11 +26,9 @@ MIP::MIP(const std::string fileName) {
 	CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
 #endif
-
-	restoreVarType.reserve(getNumCols());
 }
 
-MIP::MIP(const MIP& otherMIP, bool relaxable) {
+MIP::MIP(const MIP& otherMIP) {
 #if ACS_VERBOSE == DEBUG
 	std::ostringstream oss;
 	this->fileName = otherMIP.fileName;
@@ -50,8 +48,6 @@ MIP::MIP(const MIP& otherMIP, bool relaxable) {
 	CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
 #endif
-
-	restoreVarType.reserve(getNumCols());
 }
 
 MIP& MIP::setNumCores(const int numCores) {
@@ -75,40 +71,11 @@ int MIP::solve(const double timeLimit, const double detTimeLimit) {
 	if (timeLimit < CPX_INFBOUND) [[likely]]
 		CPXsetdblparam(env, CPX_PARAM_TILIM, timeLimit);
 
-	if (detTimeLimit < CPX_INFBOUND)
+	if (detTimeLimit < CPX_INFBOUND) [[likely]]
 		CPXsetdblparam(env, CPX_PARAM_DETTILIM, detTimeLimit);
-	else [[likely]]
-		CPXsetdblparam(env, CPX_PARAM_DETTILIM, DET_TL(getNumNonZeros()));
-
-	for (size_t i{ 0 }; i < restoreVarType.size(); i++)
-		changeVarType(i, restoreVarType[i]);
-	changeProbType(CPXPROB_MILP);
 
 	if (int error{ CPXmipopt(env, model) })
 		throw MIPException(MIPEx::MIPOptimizationError, "CPLEX cannot solve this problem!\t" + std::to_string(error));
-
-	return CPXgetstat(env, model);
-}
-
-int MIP::solveRelaxation(const double timeLimit) {
-
-	if (timeLimit < EPSILON)
-		throw MIPException(MIPEx::WrongTimeLimit, "Time-limit too short!\t" + std::to_string(timeLimit));
-
-	if (timeLimit < CPX_INFBOUND) [[likely]]
-		CPXsetdblparam(env, CPX_PARAM_TILIM, timeLimit);
-
-	changeProbType(CPXPROB_MILP); // Necessary to get vars type
-
-	for (size_t i{ 0 }; i < getNumCols(); i++) {
-		char type = getVarType(i);
-		if (type == CPX_BINARY || type == CPX_INTEGER)
-			restoreVarType[i] = type;
-	}
-	changeProbType(CPXPROB_LP);
-
-	if (int error{ CPXlpopt(env, model) })
-		throw MIPException(MIPEx::LPOptimizationError, "CPLEX cannot solve the relaxed problem!\t" + std::to_string(error));
 
 	return CPXgetstat(env, model);
 }
@@ -151,7 +118,7 @@ MIP& MIP::setObjFunction(const std::vector<double>& newObj) {
 	if (newObj.size() != numCols)
 		throw MIPException(MIPEx::InputSizeError, "Wrong new obj_function size");
 
-	int* indices{ (int*)malloc(numCols * sizeof(int)) };
+	int* indices{ (int*) malloc(numCols * sizeof(int)) };
 	for (size_t i{ 0 }; i < numCols; i++)
 		indices[i] = i;
 	if (CPXchgobj(env, model, numCols, indices, newObj.data()))
@@ -325,9 +292,4 @@ MIP::~MIP() noexcept {
 	CPXcloseCPLEX(&env);
 }
 
-MIP& MIP::changeProbType(const int type) {
-	if (CPXchgprobtype(env, model, type))
-		throw MIPException(MIPEx::General, "Problem type not changed!");
 
-	return *this;
-}

@@ -5,8 +5,6 @@
 #include "../include/OMIP.hpp"
 #include <assert.h>
 
-// FIXME Need MIPstart on FMIP and parallelFMIP
-
 int main(int argc, char* argv[]) {
 	try {
 		Clock::initTime = Clock::getTime();
@@ -14,15 +12,10 @@ int main(int argc, char* argv[]) {
 		Args	  CLIArgs = CLIParser(argc, argv).getArgs();
 		MTContext MTEnv(CLIArgs.numsubMIPs, CLIArgs.seed);
 
-		Solution tmpSol = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
+		Solution tmpSol = MTEnv.getBestIncumbent();
+		Solution tmpFMIPInc = MTEnv.getBestIncumbent();
 
-		FMIP initFMIP(CLIArgs.fileName);
-		tmpSol.sol.reserve(initFMIP.getMIPNumVars());
-		std::vector<double> initSol(initFMIP.getMIPNumVars(), CPX_INFBOUND);
-		FixPolicy::firstThetaFixing(initFMIP, initSol, CLIArgs.theta, Random(CLIArgs.seed));
-
-		tmpSol.sol = initSol;
-		tmpSol.slackSum = initFMIP.getObjValue();
+		tmpSol = FixPolicy::firstThetaFixing(CLIArgs.fileName,CLIArgs.theta,Random(CLIArgs.seed));
 		PRINT_OUT("Init FeasMIP solution cost: %25.2f", tmpSol.slackSum);
 
 		MTEnv.broadcastSol(tmpSol);
@@ -55,15 +48,21 @@ int main(int argc, char* argv[]) {
 					break;
 				}
 
-				MergeFMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit));
+				int solveCode {MergeFMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit))};
+
+				if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS)  break;
 
 				tmpSol.sol = MergeFMIP.getSol();
 				tmpSol.slackSum = MergeFMIP.getObjValue();
 				PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
 
 				MTEnv.broadcastSol(tmpSol);
-				Solution tmpFMIPInc = { .sol = MergeFMIP.MIP::getSol(), .slackSum = tmpSol.slackSum };
+
+				tmpFMIPInc.sol = MergeFMIP.MIP::getSol();
+				tmpFMIPInc.slackSum = tmpSol.slackSum;
 				MTEnv.setBestFMIPIncumbent(tmpFMIPInc);
+				
+				//if(tmpSol.slackSum < EPSILON) break;
 			}
 
 			if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -100,10 +99,9 @@ int main(int argc, char* argv[]) {
 #endif
 				break;
 			}
-			int rtnValue{ MergeOMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit)) };
+			int solveCode{ MergeOMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit)) };
 
-			if (rtnValue == CPXMIP_TIME_LIM_INFEAS)
-				break;
+			if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS) break;
 
 			tmpSol.sol = MergeOMIP.getSol();
 			tmpSol.slackSum = MergeOMIP.getSlackSum();

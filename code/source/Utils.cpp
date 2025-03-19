@@ -6,7 +6,7 @@ using namespace Utils;
 
 #pragma region STATIC
 
-constexpr const char* HELP="Usage: ./main <PARS>\
+constexpr const char* HELP_ACS="Usage: ./ACS <PARS>\
         \n '-h  / --help'\t\t\t\t Show help message\
         \n '-f  / --filename <string>'\t\t Input file\
         \n '-tl / --timelimit <double>'\t\t Max execution time\
@@ -15,6 +15,10 @@ constexpr const char* HELP="Usage: ./main <PARS>\
         \n '-sd / --seed <u long long>'\t\t Random seed\
 		\n '-nSMIPs/ --numsubMIPs <u long>'\t Number of subMIP in the parallel phase";
 
+constexpr const char* HELP_CPLEXRUN="Usage: ./CPLEXRun <PARS>\
+        \n '-h  / --help'\t\t\t\t Show help message\
+        \n '-f  / --filename <string>'\t\t Input file\
+        \n '-tl / --timelimit <double>'\t\t Max execution time";
 
 #pragma endregion
 
@@ -122,7 +126,7 @@ double Clock::timeRemaining(const double timeLimit) {
 	return timeLimit - timeElapsed();
 }
 
-CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "", .timeLimit = 0.0, .theta = 0.0, .rho = 0.0, .numsubMIPs = 0, .seed = 0 } {
+CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = "", .timeLimit = 0.0, .theta = 0.0, .rho = 0.0, .numsubMIPs = 0, .seed = 0 } {
 	if (argc > 0 && argv != nullptr) {
 
 		constexpr std::array<std::pair<const char*, std::string Args::*>, 2> stringArgs{ {
@@ -149,7 +153,10 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "", .timeLimit 
 
 		for (int i = 1; i < argc; ++i) {
 			if (std::string(argv[i]) == "-h" || std::string(argv[i]) == "-help")
-				throw ArgsParserException(HELP);
+				if(CPLEXRun)
+					throw ArgsParserException(HELP_CPLEXRUN);
+				else
+					throw ArgsParserException(HELP_ACS);
 		}
 
 		for (int i = 1; i < argc - 1; i++) {
@@ -187,10 +194,22 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "", .timeLimit 
 #if LOG
 		Logger::setFileLogName(args);
 #endif
-		if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.numsubMIPs)
-			throw ArgsParserException(HELP);
+		if(CPLEXRun){
+			if (args.fileName.empty() || !args.timeLimit)
+				throw ArgsParserException(HELP_CPLEXRUN);
+		}else{
+			if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.numsubMIPs)
+				throw ArgsParserException(HELP_ACS);
+		}
+		
 
 #if ACS_VERBOSE >= VERBOSE
+	if(CPLEXRun)
+		PRINT_INFO("Parsed Arguments:\
+			\n\t - File Name :  \t%s \
+			\n\t - Time Limit : \t%f",
+			args.fileName.c_str(), args.timeLimit);
+	else
 		PRINT_INFO("Parsed Arguments:\
                             \n\t - File Name :  \t%s \
                             \n\t - Time Limit : \t%f\
@@ -198,9 +217,12 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "", .timeLimit 
                             \n\t - Rho : \t\t%f\
 							\n\t - Seed : \t\t%d\
 							\n\t - Num sub-MIP : \t%d",
-				   args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs);
+				   			args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs);
 #endif
 	} else {
-		throw ArgsParserException(HELP);
+		if(CPLEXRun)
+			throw ArgsParserException(HELP_CPLEXRUN);
+		else
+			throw ArgsParserException(HELP_ACS);
 	}
 }

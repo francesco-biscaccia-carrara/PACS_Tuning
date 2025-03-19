@@ -1,7 +1,7 @@
 #include "../include/FixPolicy.hpp"
 
-#define MAX_UB 1e7
-#define SPARSE_THRESHOLD 4
+#define MAX_UB 1e6
+
 using FPEx = FixPolicy::FixPolicyException::ExceptionType;
 
 bool isInteger(double n) {
@@ -15,18 +15,17 @@ bool allInteger(std::vector<double>& x) {
 	return true;
 }
 
-void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double theta, Random rnd) {
+Solution FixPolicy::firstThetaFixing(std::string fileName, double theta, Random rnd) {
 	if (theta < EPSILON || theta >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Theta par. must be within (0,1)!");
 
-	const size_t numVars = x.size();
-
-	if (numVars != fMIP.getMIPNumVars())
-		throw FixPolicyException(FPEx::InputSizeError, "Wrong vector size!");
+	RlxMIP relaxedFMIP{fileName};
+	int numVars{relaxedFMIP.getMIPNumVars()};
+	Solution rtn ={.sol = std::vector(numVars,CPX_INFBOUND),.slackSum = CPX_INFBOUND, .oMIPCost= CPX_INFBOUND};
 
 	std::vector<std::pair<int, double>> varRanges(numVars);
 	for (size_t i = 0; i < numVars; i++) {
-		auto [lowerBound, upperBound] = fMIP.getVarBounds(i);
+		auto [lowerBound, upperBound] = relaxedFMIP.getVarBounds(i);
 		varRanges[i] = { static_cast<int>(i), upperBound - lowerBound };
 	}
 
@@ -36,7 +35,7 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double thet
 	std::vector<bool> isFixed(numVars, false);
 	size_t			  numFixedVars = 0;
 
-	while (!allInteger(x) && numFixedVars < numVars) {
+	while (!allInteger(rtn.sol) && numFixedVars < numVars) {
 		size_t numNotFixedVars = numVars - numFixedVars;
 		size_t varsToFix = static_cast<size_t>(numNotFixedVars * theta);
 
@@ -45,12 +44,12 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double thet
 		for (size_t i = 0; i < numVars && fixedThisIteration < varsToFix; i++) {
 			int idx = varRanges[i].first;
 			if (!isFixed[idx]) {
-				auto [lowerBound, upperBound] = fMIP.getVarBounds(idx);
+				auto [lowerBound, upperBound] = relaxedFMIP.getVarBounds(idx);
 
 				double clampedLower = std::max(-MAX_UB, lowerBound);
 				double clampedUpper = std::min(MAX_UB, upperBound);
 
-				x[idx] = rnd.Int(clampedLower, clampedUpper);
+				rtn.sol[idx] = rnd.Int(clampedLower, clampedUpper);
 				isFixed[idx] = true;
 				numFixedVars++;
 				fixedThisIteration++;
@@ -61,20 +60,23 @@ void FixPolicy::firstThetaFixing(FMIP& fMIP, std::vector<double>& x, double thet
 		PRINT_INFO("FixPolicy::firstThetaFixing - %zu vars hard-fixed", varsToFix);
 #endif
 
-		std::vector<double> tmp(x);
-		tmp.resize(fMIP.getNumCols(), CPX_INFBOUND);
-		fMIP.setVarsValues(tmp);
-		fMIP.solveRelaxation();
+		std::vector<double> tmp(rtn.sol);
+		tmp.resize(relaxedFMIP.getNumCols(), CPX_INFBOUND);
+		relaxedFMIP.setVarsValues(tmp);
+		relaxedFMIP.solveRelaxation();
 
-		std::vector<double> lpSol = fMIP.getSol();
+		std::vector<double> lpSol = relaxedFMIP.getSol();
 		for (size_t i = 0; i < lpSol.size(); ++i) {
 			if (isInteger(lpSol[i])) {
-				x[i] = lpSol[i];
+				rtn.sol[i] = lpSol[i];
 				isFixed[i] = true;
 				numFixedVars++;
 			}
 		}
 	}
+
+	rtn.slackSum = relaxedFMIP.getObjValue();
+	return rtn;
 }
 
 std::vector<size_t> FixPolicy::randomRhoFix(const size_t vectorSize, const size_t threadID, double rho, const char* type, Random& rnd) {

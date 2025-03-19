@@ -51,14 +51,13 @@ class MIP {
 
 public:
 	MIP(const std::string fileName);
-	MIP(const MIP& otherMIP, bool relaxable = false);
+	MIP(const MIP& otherMIP);
 	MIP& operator=(const MIP&) = delete;
 
 	MIP& setNumCores(const int numCores);
 	size_t getNumNonZeros();
 
 	int	 solve(const double timeLimit = CPX_INFBOUND, const double detTimeLimit = CPX_INFBOUND);
-	int	 solveRelaxation(const double timeLimit = CPX_INFBOUND);
 	MIP& addMIPStart(const std::vector<double>& MIPStart, bool CPLEXCheck = false);
 
 	[[nodiscard]]
@@ -114,12 +113,6 @@ protected:
 	std::string fileName;
 	std::string id;
 #endif
-
-private:
-	// TODO: Make it std::optional<std::vector<char>>
-	std::vector<char> restoreVarType;
-
-	MIP& changeProbType(const int type);
 };
 
 #endif

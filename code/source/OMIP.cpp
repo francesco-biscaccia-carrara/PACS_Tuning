@@ -37,10 +37,7 @@ OMIP& OMIP::updateBudgetConstr(double rhs) {
 
 double OMIP::getSlackSum() {
 	std::vector<double> xStar = MIP::getSol();
-	double				sum{ 0.0 };
-	for (size_t i{ static_cast<size_t>(getMIPNumVars()) }; i < xStar.size(); i++)
-		sum += xStar[i];
-	return sum;
+	return std::accumulate(xStar.begin()+getMIPNumVars(), xStar.end(), 0);
 }
 
 std::vector<double> OMIP::getSol() {

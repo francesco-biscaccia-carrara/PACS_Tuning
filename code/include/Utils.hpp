@@ -115,7 +115,7 @@ namespace Utils {
 	class CLIParser {
 
 	public:
-		CLIParser(int argc = 0, char* argv[] = nullptr);
+		CLIParser(int argc = 0, char* argv[] = nullptr, bool CPLEXRun = false);
 		CLIParser(const CLIParser&) = delete;
 		CLIParser& operator=(const CLIParser&) = delete;
 		CLIParser(const CLIParser&&) = delete;

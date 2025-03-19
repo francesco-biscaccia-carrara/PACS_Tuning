@@ -121,7 +121,7 @@ void MTContext::FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs) {
 		fMIP.setVarValue(i, tmpSolutions[thID].sol[i]);
 	}
 
-	int solveCode{ fMIP.solve(remTime) };
+	int solveCode{ fMIP.solve(remTime,DET_TL(fMIP.getNumNonZeros()))};
 	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS) {
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Proc: %3d [FMIP] - Aborted: Infeasible with given TL", thID);
@@ -160,7 +160,7 @@ void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, doubl
 		oMIP.addMIPStart(MIPStart);
 	}
 
-	int solveCode{ oMIP.solve(remTime) };
+	int solveCode{ oMIP.solve(remTime,DET_TL(oMIP.getNumNonZeros()))};
 
 	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS) {
 #if ACS_VERBOSE >= VERBOSE

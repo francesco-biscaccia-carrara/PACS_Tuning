@@ -8,7 +8,7 @@ if ("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
     message(FATAL_ERROR "Please build the project from a build folder.\nCreate a separate build directory and run CMake from there:\n  mkdir build\n  cd build\n  cmake <buid_options> ..\n\nYou may delete the CMakeCache.txt file and the CMakeFiles folder that has been created.\n" )
 endif()
 
-project(main)
+project(ACS)
 
 # setting flags for optimization and debug builds
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
@@ -77,6 +77,11 @@ add_library(
     source/FMIP.cpp
     include/FMIP.hpp
 )
+add_library(
+    RlxMIP
+    source/RlxMIP.cpp
+    include/RlxMIP.hpp
+)
 
 add_library(
     OMIP
@@ -117,19 +122,33 @@ endif()
 
 # Add the main executable
 add_executable(
-    main
-    source/main.cpp
+    ACS
+    source/ACS.cpp
+)
+
+add_executable(
+    CPLEXRun
+    source/CPLEXRun.cpp
 )
 
 # Linking
 target_link_libraries(
-    main
+    ACS
     MIP
     FMIP
     OMIP
     MTContext
     FixPol
+    RlxMIP
     MerPol
+    Utils
+    # Link CPLEX library
+    ${CPLEX_LIBRARY}
+)
+
+target_link_libraries(
+    CPLEXRun
+    MIP
     Utils
     # Link CPLEX library
     ${CPLEX_LIBRARY}
