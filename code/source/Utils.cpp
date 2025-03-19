@@ -1,6 +1,6 @@
 #include "../include/Utils.hpp"
 
-#define ARGS_CONV_BASE 10
+
 
 using namespace Utils;
 
@@ -13,8 +13,7 @@ constexpr const char* HELP="Usage: ./main <PARS>\
         \n '-th / --theta <double (0,1)>'\t\t %% of vars to fix in the initially vector\
         \n '-rh / --rho <double (0,1)>'\t\t %% of vars to fix per ACS iteration\
         \n '-sd / --seed <u long long>'\t\t Random seed\
-		\n '-nSMIPs/ --numsubMIPs <u long>'\t Number of subMIP in the parallel phase\
-		\n '-LNSDt/ --LNSDtimelimit <double>'\t Execution time for each LNS instance";
+		\n '-nSMIPs/ --numsubMIPs <u long>'\t Number of subMIP in the parallel phase";
 
 
 #pragma endregion
@@ -45,7 +44,6 @@ void Logger::setFileLogName(Args args) {
 		<< "_tl-" << args.timeLimit
 		<< "_th-" << args.theta
 		<< "_rh-" << args.rho
-		<< "_Dtl-" << args.LNSDtimeLimit
 		<< "_nMIP-" << args.numsubMIPs
 		<< "_sd" << args.seed
 		<< ".log";
@@ -137,14 +135,12 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "", .timeLimit 
 			{ "--numsubMIPs", &Args::numsubMIPs },
 		} };
 
-		constexpr std::array<std::pair<const char*, double Args::*>, 8> doubleArgs{ { { "-tl", &Args::timeLimit },
+		constexpr std::array<std::pair<const char*, double Args::*>, 6> doubleArgs{ { { "-tl", &Args::timeLimit },
 																					  { "--timelimit", &Args::timeLimit },
 																					  { "-th", &Args::theta },
 																					  { "--theta", &Args::theta },
 																					  { "-rh", &Args::rho },
-																					  { "--rho", &Args::rho },
-																					  { "-LNSDt", &Args::LNSDtimeLimit },
-																					  { "--LNSDtimelimit", &Args::LNSDtimeLimit } } };
+																					  { "--rho", &Args::rho }} };
 
 		constexpr std::array<std::pair<const char*, unsigned long long Args::*>, 2> ullongArgs{ {
 			{ "-sd", &Args::seed },
@@ -191,7 +187,7 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "", .timeLimit 
 #if LOG
 		Logger::setFileLogName(args);
 #endif
-		if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.LNSDtimeLimit || !args.seed || !args.numsubMIPs)
+		if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.numsubMIPs)
 			throw ArgsParserException(HELP);
 
 #if ACS_VERBOSE >= VERBOSE
@@ -201,9 +197,8 @@ CLIParser::CLIParser(int argc, char* argv[]) : args{ .fileName = "", .timeLimit 
                             \n\t - Theta : \t\t%f\
                             \n\t - Rho : \t\t%f\
 							\n\t - Seed : \t\t%d\
-							\n\t - Num sub-MIP : \t%d\
-							\n\t - LNS DTime Limiit : \t%f",
-				   args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs, args.LNSDtimeLimit);
+							\n\t - Num sub-MIP : \t%d",
+				   args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs);
 #endif
 	} else {
 		throw ArgsParserException(HELP);

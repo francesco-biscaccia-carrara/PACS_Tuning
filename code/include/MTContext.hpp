@@ -27,6 +27,8 @@ public:
 	[[nodiscard]]
 	inline Solution getBestIncumbent() { return bestIncumbent; }
 	MTContext&		setBestIncumbent(Solution& sol);
+	[[nodiscard]]
+	inline Solution getBestFMIPIncumbent() { return bestFMIPIncumbent; }
 	MTContext&		setBestFMIPIncumbent(Solution& sol);
 
 	[[nodiscard]]

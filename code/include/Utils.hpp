@@ -22,6 +22,13 @@
 #define DEBUG 10
 
 #define EPSILON 1e-7
+#define ARGS_CONV_BASE 10
+
+
+#define MAX_DET_TL 1e7
+#define MIN_DET_TL 1e3
+#define SCALE 1e2
+#define DET_TL(nnz) std::max(MIN_DET_TL , std::min((double)(nnz / SCALE), MAX_DET_TL))
 
 #define PRINT_ERR(format, ...) Logger::print(Logger::LogLevel::ERROR, format, ##__VA_ARGS__)
 #define PRINT_WARN(format, ...) Logger::print(Logger::LogLevel::WARN, format, ##__VA_ARGS__)
@@ -38,7 +45,7 @@ namespace Utils {
 
 	struct Args {
 		std::string		   fileName;
-		double			   timeLimit, theta, rho, LNSDtimeLimit;
+		double			   timeLimit, theta, rho;
 		unsigned long	   numsubMIPs;
 		unsigned long long seed;
 	};

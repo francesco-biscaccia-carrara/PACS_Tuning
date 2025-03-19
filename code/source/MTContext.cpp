@@ -12,7 +12,6 @@ MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : numMIPs{
 	rndGens.reserve(numMIPs);
 
 	for (size_t i{ 0 }; i < numMIPs; i++) {
-
 		rndGens.emplace_back(intialSeed + (i + 1));
 		tmpSolutions.push_back({ .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND });
 	}
@@ -47,7 +46,7 @@ MTContext& MTContext::setBestFMIPIncumbent(Solution& sol) {
 	std::lock_guard<std::mutex> lock(updateSolMTX);
 	bestFMIPIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = 0.0 };
 #if ACS_VERBOSE >= VERBOSE
-	PRINT_INFO("New FMIPIncumbent found %12.2f\t", bestIncumbent.slackSum);
+	PRINT_INFO("New FMIPIncumbent found %12.2f\t", bestFMIPIncumbent.slackSum);
 #endif
 	return *this;
 }
@@ -111,6 +110,9 @@ MTContext::~MTContext() {
 void MTContext::FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs) {
 
 	FMIP fMIP{ CLIArgs.fileName };
+	if (bestFMIPIncumbent.slackSum < CPX_INFBOUND) {
+		fMIP.addMIPStart(bestFMIPIncumbent.sol);
+	}
 	fMIP.setNumCores(CPLEX_CORE);
 
 	std::vector<size_t> varsToFix = randomRhoFix(tmpSolutions[thID].sol.size(), thID, CLIArgs.rho, "FMIP", rndGens[thID]);
@@ -119,13 +121,21 @@ void MTContext::FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs) {
 		fMIP.setVarValue(i, tmpSolutions[thID].sol[i]);
 	}
 
-	int solveCode{ fMIP.solve(remTime, CLIArgs.LNSDtimeLimit) };
-	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS)
+	int solveCode{ fMIP.solve(remTime) };
+	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS) {
+#if ACS_VERBOSE >= VERBOSE
+		PRINT_INFO("Proc: %3d [FMIP] - Aborted: Infeasible with given TL", thID);
+#endif
 		return;
+	}
 
 	tmpSolutions[thID].sol = fMIP.getSol();
 	tmpSolutions[thID].slackSum = fMIP.getObjValue();
+
 	PRINT_OUT("Proc: %3d - FeasMIP Objective: %20.2f", thID, tmpSolutions[thID].slackSum);
+
+	Solution FMIPInc = { .sol = fMIP.MIP::getSol(), .slackSum = tmpSolutions[thID].slackSum };
+	setBestFMIPIncumbent(FMIPInc);
 }
 
 void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, double slackSumUB) {
@@ -139,21 +149,31 @@ void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, doubl
 	}
 
 	oMIP.updateBudgetConstr(slackSumUB);
+
+	if (bestFMIPIncumbent.slackSum < CPX_INFBOUND) {
+		oMIP.addMIPStart(bestFMIPIncumbent.sol);
+	}
+
 	if (bestIncumbent.slackSum < EPSILON) {
 		std::vector<double> MIPStart(bestIncumbent.sol);
 		MIPStart.resize(oMIP.getNumCols(), 0.0);
 		oMIP.addMIPStart(MIPStart);
 	}
 
-	int solveCode{ oMIP.solve(remTime, CLIArgs.LNSDtimeLimit) };
+	int solveCode{ oMIP.solve(remTime) };
 
-	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS)
+	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS) {
+#if ACS_VERBOSE >= VERBOSE
+		PRINT_INFO("Proc: %3d [OMIP] - Aborted: Infeasible with given TL", thID);
+#endif
 		return;
+	}
 
 	tmpSolutions[thID].sol = oMIP.getSol();
 	tmpSolutions[thID].slackSum = oMIP.getSlackSum();
 	tmpSolutions[thID].oMIPCost = oMIP.getObjValue();
 
-	PRINT_OUT("Proc: %3d - OptMIP Objective: %20.2f", thID, tmpSolutions[thID].oMIPCost);
+	PRINT_OUT("Proc: %3d - OptMIP Objective: %20.2f|%-10.2f", thID, tmpSolutions[thID].oMIPCost,tmpSolutions[thID].slackSum);
+	
 	setBestIncumbent(tmpSolutions[thID]);
 }

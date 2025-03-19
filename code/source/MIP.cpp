@@ -60,6 +60,13 @@ MIP& MIP::setNumCores(const int numCores) {
 	return *this;
 }
 
+size_t MIP::getNumNonZeros() {
+	size_t nnz{static_cast<size_t>(CPXgetnumnz(env, model))};
+	if (!nnz)
+		throw MIPException(MIPEx::General, "Unable to get the number of nonzero elements!");
+	return nnz;
+}
+
 int MIP::solve(const double timeLimit, const double detTimeLimit) {
 
 	if (timeLimit < EPSILON)
@@ -68,8 +75,10 @@ int MIP::solve(const double timeLimit, const double detTimeLimit) {
 	if (timeLimit < CPX_INFBOUND) [[likely]]
 		CPXsetdblparam(env, CPX_PARAM_TILIM, timeLimit);
 
-	if (detTimeLimit < CPX_INFBOUND) [[likely]]
+	if (detTimeLimit < CPX_INFBOUND)
 		CPXsetdblparam(env, CPX_PARAM_DETTILIM, detTimeLimit);
+	else [[likely]]
+		CPXsetdblparam(env, CPX_PARAM_DETTILIM, DET_TL(getNumNonZeros()));
 
 	for (size_t i{ 0 }; i < restoreVarType.size(); i++)
 		changeVarType(i, restoreVarType[i]);
@@ -154,7 +163,7 @@ MIP& MIP::setObjFunction(const std::vector<double>& newObj) {
 std::vector<double> MIP::getSol() {
 	int		numCols{ getNumCols() };
 	double* xStar{ (double*)calloc(numCols, sizeof(double)) };
-	if (int error{CPXgetx(env, model, xStar, 0, numCols - 1)})
+	if (int error{ CPXgetx(env, model, xStar, 0, numCols - 1) })
 		throw MIPException(MIPEx::General, "Unable to obtain the solution!" + std::to_string(error));
 	std::vector<double> sol(xStar, xStar + numCols);
 	free(xStar);
@@ -168,7 +177,7 @@ MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef, const 
 		throw MIPException(MIPEx::InputSizeError, "Wrong new column size");
 
 	char** cname{ (char**)calloc(1, sizeof(char*)) };
-	char   colName[name.length()+1];
+	char   colName[name.length() + 1];
 	strcpy(colName, name.c_str());
 	cname[0] = colName;
 	int*	indices{ (int*)malloc(numRow * sizeof(int)) };
@@ -190,18 +199,18 @@ MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef, const 
 	return *this;
 }
 
-MIP& MIP::addCol(const size_t index, const double value, const double objCoef, const double lb, const double ub, const std::string name){
+MIP& MIP::addCol(const size_t index, const double value, const double objCoef, const double lb, const double ub, const std::string name) {
 	if (index < 0 || index > getNumRows() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index addCol()!");
-	
+
 	char** cname{ (char**)calloc(1, sizeof(char*)) };
-	char   colName[name.length()+1];
+	char   colName[name.length() + 1];
 	strcpy(colName, name.c_str());
 	cname[0] = colName;
 
-	int		tmpIndex{ static_cast<int>(index)};
-	double	tmpValue{ value };
-	int		start{0}, nnz{ 1 };
+	int	   tmpIndex{ static_cast<int>(index) };
+	double tmpValue{ value };
+	int	   start{ 0 }, nnz{ 1 };
 
 	if (CPXaddcols(env, model, 1, nnz, &objCoef, &start, &tmpIndex, &tmpValue, &lb, &ub, &cname[0]))
 		throw MIPException(MIPEx::General, "No column added!");

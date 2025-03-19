@@ -5,8 +5,8 @@
 #include "../include/OMIP.hpp"
 #include <assert.h>
 
-//FIXME Need MIPstart on FMIP and parallelFMIP
- 
+// FIXME Need MIPstart on FMIP and parallelFMIP
+
 int main(int argc, char* argv[]) {
 	try {
 		Clock::initTime = Clock::getTime();
@@ -46,6 +46,8 @@ int main(int argc, char* argv[]) {
 				for (auto i : commonValues)
 					MergeFMIP.setVarValue(i, MTEnv.getTmpSolution(0).sol[i]);
 
+				MergeFMIP.addMIPStart(MTEnv.getBestFMIPIncumbent().sol);
+
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
 #if ACS_VERBOSE >= VERBOSE
 					PRINT_INFO("TIME_LIMIT REACHED");
@@ -53,13 +55,15 @@ int main(int argc, char* argv[]) {
 					break;
 				}
 
-				MergeFMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), CLIArgs.LNSDtimeLimit);
+				MergeFMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit));
 
 				tmpSol.sol = MergeFMIP.getSol();
 				tmpSol.slackSum = MergeFMIP.getObjValue();
 				PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
 
 				MTEnv.broadcastSol(tmpSol);
+				Solution tmpFMIPInc = { .sol = MergeFMIP.MIP::getSol(), .slackSum = tmpSol.slackSum };
+				MTEnv.setBestFMIPIncumbent(tmpFMIPInc);
 			}
 
 			if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -79,6 +83,10 @@ int main(int argc, char* argv[]) {
 			for (auto i : commonValues)
 				MergeOMIP.setVarValue(i, MTEnv.getTmpSolution(0).sol[i]);
 
+			if (MTEnv.getBestFMIPIncumbent().slackSum < CPX_INFBOUND) {
+				MergeOMIP.addMIPStart(MTEnv.getBestFMIPIncumbent().sol);
+			}
+
 			if (MTEnv.getBestIncumbent().slackSum < EPSILON) {
 				std::vector<double> MIPStart(MTEnv.getBestIncumbent().sol);
 				MIPStart.resize(MergeOMIP.getNumCols(), 0.0);
@@ -92,7 +100,7 @@ int main(int argc, char* argv[]) {
 #endif
 				break;
 			}
-			int rtnValue{ MergeOMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), CLIArgs.LNSDtimeLimit) };
+			int rtnValue{ MergeOMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit)) };
 
 			if (rtnValue == CPXMIP_TIME_LIM_INFEAS)
 				break;

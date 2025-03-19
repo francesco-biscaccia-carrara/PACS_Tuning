@@ -55,6 +55,7 @@ public:
 	MIP& operator=(const MIP&) = delete;
 
 	MIP& setNumCores(const int numCores);
+	size_t getNumNonZeros();
 
 	int	 solve(const double timeLimit = CPX_INFBOUND, const double detTimeLimit = CPX_INFBOUND);
 	int	 solveRelaxation(const double timeLimit = CPX_INFBOUND);
