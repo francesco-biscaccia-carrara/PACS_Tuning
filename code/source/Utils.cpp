@@ -42,15 +42,20 @@ int Random::Int(int min, int max) {
 }
 
 #if LOG
-void Logger::setFileLogName(Args args) {
+void Logger::setFileLogName(Args args, bool CPLEXRun) {
 	std::ostringstream oss;
+	if(CPLEXRun){
+	oss << "../log/CPLEX_" << args.fileName
+		<< "_tl-" << args.timeLimit
+		<< ".log";}
+	else{
 	oss << "../log/" << args.fileName
 		<< "_tl-" << args.timeLimit
 		<< "_th-" << args.theta
 		<< "_rh-" << args.rho
 		<< "_nMIP-" << args.numsubMIPs
 		<< "_sd" << args.seed
-		<< ".log";
+		<< ".log";}
 	Logger::logFile = fopen(oss.str().c_str(), "w+");
 }
 #endif
@@ -152,11 +157,11 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 		} };
 
 		for (int i = 1; i < argc; ++i) {
-			if (std::string(argv[i]) == "-h" || std::string(argv[i]) == "-help")
-				if(CPLEXRun)
-					throw ArgsParserException(HELP_CPLEXRUN);
-				else
-					throw ArgsParserException(HELP_ACS);
+			if (std::string(argv[i]) == "-h" || std::string(argv[i]) == "-help"){
+				if(CPLEXRun) throw ArgsParserException(HELP_CPLEXRUN);
+				else throw ArgsParserException(HELP_ACS);
+			}
+			
 		}
 
 		for (int i = 1; i < argc - 1; i++) {
@@ -192,7 +197,7 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 		}
 
 #if LOG
-		Logger::setFileLogName(args);
+		Logger::setFileLogName(args,CPLEXRun);
 #endif
 		if(CPLEXRun){
 			if (args.fileName.empty() || !args.timeLimit)
@@ -203,13 +208,20 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 		}
 		
 
+	std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+	char buffer[32];
+    std::strncpy(buffer, std::ctime(&time), 26);
+	buffer[std::strlen(buffer)-1] = 0; //Remove the \n
+    PRINT_OUT("Date:\t %s",buffer);
+
 #if ACS_VERBOSE >= VERBOSE
-	if(CPLEXRun)
+	if(CPLEXRun){
 		PRINT_INFO("Parsed Arguments:\
 			\n\t - File Name :  \t%s \
 			\n\t - Time Limit : \t%f",
 			args.fileName.c_str(), args.timeLimit);
-	else
+	}
+	else{
 		PRINT_INFO("Parsed Arguments:\
                             \n\t - File Name :  \t%s \
                             \n\t - Time Limit : \t%f\
@@ -218,11 +230,15 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 							\n\t - Seed : \t\t%d\
 							\n\t - Num sub-MIP : \t%d",
 				   			args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs);
+		}
+	
 #endif
 	} else {
-		if(CPLEXRun)
+		if(CPLEXRun){
 			throw ArgsParserException(HELP_CPLEXRUN);
-		else
+		}
+		else{
 			throw ArgsParserException(HELP_ACS);
+		}
 	}
 }

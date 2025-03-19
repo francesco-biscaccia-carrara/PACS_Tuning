@@ -74,7 +74,7 @@ namespace Utils {
 	namespace Logger {
 #if LOG
 		inline FILE* logFile{ nullptr };
-		void		 setFileLogName(Args CLIArgs);
+		void		 setFileLogName(Args CLIArgs, bool CPLEXRun = false);
 		inline void	 closeFileLog() {
 			 if (Logger::logFile != nullptr)
 				 fclose(Logger::logFile);
