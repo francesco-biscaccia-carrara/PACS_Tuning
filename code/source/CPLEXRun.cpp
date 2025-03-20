@@ -24,9 +24,5 @@ int main(int argc, char* argv[]) {
 		PRINT_ERR(ex.what());
 		return EXIT_FAILURE;
 	}
-#if LOG
-	Logger::closeFileLog();
-#endif
-
 	return EXIT_SUCCESS;
 }

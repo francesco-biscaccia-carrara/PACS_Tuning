@@ -40,10 +40,10 @@ void FMIP::setup() {
 	setObjFunction(obj);
 
 	for (size_t i{ 0 }; i < getNumRows(); i++) {
-		addCol(i,1, FMIP_SLACK_OBJ_COEFF, 0, CPX_INFBOUND, "SP_" + std::to_string(i + 1));
+		addCol(i, 1, FMIP_SLACK_OBJ_COEFF, 0, CPX_INFBOUND, "SP_" + std::to_string(i + 1));
 	}
 
 	for (size_t i{ 0 }; i < getNumRows(); i++) {
-		addCol(i,-1, FMIP_SLACK_OBJ_COEFF, 0, CPX_INFBOUND, "SN_" + std::to_string(i + 1));
+		addCol(i, -1, FMIP_SLACK_OBJ_COEFF, 0, CPX_INFBOUND, "SN_" + std::to_string(i + 1));
 	}
 }

@@ -117,7 +117,7 @@ void MTContext::FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs) {
 
 	FixPolicy::randomRhoFix(tmpSolutions[thID].sol, fMIP, thID, CLIArgs.rho, "FMIP", rndGens[thID]);
 
-	int solveCode{ fMIP.solve(remTime,DET_TL(fMIP.getNumNonZeros()))};
+	int solveCode{ fMIP.solve(remTime, DET_TL(fMIP.getNumNonZeros())) };
 	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS) {
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Proc: %3d [FMIP] - Aborted: Infeasible with given TL", thID);
@@ -140,7 +140,7 @@ void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, doubl
 	oMIP.setNumCores(CPLEX_CORE);
 	oMIP.updateBudgetConstr(slackSumUB);
 
-	FixPolicy::randomRhoFix(tmpSolutions[thID].sol, oMIP, thID, CLIArgs.rho, "OMIP", rndGens[thID]);	
+	FixPolicy::randomRhoFix(tmpSolutions[thID].sol, oMIP, thID, CLIArgs.rho, "OMIP", rndGens[thID]);
 
 	if (bestFMIPIncumbent.slackSum < CPX_INFBOUND) {
 		oMIP.addMIPStart(bestFMIPIncumbent.sol);
@@ -152,7 +152,7 @@ void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, doubl
 		oMIP.addMIPStart(MIPStart);
 	}
 
-	int solveCode{ oMIP.solve(remTime,DET_TL(oMIP.getNumNonZeros()))};
+	int solveCode{ oMIP.solve(remTime, DET_TL(oMIP.getNumNonZeros())) };
 
 	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS) {
 #if ACS_VERBOSE >= VERBOSE
@@ -165,7 +165,7 @@ void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, doubl
 	tmpSolutions[thID].slackSum = oMIP.getSlackSum();
 	tmpSolutions[thID].oMIPCost = oMIP.getObjValue();
 
-	PRINT_OUT("Proc: %3d - OptMIP Objective: %20.2f|%-10.2f", thID, tmpSolutions[thID].oMIPCost,tmpSolutions[thID].slackSum);
-	
+	PRINT_OUT("Proc: %3d - OptMIP Objective: %20.2f|%-10.2f", thID, tmpSolutions[thID].oMIPCost, tmpSolutions[thID].slackSum);
+
 	setBestIncumbent(tmpSolutions[thID]);
 }

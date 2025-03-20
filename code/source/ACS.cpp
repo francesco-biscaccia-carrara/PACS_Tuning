@@ -5,6 +5,8 @@
 #include "../include/OMIP.hpp"
 #include <assert.h>
 
+//FIXME: Too much overhead, reduce it
+
 int main(int argc, char* argv[]) {
 	try {
 		Clock::initTime = Clock::getTime();
@@ -15,9 +17,8 @@ int main(int argc, char* argv[]) {
 		Solution tmpSol = MTEnv.getBestIncumbent();
 		Solution tmpFMIPInc = MTEnv.getBestIncumbent();
 
-		tmpSol = FixPolicy::firstThetaFixing(CLIArgs.fileName,CLIArgs.theta,Random(CLIArgs.seed));
+		tmpSol = FixPolicy::firstThetaFixing(CLIArgs.fileName, CLIArgs.theta, Random(CLIArgs.seed));
 		PRINT_OUT("Init FeasMIP solution cost: %25.2f", tmpSol.slackSum);
-
 		MTEnv.broadcastSol(tmpSol);
 
 		while (Clock::timeElapsed() < CLIArgs.timeLimit) {
@@ -35,7 +36,7 @@ int main(int argc, char* argv[]) {
 				FMIP MergeFMIP(CLIArgs.fileName);
 				MergeFMIP.setNumCores(CPLEX_CORE);
 
-				MergePolicy::recombine(MergeFMIP,MTEnv.getTmpSolutions(), "1_Phase");
+				MergePolicy::recombine(MergeFMIP, MTEnv.getTmpSolutions(), "1_Phase");
 
 				MergeFMIP.addMIPStart(MTEnv.getBestFMIPIncumbent().sol);
 
@@ -46,9 +47,10 @@ int main(int argc, char* argv[]) {
 					break;
 				}
 
-				int solveCode {MergeFMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit))};
+				int solveCode{ MergeFMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit)) };
 
-				if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS)  break;
+				if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS)
+					break;
 
 				tmpSol.sol = MergeFMIP.getSol();
 				tmpSol.slackSum = MergeFMIP.getObjValue();
@@ -59,8 +61,8 @@ int main(int argc, char* argv[]) {
 				tmpFMIPInc.sol = MergeFMIP.MIP::getSol();
 				tmpFMIPInc.slackSum = tmpSol.slackSum;
 				MTEnv.setBestFMIPIncumbent(tmpFMIPInc);
-				
-				//if(tmpSol.slackSum < EPSILON) break;
+
+				// if(tmpSol.slackSum < EPSILON) break;
 			}
 
 			if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -76,7 +78,7 @@ int main(int argc, char* argv[]) {
 			OMIP MergeOMIP(CLIArgs.fileName);
 			MergeOMIP.setNumCores(CPLEX_CORE);
 
-			MergePolicy::recombine(MergeOMIP,MTEnv.getTmpSolutions(), "2_Phase");
+			MergePolicy::recombine(MergeOMIP, MTEnv.getTmpSolutions(), "2_Phase");
 
 			if (MTEnv.getBestFMIPIncumbent().slackSum < CPX_INFBOUND) {
 				MergeOMIP.addMIPStart(MTEnv.getBestFMIPIncumbent().sol);
@@ -97,7 +99,8 @@ int main(int argc, char* argv[]) {
 			}
 			int solveCode{ MergeOMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit)) };
 
-			if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS) break;
+			if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS)
+				break;
 
 			tmpSol.sol = MergeOMIP.getSol();
 			tmpSol.slackSum = MergeOMIP.getSlackSum();
@@ -105,14 +108,16 @@ int main(int argc, char* argv[]) {
 
 			PRINT_OUT("OptMIP Objective|SlackSum after merging: %12.2f|%-10.2f", MergeOMIP.getObjValue(), tmpSol.slackSum);
 			MTEnv.setBestIncumbent(tmpSol);
+			MTEnv.setBestFMIPIncumbent(tmpFMIPInc);
 			MTEnv.broadcastSol(tmpSol);
 		}
 
-		MIP		 og(CLIArgs.fileName);
+		
 		Solution incumbent = MTEnv.getBestIncumbent();
 		if (incumbent.sol.empty() || incumbent.slackSum > EPSILON) {
 			PRINT_ERR("NO FEASIBLE SOLUTION FIND");
 		} else {
+			MIP		 og(CLIArgs.fileName);
 			assert(og.checkFeasibility(incumbent.sol) == true);
 			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
 		}
@@ -121,9 +126,6 @@ int main(int argc, char* argv[]) {
 		PRINT_ERR(ex.what());
 		return EXIT_FAILURE;
 	}
-#if LOG
-	Logger::closeFileLog();
-#endif
-
+	
 	return EXIT_SUCCESS;
 }

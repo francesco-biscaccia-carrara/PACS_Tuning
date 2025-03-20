@@ -15,6 +15,8 @@
 #include <string>
 #include <sys/time.h>
 #include <vector>
+#include <ctime>
+#include <chrono>
 
 #define NO_VER -1
 #define DEFAULT 0
@@ -73,15 +75,6 @@ namespace Utils {
 	}; // namespace Random
 
 	namespace Logger {
-#if LOG
-		inline FILE* logFile{ nullptr };
-		void		 setFileLogName(Args CLIArgs, bool CPLEXRun = false);
-		inline void	 closeFileLog() {
-			 if (Logger::logFile != nullptr)
-				 fclose(Logger::logFile);
-		}
-#endif
-
 		enum class LogLevel { ERROR,
 							  WARN,
 							  INFO,

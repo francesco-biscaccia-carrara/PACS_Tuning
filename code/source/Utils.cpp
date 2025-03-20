@@ -2,7 +2,7 @@
 
 using namespace Utils;
 
-constexpr const char* HELP_ACS="Usage: ./ACS <PARS>\
+constexpr const char* HELP_ACS = "Usage: ./ACS <PARS>\
         \n '-h  / --help'\t\t\t\t Show help message\
         \n '-f  / --filename <string>'\t\t Input file\
         \n '-tl / --timelimit <double>'\t\t Max execution time\
@@ -11,12 +11,10 @@ constexpr const char* HELP_ACS="Usage: ./ACS <PARS>\
         \n '-sd / --seed <u long long>'\t\t Random seed\
 		\n '-nSMIPs/ --numsubMIPs <u long>'\t Number of subMIP in the parallel phase";
 
-constexpr const char* HELP_CPLEXRUN="Usage: ./CPLEXRun <PARS>\
+constexpr const char* HELP_CPLEXRUN = "Usage: ./CPLEXRun <PARS>\
         \n '-h  / --help'\t\t\t\t Show help message\
         \n '-f  / --filename <string>'\t\t Input file\
         \n '-tl / --timelimit <double>'\t\t Max execution time";
-
-
 
 Random::Random(unsigned long long newSeed) : seed{ newSeed } {
 	rng.seed(newSeed);
@@ -37,24 +35,6 @@ int Random::Int(int min, int max) {
 	return get(rng);
 }
 
-#if LOG
-void Logger::setFileLogName(Args args, bool CPLEXRun) {
-	std::ostringstream oss;
-	if(CPLEXRun){
-	oss << "../log/CPLEX_" << args.fileName
-		<< "_tl-" << args.timeLimit
-		<< ".log";}
-	else{
-	oss << "../log/" << args.fileName
-		<< "_tl-" << args.timeLimit
-		<< "_th-" << args.theta
-		<< "_rh-" << args.rho
-		<< "_nMIP-" << args.numsubMIPs
-		<< "_sd" << args.seed
-		<< ".log";}
-	Logger::logFile = fopen(oss.str().c_str(), "w+");
-}
-#endif
 
 void Logger::print(LogLevel typeMsg, const char* format, ...) {
 	const char* msgClr;
@@ -87,23 +67,20 @@ void Logger::print(LogLevel typeMsg, const char* format, ...) {
 			break;
 	}
 #if LOG
-	fprintf(Logger::logFile, "%s|%8.2f|", msgPref, Clock::timeElapsed());
+	printf("%s|%8.2f|", msgPref, Clock::timeElapsed());
 #else
 	printf("%s\033[1m\033[4m%s%s%s|%8.2f|", msgClr, msgPref, ANSI_COLOR_RESET, msgClr, Clock::timeElapsed());
 #endif
 
 	va_list args;
 	va_start(args, format);
-#if LOG
-	vfprintf(Logger::logFile, format, args);
-#else
 	vfprintf(stdout, format, args);
-#endif
+
 
 	va_end(args);
 
 #if LOG
-	fprintf(Logger::logFile, "\n");
+	printf("\n");
 #else
 	printf("%s\n", ANSI_COLOR_RESET);
 #endif
@@ -145,7 +122,7 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 																					  { "-th", &Args::theta },
 																					  { "--theta", &Args::theta },
 																					  { "-rh", &Args::rho },
-																					  { "--rho", &Args::rho }} };
+																					  { "--rho", &Args::rho } } };
 
 		constexpr std::array<std::pair<const char*, unsigned long long Args::*>, 2> ullongArgs{ {
 			{ "-sd", &Args::seed },
@@ -153,11 +130,12 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 		} };
 
 		for (int i = 1; i < argc; ++i) {
-			if (std::string(argv[i]) == "-h" || std::string(argv[i]) == "-help"){
-				if(CPLEXRun) throw ArgsParserException(HELP_CPLEXRUN);
-				else throw ArgsParserException(HELP_ACS);
+			if (std::string(argv[i]) == "-h" || std::string(argv[i]) == "-help") {
+				if (CPLEXRun)
+					throw ArgsParserException(HELP_CPLEXRUN);
+				else
+					throw ArgsParserException(HELP_ACS);
 			}
-			
 		}
 
 		for (int i = 1; i < argc - 1; i++) {
@@ -192,49 +170,47 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 			}
 		}
 
-#if LOG
-		Logger::setFileLogName(args,CPLEXRun);
-#endif
-		if(CPLEXRun){
+		if (CPLEXRun) {
 			if (args.fileName.empty() || !args.timeLimit)
 				throw ArgsParserException(HELP_CPLEXRUN);
-		}else{
+		} else {
 			if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.numsubMIPs)
 				throw ArgsParserException(HELP_ACS);
 		}
-		
 
-	PRINT_OUT("%s v0.0",argv[0]+2);
-	std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-	char buffer[32];
-    std::strncpy(buffer, std::ctime(&time), 26);
-	buffer[std::strlen(buffer)-1] = 0; //Remove the \n
-    PRINT_OUT("Date:\t %s",buffer);
+		const char* ACSversion = "";
+		if (!CPLEXRun) {
+			ACSversion = "\tv0.0";
+		}
+		PRINT_OUT("%s%s", argv[0] + 2,ACSversion);
+		std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+		char		buffer[32];
+		strncpy(buffer, std::ctime(&time), 26);
+		buffer[strlen(buffer) - 1] = 0; // Remove the \n
+		PRINT_OUT("Date:\t %s", buffer);
 
 #if ACS_VERBOSE >= VERBOSE
-	if(CPLEXRun){
-		PRINT_INFO("Parsed Arguments:\
+		if (CPLEXRun) {
+			PRINT_INFO("Parsed Arguments:\
 			\n\t - File Name :  \t%s \
 			\n\t - Time Limit : \t%f",
-			args.fileName.c_str(), args.timeLimit);
-	}
-	else{
-		PRINT_INFO("Parsed Arguments:\
+					   args.fileName.c_str(), args.timeLimit);
+		} else {
+			PRINT_INFO("Parsed Arguments:\
                             \n\t - File Name :  \t%s \
                             \n\t - Time Limit : \t%f\
                             \n\t - Theta : \t\t%f\
                             \n\t - Rho : \t\t%f\
 							\n\t - Seed : \t\t%d\
 							\n\t - Num sub-MIP : \t%d",
-				   			args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs);
+					   args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs);
 		}
-	
+
 #endif
 	} else {
-		if(CPLEXRun){
+		if (CPLEXRun) {
 			throw ArgsParserException(HELP_CPLEXRUN);
-		}
-		else{
+		} else {
 			throw ArgsParserException(HELP_ACS);
 		}
 	}
