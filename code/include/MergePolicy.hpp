@@ -1,7 +1,7 @@
 #ifndef MER_POL_H
 #define MER_POL_H
 
-#include "Utils.hpp"
+#include "MIP.hpp"
 
 using namespace Utils;
 
@@ -29,7 +29,7 @@ namespace MergePolicy {
 		}
 	};
 
-	std::vector<size_t> recombine(const std::vector<Solution>& x, const char* phase);
+	void recombine(MIP& model, const std::vector<Solution>& x, const char* phase);
 }; // namespace MergePolicy
 
 #endif

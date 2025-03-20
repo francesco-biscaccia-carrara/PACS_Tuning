@@ -115,11 +115,7 @@ void MTContext::FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs) {
 	}
 	fMIP.setNumCores(CPLEX_CORE);
 
-	std::vector<size_t> varsToFix = randomRhoFix(tmpSolutions[thID].sol.size(), thID, CLIArgs.rho, "FMIP", rndGens[thID]);
-
-	for (auto i : varsToFix) {
-		fMIP.setVarValue(i, tmpSolutions[thID].sol[i]);
-	}
+	FixPolicy::randomRhoFix(tmpSolutions[thID].sol, fMIP, thID, CLIArgs.rho, "FMIP", rndGens[thID]);
 
 	int solveCode{ fMIP.solve(remTime,DET_TL(fMIP.getNumNonZeros()))};
 	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS) {
@@ -142,13 +138,9 @@ void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, doubl
 
 	OMIP oMIP{ CLIArgs.fileName };
 	oMIP.setNumCores(CPLEX_CORE);
-
-	std::vector<size_t> varsToFix = randomRhoFix(tmpSolutions[thID].sol.size(), thID, CLIArgs.rho, "OMIP", rndGens[thID]);
-	for (auto i : varsToFix) {
-		oMIP.setVarValue(i, tmpSolutions[thID].sol[i]);
-	}
-
 	oMIP.updateBudgetConstr(slackSumUB);
+
+	FixPolicy::randomRhoFix(tmpSolutions[thID].sol, oMIP, thID, CLIArgs.rho, "OMIP", rndGens[thID]);	
 
 	if (bestFMIPIncumbent.slackSum < CPX_INFBOUND) {
 		oMIP.addMIPStart(bestFMIPIncumbent.sol);

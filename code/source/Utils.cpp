@@ -1,10 +1,6 @@
 #include "../include/Utils.hpp"
 
-
-
 using namespace Utils;
-
-#pragma region STATIC
 
 constexpr const char* HELP_ACS="Usage: ./ACS <PARS>\
         \n '-h  / --help'\t\t\t\t Show help message\
@@ -20,7 +16,7 @@ constexpr const char* HELP_CPLEXRUN="Usage: ./CPLEXRun <PARS>\
         \n '-f  / --filename <string>'\t\t Input file\
         \n '-tl / --timelimit <double>'\t\t Max execution time";
 
-#pragma endregion
+
 
 Random::Random(unsigned long long newSeed) : seed{ newSeed } {
 	rng.seed(newSeed);
@@ -208,6 +204,7 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 		}
 		
 
+	PRINT_OUT("%s v0.0",argv[0]+2);
 	std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 	char buffer[32];
     std::strncpy(buffer, std::ctime(&time), 26);

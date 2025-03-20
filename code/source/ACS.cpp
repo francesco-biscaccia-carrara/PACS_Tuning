@@ -31,13 +31,11 @@ int main(int argc, char* argv[]) {
 				}
 				MTEnv.parallelFMIPOptimization(Clock::timeRemaining(CLIArgs.timeLimit), CLIArgs);
 
-				auto commonValues = MergePolicy::recombine(MTEnv.getTmpSolutions(), "1_Phase");
-
+				// 1° Recombination phase
 				FMIP MergeFMIP(CLIArgs.fileName);
 				MergeFMIP.setNumCores(CPLEX_CORE);
 
-				for (auto i : commonValues)
-					MergeFMIP.setVarValue(i, MTEnv.getTmpSolution(0).sol[i]);
+				MergePolicy::recombine(MergeFMIP,MTEnv.getTmpSolutions(), "1_Phase");
 
 				MergeFMIP.addMIPStart(MTEnv.getBestFMIPIncumbent().sol);
 
@@ -74,13 +72,11 @@ int main(int argc, char* argv[]) {
 
 			MTEnv.parallelOMIPOptimization(Clock::timeRemaining(CLIArgs.timeLimit), CLIArgs, tmpSol.slackSum);
 
-			auto commonValues = MergePolicy::recombine(MTEnv.getTmpSolutions(), "2_Phase");
-
+			// 2° Recombination phase
 			OMIP MergeOMIP(CLIArgs.fileName);
 			MergeOMIP.setNumCores(CPLEX_CORE);
 
-			for (auto i : commonValues)
-				MergeOMIP.setVarValue(i, MTEnv.getTmpSolution(0).sol[i]);
+			MergePolicy::recombine(MergeOMIP,MTEnv.getTmpSolutions(), "2_Phase");
 
 			if (MTEnv.getBestFMIPIncumbent().slackSum < CPX_INFBOUND) {
 				MergeOMIP.addMIPStart(MTEnv.getBestFMIPIncumbent().sol);

@@ -36,6 +36,7 @@
 #define PRINT_OUT(format, ...) Logger::print(Logger::LogLevel::OUT, format, ##__VA_ARGS__)
 #define PRINT_BEST(format, ...) Logger::print(Logger::LogLevel::BEST, format, ##__VA_ARGS__)
 
+
 namespace Utils {
 
 	struct VarBounds {
@@ -85,7 +86,8 @@ namespace Utils {
 							  WARN,
 							  INFO,
 							  OUT,
-							  BEST };
+							  BEST,
+							_NO};
 
 		void print(LogLevel typeMsg, const char* msg, ...);
 

@@ -79,21 +79,20 @@ Solution FixPolicy::firstThetaFixing(std::string fileName, double theta, Random 
 	return rtn;
 }
 
-std::vector<size_t> FixPolicy::randomRhoFix(const size_t vectorSize, const size_t threadID, double rho, const char* type, Random& rnd) {
+
+void FixPolicy::randomRhoFix(const std::vector<double>& sol, MIP& model, const size_t threadID, double rho, const char* type, Random& rnd) {
 	if (rho < EPSILON || rho >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Rho par. must be within (0,1)!");
 
-	const size_t numFixedVars = static_cast<size_t>(rho * vectorSize);
-	const size_t start = rnd.Int(0, vectorSize - 1);
+	const size_t numFixedVars = static_cast<size_t>(rho * sol.size());
+	const size_t start = rnd.Int(0, sol.size() - 1);
 
 #if ACS_VERBOSE >= VERBOSE
 	PRINT_INFO("Proc: %3d [%s] - FixPolicy::randomRhoFix - %zu vars hard-fixed", threadID, type, numFixedVars);
 #endif
-	std::vector<size_t> rtn;
 
 	for (size_t i{ 0 }; i < numFixedVars; i++) {
-		rtn.emplace_back((start + i) % vectorSize);
+		size_t index {(start + i) % sol.size()};
+		model.setVarValue(index,sol[index]);
 	}
-
-	return rtn;
 }
