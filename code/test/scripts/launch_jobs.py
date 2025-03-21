@@ -1,4 +1,4 @@
-import os
+import os,time
 
 jobs = os.listdir("../jobs")
 
@@ -11,4 +11,5 @@ if (
 
 for job in jobs:
     os.system(f"sbatch --wckey=rop --requeue ../jobs/{job}")
+    time.sleep(0.5)
 
