@@ -10,5 +10,5 @@ if (
     ): exit(1)
 
 for job in jobs:
-    os.system(f"sbatch --wckey=rop --requeue {job}")
+    os.system(f"sbatch --wckey=rop --requeue ../jobs/{job}")
 
