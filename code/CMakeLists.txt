@@ -172,13 +172,15 @@ add_definitions(-D ACS_HOME_DIR="${HOME_DIR}" -D ACS_VERBOSE=${VERBOSE} -D ACS_W
 add_custom_target(opt
     COMMAND echo "flags used: ${CMAKE_CXX_FLAGS_RELEASE}"
     COMMAND ${CMAKE_COMMAND} -D CMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
-    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target main
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ACS
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target CPLEXRun
 )
 
 add_custom_target(debug
     COMMAND echo "flags used: ${CMAKE_CXX_FLAGS_DEBUG}"
     COMMAND ${CMAKE_COMMAND} -D CMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
-    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target main
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ACS
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target CPLEXRun
 )
 
 add_custom_target(clear
