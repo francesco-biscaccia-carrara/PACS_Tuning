@@ -180,7 +180,7 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 
 		const char* ACSversion = "";
 		if (!CPLEXRun) {
-			ACSversion = "\tv1.0.0";
+			ACSversion = "\tv1.0.1";
 		}
 		PRINT_OUT("%s%s", argv[0] + 2,ACSversion);
 		std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());

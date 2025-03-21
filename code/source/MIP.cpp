@@ -16,7 +16,8 @@ MIP::MIP(const std::string fileName) {
 	if (status)
 		throw MIPException(MIPEx::ModelCreation, "Model not created!");
 
-	status = CPXreadcopyprob(env, model, (INST_DIR + fileName + ".mps").c_str(), "MPS");
+	status = CPXreadcopyprob(env, model, (INST_DIR + fileName + ".mps.gz").c_str(), NULL);
+	
 	if (status)
 		throw MIPException(MIPEx::FileNotFound, "Failed to read the problem from file!\t" + std::to_string(status));
 

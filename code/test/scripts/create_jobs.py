@@ -14,6 +14,7 @@ def clear_dir(dir: Path):
 
 def main():
     input_csv = "fHard_instances.csv"
+    print(f"Input file: {input_csv}")
     if (
             input(
                 f"Insert y if the file is correct: "
@@ -25,19 +26,16 @@ def main():
 
     instances = df["Instance"];
 
-
-    code_dir = os.path("../..")
+    programms = ["ACS"]
 
     # jobs
-    jobs_folder = os.path.join(code_dir, "test/jobs")
-    jobs_outputs = os.path.join(code_dir, "test/jobs_output")
+    jobs_folder = "../jobs"
+    jobs_outputs = "../jobs_output"
 
-    instances_folder = os.path.join(code_dir, "data") #TO BE CHANGED ON CLUSTER
-    exec_dir = os.path.join(code_dir, "build")
+    exec_dir = "../../build"
 
     print(f"Jobs folder: {jobs_folder}")
     print(f"Jobs output: {jobs_outputs}")
-    print(f"Instances folder: {instances_folder}")
     print(f"ACS Executable: {exec_dir}/CPLEXRun")
     print(f"CPLEX Executable: {exec_dir}/CPLEXRun")
 
@@ -47,38 +45,75 @@ def main():
     os.makedirs(jobs_folder, exist_ok=True)
     os.makedirs(jobs_outputs, exist_ok=True)
     clear_dir(Path(jobs_outputs))
-
+    
+    count =0;
     for instance in instances:
-        for exe in ("CPLEXRun","ACS"):
-            job = f"{jobs_folder}/{instance}_CPLEXRun"
-            job_content = f"""#!/bin/bash
-    #SBATCH --job-name={instance}_CPLEXRun
-    #SBATCH --partition=arrow
-    #SBATCH --ntasks=1
-    #SBATCH --mem=32GB
-    #SBATCH --time=00:10:00
-    #SBATCH --output={jobs_outputs}/{instance}_CPLEXRun.out
-    #SBATCH --error={jobs_outputs}/{instance}_CPLEXRun_.out
+        for exe in  ["CPLEXRun","ACS"]:
+            if exe == "ACS":
+                for rho in [0.10,0.25,0.50,0.75,0.9]:
+                    for seed in [2120934,3409212,240931]:
+                        job = f"{jobs_folder}/{instance}_{exe}_{rho}_{seed}"
+                        job_content = f"""#!/bin/bash
+#SBATCH --job-name={instance}_{exe}_{rho}_{seed}
+#SBATCH --partition=arrow
+#SBATCH --ntasks=1
+#SBATCH --mem=32GB
+#SBATCH --cpus-per-task=4
+#SBATCH --time=00:10:00
+#SBATCH --output={jobs_outputs}/{instance}_{exe}.out
+#SBATCH --error={jobs_outputs}/{instance}_{exe}.out
 
-    # warm up processors
-    sudo cpupower frequency-set -g performance
-    sleep 0.1
-    stress-ng -c 4 --cpu-ops=100
-    # set limits
-    ulimit -v 16777216
+# warm up processors
+sudo cpupower frequency-set -g performance
+sleep 0.1
+stress-ng -c 4 --cpu-ops=100
+# set limits
+ulimit -v 16777216
 
-    #####################
+#####################
+cd {exec_dir}
+./{exe} -f {instance} -tl 300 -th 0.25 -nSMIPs 4 -rh {rho} -sd {seed}
 
-    {exec_dir}/./{exe} -f {instances_folder}/{instance}.mps -tl 300 
+#####################
 
-    #####################
+# back to power saving mode
+sudo cpupower frequency-set -g powersave"""
 
-    # back to power saving mode
-    sudo cpupower frequency-set -g powersave"""
+                        with open(job, "w") as f:
+                            f.write(job_content)
+                        count+=1;
+            else: 
+                job = f"{jobs_folder}/{instance}_{exe}"
+                job_content = f"""#!/bin/bash
+#SBATCH --job-name={instance}_{exe}
+#SBATCH --partition=arrow
+#SBATCH --ntasks=1
+#SBATCH --mem=32GB
+#SBATCH --cpus-per-task=4
+#SBATCH --time=00:10:00
+#SBATCH --output={jobs_outputs}/{instance}_{exe}.out
+#SBATCH --error={jobs_outputs}/{instance}_{exe}.out
 
-        with open(job, "w") as f:
-            f.write(job_content)
+# warm up processors
+sudo cpupower frequency-set -g performance
+sleep 0.1
+stress-ng -c 4 --cpu-ops=100
+# set limits
+ulimit -v 16777216
 
+#####################
+cd {exec_dir}
+./{exe} -f {instance} -tl 300
+
+#####################
+
+# back to power saving mode
+sudo cpupower frequency-set -g powersave"""
+
+                with open(job, "w") as f:
+                    f.write(job_content)
+                count+=1;
+    print(f"Generated {count} files")
 
 
 
