@@ -57,7 +57,7 @@ def main():
 #SBATCH --job-name={instance}_{exe}_{rho}_{seed}
 #SBATCH --partition=arrow
 #SBATCH --ntasks=1
-#SBATCH --mem=32GB
+#SBATCH --mem=16GB
 #SBATCH --cpus-per-task=4
 #SBATCH --time=00:10:00
 #SBATCH --output={jobs_outputs}/{instance}_{exe}.out
@@ -88,7 +88,7 @@ sudo cpupower frequency-set -g powersave"""
 #SBATCH --job-name={instance}_{exe}
 #SBATCH --partition=arrow
 #SBATCH --ntasks=1
-#SBATCH --mem=32GB
+#SBATCH --mem=16GB
 #SBATCH --cpus-per-task=4
 #SBATCH --time=00:10:00
 #SBATCH --output={jobs_outputs}/{instance}_{exe}.out
