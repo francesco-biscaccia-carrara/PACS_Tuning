@@ -1,7 +1,14 @@
 import os
 
-jobs = os.listdir("../job_outputs")
+jobs = os.listdir("../jobs")
+
+if (
+            input(
+                f"Are you sure to launch {len(jobs)} jobs [y/n]? "
+            )
+            != "y"
+    ): exit(1)
 
 for job in jobs:
-    print(f"sbatch --wckey=rop --requeue {job}")
-#    os.system(f"sbatch --wckey=rop --requeue {job}")
+    os.system(f"sbatch --wckey=rop --requeue {job}")
+
