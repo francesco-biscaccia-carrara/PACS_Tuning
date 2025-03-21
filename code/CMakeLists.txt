@@ -153,6 +153,9 @@ target_link_libraries(
     RlxMIP
     MerPol
     Utils
+    #pthread
+    pthread
+    dl
     # Link CPLEX library
     ${CPLEX_LIBRARY}
 )
