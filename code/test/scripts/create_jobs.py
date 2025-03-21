@@ -5,6 +5,12 @@ sys.dont_write_bytecode = True
 import pandas as pd
 from pathlib import Path
 
+def clear_dir(dir: Path):
+    for item in dir.iterdir():
+        if item.is_file() or item.is_symlink():
+            item.unlink()
+        elif item.is_dir():
+            shutil.rmtree(item)
 
 def main():
     input_csv = "fHard_instances.csv"
@@ -18,7 +24,7 @@ def main():
 
     df = pd.read_csv(input_csv)
 
-    instances = df["Instance"]
+    instances = df["Instance"];
 
     programms = ["ACS"]
 
