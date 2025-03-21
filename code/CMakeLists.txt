@@ -164,6 +164,9 @@ target_link_libraries(
     CPLEXRun
     MIP
     Utils
+    #pthread
+    pthread
+    dl
     # Link CPLEX library
     ${CPLEX_LIBRARY}
 )
