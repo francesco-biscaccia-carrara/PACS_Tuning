@@ -19,8 +19,19 @@ set(VERBOSE "1" CACHE STRING "Verbose setting set from command line")
 set(LOG "0" CACHE STRING "Flag to enable log on file")
 #set(WARN "0" CACHE STRING "Flag to enable warning messages")
 #set(INTCHECK "0" CACHE STRING "Flag to enable integrity checks")
-set(CPLEX_DIR "/opt/ibm/ILOG/CPLEX_Studio2212/cplex/lib/x86-64_linux/static_pic" CACHE STRING "Path to the CPLEX library") #application for Mac, opt/ibm for linux
-set(CPLEX_INCLUDE "/opt/ibm/ILOG/CPLEX_Studio2212/cplex/include/ilcplex" CACHE STRING "Path to the CPLEX headers")
+# Detect machine and set CPLEX paths accordingly
+if(EXISTS "/Applications/CPLEX_Studio2211/cplex/lib/arm64_osx/static_pic")                  # Mac Laptop
+    set(CPLEX_DIR "/Applications/CPLEX_Studio2211/cplex/lib/arm64_osx/static_pic")
+    set(CPLEX_INCLUDE "/Applications/CPLEX_Studio2211/cplex/include/ilcplex")
+elseif(EXISTS "/opt/ibm/ILOG/CPLEX_Studio2212/cplex/lib/x86-64_linux/static_pic")           # Linux PC
+    set(CPLEX_DIR "/opt/ibm/ILOG/CPLEX_Studio2212/cplex/lib/x86-64_linux/static_pic")
+    set(CPLEX_INCLUDE "/opt/ibm/ILOG/CPLEX_Studio2212/cplex/include/ilcplex")
+elseif(EXISTS "/nfsd/rop/sw/ibm/cos221/cplex/lib/x86-64_linux/static_pic")                  # Cluster DEI
+    set(CPLEX_DIR "/nfsd/rop/sw/ibm/cos221/cplex/lib/x86-64_linux/static_pic")
+    set(CPLEX_INCLUDE "/nfsd/rop/sw/ibm/cos221/cplex/include/ilcplex")
+else()
+    message(FATAL_ERROR "CPLEX directory not found on this machine. Please set CPLEX_DIR manually.")
+endif()
 
 # check if all necessary folders exist
 cmake_path(GET CMAKE_HOME_DIRECTORY PARENT_PATH HOME_DIR)
