@@ -52,16 +52,17 @@ def main():
             if exe == "ACS":
                 for rho in [0.10,0.25,0.50,0.75,0.9]:
                     for seed in [2120934,3409212,240931]:
-                        job = f"{jobs_folder}/{instance}_{exe}_{rho}_{seed}"
+                        job_name =f"{instance}_{exe}_{rho}_{seed}"
+                        job = f"{jobs_folder}/{job_name}"
                         job_content = f"""#!/bin/bash
-#SBATCH --job-name={instance}_{exe}_{rho}_{seed}
+#SBATCH --job-name={job_name}
 #SBATCH --partition=arrow
 #SBATCH --ntasks=1
 #SBATCH --mem=14GB
 #SBATCH --cpus-per-task=4
 #SBATCH --time=00:10:00
-#SBATCH --output={jobs_outputs}/{instance}_{exe}.out
-#SBATCH --error={jobs_outputs}/{instance}_{exe}.out
+#SBATCH --output={jobs_outputs}/{job_name}.out
+#SBATCH --error={jobs_outputs}/{job_name}.out
 
 # warm up processors
 sudo cpupower frequency-set -g performance
