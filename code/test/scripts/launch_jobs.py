@@ -11,5 +11,5 @@ if (
 
 for job in jobs:
     os.system(f"sbatch --wckey=rop --requeue ../jobs/{job}")
-    time.sleep(0.5)
+    time.sleep(0.1)
 
