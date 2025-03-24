@@ -6,6 +6,7 @@
 /code/log
 /code/build
 /code/data
+/code/test/job*
 
 #Thesis stuff
 /thesis/*.aux
