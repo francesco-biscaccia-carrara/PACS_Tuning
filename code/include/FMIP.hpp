@@ -15,10 +15,7 @@ public:
 	FMIP& operator=(const FMIP&) = delete;
 
 	[[nodiscard]]
-	std::vector<double> getSol();
-
-	[[nodiscard]]
-	int getMIPNumVars() { return MIPNumVars; };
+	int getMIPNumVars() noexcept { return MIPNumVars; };
 
 private:
 	void setup();

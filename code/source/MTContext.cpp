@@ -2,8 +2,7 @@
 
 MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : numMIPs{ subMIPNum } {
 
-	bestIncumbent = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
-	bestFMIPIncumbent = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = 0.0 };
+	bestACSIncumbent = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
 	tmpSolutions = std::vector<Solution>();
 	threads = std::vector<std::thread>();
 
@@ -21,40 +20,32 @@ MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : numMIPs{
 #endif
 }
 
-MTContext& MTContext::setBestIncumbent(Solution& sol) {
-	if (abs(sol.slackSum) > EPSILON) {
+
+MTContext& MTContext::setBestACSIncumbent(Solution& sol) {
+	if (sol.slackSum > bestACSIncumbent.slackSum) {
 		return *this;
 	}
 
-	if (sol.oMIPCost >= bestIncumbent.oMIPCost) {
+	if (sol.oMIPCost > bestACSIncumbent.oMIPCost) {
 		return *this;
 	}
+
+	if ( (bestACSIncumbent.slackSum-sol.slackSum) < EPSILON && sol.oMIPCost >= bestACSIncumbent.oMIPCost) {
+		return *this;
+	}
+
 
 	std::lock_guard<std::mutex> lock(updateSolMTX);
-	bestIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = sol.oMIPCost };
-
-	PRINT_BEST("New incumbent found %12.2f|%-10.2f\t [*]", bestIncumbent.oMIPCost, bestIncumbent.slackSum);
-
-	return *this;
-}
-
-MTContext& MTContext::setBestFMIPIncumbent(Solution& sol) {
-	if (sol.slackSum >= bestFMIPIncumbent.slackSum) {
-		return *this;
-	}
-
-	std::lock_guard<std::mutex> lock(updateSolMTX);
-	bestFMIPIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = 0.0 };
+	bestACSIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = sol.oMIPCost };
 #if ACS_VERBOSE >= VERBOSE
-	PRINT_INFO("New FMIPIncumbent found %12.2f\t", bestFMIPIncumbent.slackSum);
+	if(bestACSIncumbent.slackSum < EPSILON && bestACSIncumbent.oMIPCost< CPX_INFBOUND)
+			PRINT_BEST("New MIP Incumbent found %12.2f\t [*]", bestACSIncumbent.oMIPCost);
+	else
+		PRINT_INFO("New ACS Incumbent found %12.2f [*]", bestACSIncumbent.slackSum);
 #endif
 	return *this;
 }
 
-MTContext& MTContext::setTmpSolution(int index, Solution& tmpSol) {
-	tmpSolutions[index] = tmpSol;
-	return *this;
-}
 
 MTContext& MTContext::broadcastSol(Solution& tmpSol) {
 	waitAllJobs();
@@ -110,8 +101,8 @@ MTContext::~MTContext() {
 void MTContext::FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs) {
 
 	FMIP fMIP{ CLIArgs.fileName };
-	if (bestFMIPIncumbent.slackSum < CPX_INFBOUND) {
-		fMIP.addMIPStart(bestFMIPIncumbent.sol);
+	if (bestACSIncumbent.slackSum < CPX_INFBOUND) {
+		fMIP.addMIPStart(bestACSIncumbent.sol);
 	}
 	fMIP.setNumCores(CPLEX_CORE);
 
@@ -129,9 +120,7 @@ void MTContext::FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs) {
 	tmpSolutions[thID].slackSum = fMIP.getObjValue();
 
 	PRINT_OUT("Proc: %3d - FeasMIP Objective: %20.2f", thID, tmpSolutions[thID].slackSum);
-
-	Solution FMIPInc = { .sol = fMIP.MIP::getSol(), .slackSum = tmpSolutions[thID].slackSum };
-	setBestFMIPIncumbent(FMIPInc);
+	setBestACSIncumbent(tmpSolutions[thID]);
 }
 
 void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, double slackSumUB) {
@@ -142,14 +131,8 @@ void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, doubl
 
 	FixPolicy::randomRhoFix(tmpSolutions[thID].sol, oMIP, thID, CLIArgs.rho, "OMIP", rndGens[thID]);
 
-	if (bestFMIPIncumbent.slackSum < CPX_INFBOUND) {
-		oMIP.addMIPStart(bestFMIPIncumbent.sol);
-	}
-
-	if (bestIncumbent.slackSum < EPSILON) {
-		std::vector<double> MIPStart(bestIncumbent.sol);
-		MIPStart.resize(oMIP.getNumCols(), 0.0);
-		oMIP.addMIPStart(MIPStart);
+	if (bestACSIncumbent.slackSum < CPX_INFBOUND) {
+		oMIP.addMIPStart(bestACSIncumbent.sol);
 	}
 
 	int solveCode{ oMIP.solve(remTime, DET_TL(oMIP.getNumNonZeros())) };
@@ -166,6 +149,5 @@ void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, doubl
 	tmpSolutions[thID].oMIPCost = oMIP.getObjValue();
 
 	PRINT_OUT("Proc: %3d - OptMIP Objective: %20.2f|%-10.2f", thID, tmpSolutions[thID].oMIPCost, tmpSolutions[thID].slackSum);
-
-	setBestIncumbent(tmpSolutions[thID]);
+	setBestACSIncumbent(tmpSolutions[thID]);
 }

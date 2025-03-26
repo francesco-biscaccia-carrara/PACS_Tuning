@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Enhanced performance and efficiency  
 - Reduced computational overhead  
 
+# [1.1.0] - 2025-03-26
+### Fixed
+- Resolved issue in FixPolicy::firstThetaFixing
+- Optimized ACS Incumbent overhead in ACS
+
 ## [1.0.0] - 2025-03-20
 ### Added
 - Initial implementation of the ACS algorithm  

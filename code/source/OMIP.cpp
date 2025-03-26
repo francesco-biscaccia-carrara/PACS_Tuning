@@ -40,11 +40,6 @@ double OMIP::getSlackSum() {
 	return std::accumulate(xStar.begin()+getMIPNumVars(), xStar.end(), 0);
 }
 
-std::vector<double> OMIP::getSol() {
-	std::vector<double> xStar = MIP::getSol();
-	xStar.resize(getNumCols() - 2 * (getNumRows() - 1));
-	return xStar;
-}
 
 void OMIP::setup() {
 	for (size_t i{ 0 }; i < getNumRows(); i++) {

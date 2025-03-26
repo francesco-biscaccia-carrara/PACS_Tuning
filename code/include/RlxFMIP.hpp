@@ -1,18 +1,18 @@
-#ifndef RLXMIP_H
-#define RLXMIP_H
+#ifndef RlxFMIP_H
+#define RlxFMIP_H
 
 #include "FMIP.hpp"
 
 using namespace Utils;
 
-class RlxMIP : public FMIP {
+class RlxFMIP : public FMIP {
 
 public:
-    RlxMIP(std::string fileName);
-    RlxMIP(const RlxMIP& otherRlxMIP) = delete;
-	RlxMIP(const MIP& otherMIP) = delete;
-	RlxMIP& operator=(const MIP&) = delete;
-	RlxMIP& operator=(const RlxMIP&) = delete;
+    RlxFMIP(std::string fileName);
+    RlxFMIP(const RlxFMIP& otherRlxFMIP) = delete;
+	RlxFMIP(const MIP& otherMIP) = delete;
+	RlxFMIP& operator=(const MIP&) = delete;
+	RlxFMIP& operator=(const RlxFMIP&) = delete;
 
     int	solve(const double timeLimit = CPX_INFBOUND, const double detTimeLimit = CPX_INFBOUND);
     int solveRelaxation(const double timeLimit=CPX_INFBOUND);

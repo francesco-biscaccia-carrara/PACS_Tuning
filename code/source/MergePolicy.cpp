@@ -9,8 +9,10 @@ void MergePolicy::recombine(MIP& model, const std::vector<Solution>& x, const ch
 #if ACS_VERBOSE>=VERBOSE
 	size_t numCommVars{0}; 
 #endif
+
+	size_t xLen{static_cast<size_t>(model.getMIPNumVars())};
 	
-	for (size_t i{ 0 }; i < x[0].sol.size(); i++) {
+	for (size_t i{ 0 }; i < xLen; i++) {
 		if (abs(x[0].sol[i] - x[1].sol[i]) >= EPSILON)
 			continue;
 

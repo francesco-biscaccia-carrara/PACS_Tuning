@@ -13,7 +13,6 @@ using namespace FixPolicy;
 #include "FMIP.hpp"
 #include "OMIP.hpp"
 
-#define CPLEX_CORE 1
 
 class MTContext {
 
@@ -25,17 +24,11 @@ public:
 	MTContext& operator=(const MTContext&&) = delete;
 
 	[[nodiscard]]
-	inline Solution getBestIncumbent() { return bestIncumbent; }
-	MTContext&		setBestIncumbent(Solution& sol);
-	[[nodiscard]]
-	inline Solution getBestFMIPIncumbent() { return bestFMIPIncumbent; }
-	MTContext&		setBestFMIPIncumbent(Solution& sol);
+	inline Solution getBestACSIncumbent() { return bestACSIncumbent; }
+	MTContext&		setBestACSIncumbent(Solution& sol);
 
 	[[nodiscard]]
-	inline std::vector<Solution> getTmpSolutions() { return tmpSolutions; }
-	[[nodiscard]]
-	inline Solution getTmpSolution(int index) { return tmpSolutions[index]; }
-	MTContext&		setTmpSolution(int index, Solution& tmpSol);
+	inline const std::vector<Solution>& getTmpSolutions() { return tmpSolutions; }
 	MTContext&		broadcastSol(Solution& tmpSol);
 
 	[[nodiscard]]
@@ -51,11 +44,14 @@ private:
 	std::vector<Solution>	 tmpSolutions;
 	std::vector<std::thread> threads;
 	std::vector<Random>		 rndGens;
-	Solution				 bestIncumbent;
-	Solution				 bestFMIPIncumbent;
+	Solution				bestACSIncumbent;
 	std::mutex				 updateSolMTX;
 
 	void waitAllJobs();
+
+	inline void		setTmpSolution(int index, Solution& tmpSol){tmpSolutions[index] = tmpSol;}
+	[[nodiscard]]
+	inline Solution getTmpSolution(int index) { return tmpSolutions[index]; }
 	void FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs);
 	void OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, double slackSumUB);
 };

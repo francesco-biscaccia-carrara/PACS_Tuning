@@ -1,14 +1,14 @@
-#include "../include/RlxMIP.hpp"
+#include "../include/RlxFMIP.hpp"
 using MIPEx = MIPException::ExceptionType;
 
-RlxMIP::RlxMIP(std::string fileName): FMIP(fileName){
+RlxFMIP::RlxFMIP(std::string fileName): FMIP(fileName){
     restoreVarType.reserve(getNumCols());
 #if ACS_VERBOSE == DEBUG
-	this->fileName += "_RlxMIP";
+	this->fileName += "_RlxFMIP";
 #endif
 }
 
-int RlxMIP::solve(const double timeLimit, const double detTimeLimit) {
+int RlxFMIP::solve(const double timeLimit, const double detTimeLimit) {
 
 	if (timeLimit < EPSILON)
 		throw MIPException(MIPEx::WrongTimeLimit, "Time-limit too short!\t" + std::to_string(timeLimit));
@@ -29,7 +29,7 @@ int RlxMIP::solve(const double timeLimit, const double detTimeLimit) {
 	return CPXgetstat(env, model);
 }
 
-int RlxMIP::solveRelaxation(const double timeLimit) {
+int RlxFMIP::solveRelaxation(const double timeLimit) {
 
 	if (timeLimit < EPSILON)
 		throw MIPException(MIPEx::WrongTimeLimit, "Time-limit too short!\t" + std::to_string(timeLimit));
@@ -52,7 +52,7 @@ int RlxMIP::solveRelaxation(const double timeLimit) {
 	return CPXgetstat(env, model);
 }
 
-void RlxMIP::changeProbType(const int type) {
+void RlxFMIP::changeProbType(const int type) {
 	if (CPXchgprobtype(env, model, type))
 		throw MIPException(MIPEx::General, "Problem type not changed!");
 }

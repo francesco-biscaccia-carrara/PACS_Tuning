@@ -1,7 +1,9 @@
 #ifndef FIX_POL_H
 #define FIX_POL_H
 
-#include "RlxMIP.hpp"
+#include <type_traits>
+#include "RlxFMIP.hpp"
+
 
 using namespace Utils;
 
@@ -29,8 +31,8 @@ namespace FixPolicy {
 		}
 	};
 
-	Solution firstThetaFixing(std::string fileName, double theta, Random rnd);
-	void randomRhoFix(const std::vector<double>& sol, MIP& model, const size_t threadID, double rho, const char* type, Random& rnd);
+	void firstThetaFixing(std::vector<double>& x,std::string fileName, double theta, Random rnd);
+	void randomRhoFix(const std::vector<double>& sol, MIP& model, const size_t threadID, double rho,const char* type, Random& rnd);
 }; // namespace FixPolicy
 
 #endif

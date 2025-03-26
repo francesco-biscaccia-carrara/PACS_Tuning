@@ -5,8 +5,6 @@
 #include "../include/OMIP.hpp"
 #include <assert.h>
 
-//FIXME: Too much overhead, reduce it
-
 int main(int argc, char* argv[]) {
 	try {
 		Clock::initTime = Clock::getTime();
@@ -14,15 +12,16 @@ int main(int argc, char* argv[]) {
 		Args	  CLIArgs = CLIParser(argc, argv).getArgs();
 		MTContext MTEnv(CLIArgs.numsubMIPs, CLIArgs.seed);
 
-		Solution tmpSol = MTEnv.getBestIncumbent();
-		Solution tmpFMIPInc = MTEnv.getBestIncumbent();
-
-		tmpSol = FixPolicy::firstThetaFixing(CLIArgs.fileName, CLIArgs.theta, Random(CLIArgs.seed));
-		PRINT_OUT("Init FeasMIP solution cost: %25.2f", tmpSol.slackSum);
+		std::vector<double> initSol;
+		FixPolicy::firstThetaFixing(initSol,CLIArgs.fileName, CLIArgs.theta, Random(CLIArgs.seed));
+		Solution tmpSol = {.sol = initSol, .slackSum = CPX_INFBOUND,  .oMIPCost = CPX_INFBOUND};
+#if ACS_VERBOSE >= VERBOSE	
+		PRINT_INFO("Init FeasMIP solution found!");
+#endif
 		MTEnv.broadcastSol(tmpSol);
 
 		while (Clock::timeElapsed() < CLIArgs.timeLimit) {
-			if (MTEnv.getBestIncumbent().slackSum > EPSILON) {
+			if (MTEnv.getBestACSIncumbent().slackSum > EPSILON) {
 
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
 #if ACS_VERBOSE >= VERBOSE
@@ -38,7 +37,7 @@ int main(int argc, char* argv[]) {
 
 				MergePolicy::recombine(MergeFMIP, MTEnv.getTmpSolutions(), "1_Phase");
 
-				MergeFMIP.addMIPStart(MTEnv.getBestFMIPIncumbent().sol);
+				MergeFMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
 
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
 #if ACS_VERBOSE >= VERBOSE
@@ -57,12 +56,7 @@ int main(int argc, char* argv[]) {
 				PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
 
 				MTEnv.broadcastSol(tmpSol);
-
-				tmpFMIPInc.sol = MergeFMIP.MIP::getSol();
-				tmpFMIPInc.slackSum = tmpSol.slackSum;
-				MTEnv.setBestFMIPIncumbent(tmpFMIPInc);
-
-				// if(tmpSol.slackSum < EPSILON) break;
+				MTEnv.setBestACSIncumbent(tmpSol);
 			}
 
 			if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -80,14 +74,8 @@ int main(int argc, char* argv[]) {
 
 			MergePolicy::recombine(MergeOMIP, MTEnv.getTmpSolutions(), "2_Phase");
 
-			if (MTEnv.getBestFMIPIncumbent().slackSum < CPX_INFBOUND) {
-				MergeOMIP.addMIPStart(MTEnv.getBestFMIPIncumbent().sol);
-			}
-
-			if (MTEnv.getBestIncumbent().slackSum < EPSILON) {
-				std::vector<double> MIPStart(MTEnv.getBestIncumbent().sol);
-				MIPStart.resize(MergeOMIP.getNumCols(), 0.0);
-				MergeOMIP.addMIPStart(MIPStart);
+			if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {
+				MergeOMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
 			}
 
 			MergeOMIP.updateBudgetConstr(tmpSol.slackSum);
@@ -107,17 +95,17 @@ int main(int argc, char* argv[]) {
 			tmpSol.oMIPCost = MergeOMIP.getObjValue();
 
 			PRINT_OUT("OptMIP Objective|SlackSum after merging: %12.2f|%-10.2f", MergeOMIP.getObjValue(), tmpSol.slackSum);
-			MTEnv.setBestIncumbent(tmpSol);
-			MTEnv.setBestFMIPIncumbent(tmpFMIPInc);
+			MTEnv.setBestACSIncumbent(tmpSol);
 			MTEnv.broadcastSol(tmpSol);
 		}
 
 		
-		Solution incumbent = MTEnv.getBestIncumbent();
+		Solution incumbent = MTEnv.getBestACSIncumbent();
 		if (incumbent.sol.empty() || incumbent.slackSum > EPSILON) {
 			PRINT_ERR("NO FEASIBLE SOLUTION FIND");
 		} else {
 			MIP		 og(CLIArgs.fileName);
+			incumbent.sol.resize(og.getNumCols());
 			assert(og.checkFeasibility(incumbent.sol) == true);
 			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
 		}

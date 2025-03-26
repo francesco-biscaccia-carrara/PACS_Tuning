@@ -5,19 +5,17 @@
 using FPEx = FixPolicy::FixPolicyException::ExceptionType;
 
 bool isInteger(double n) {
-	return ((std::floor(n) == n) && (n != CPX_INFBOUND));
+	return ((n < CPX_INFBOUND) && (static_cast<int>(n) == n));
 }
 
-Solution FixPolicy::firstThetaFixing(std::string fileName, double theta, Random rnd) {
-	if (theta < EPSILON || theta >= 1.0)
+void FixPolicy::firstThetaFixing(std::vector<double>& x,std::string fileName, double theta, Random rnd) {
+	if (theta < EPSILON || theta > 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Theta par. must be within (0,1)!");
 
-	RlxMIP	 relaxedFMIP{ fileName };
-	int		 numVarsToFix{ relaxedFMIP.getMIPNumVars() };
 
-	Solution rtn = { .sol = std::vector(relaxedFMIP.getNumCols(), CPX_INFBOUND),
-					 .slackSum = CPX_INFBOUND,
-					 .oMIPCost = CPX_INFBOUND };
+	RlxFMIP	 relaxedFMIP{ fileName };
+	int		 numVarsToFix{ relaxedFMIP.getMIPNumVars() };
+	x.resize(numVarsToFix,CPX_INFBOUND);	
 
 	
 	std::vector<size_t>					varRangesIndices(numVarsToFix);
@@ -33,8 +31,9 @@ Solution FixPolicy::firstThetaFixing(std::string fileName, double theta, Random 
 	size_t			  numFixedVars = 0;
 
 	while (numFixedVars < numVarsToFix) {
+		 
 		size_t numNotFixedVars {numVarsToFix - numFixedVars};
-		size_t varsToFix {static_cast<size_t>(numNotFixedVars * theta)};
+		size_t varsToFix {static_cast<size_t>(std::ceil(numNotFixedVars * theta))};
 
 		size_t fixedThisIteration {0};
 
@@ -46,10 +45,9 @@ Solution FixPolicy::firstThetaFixing(std::string fileName, double theta, Random 
 				double clampedLower = std::max(-MAX_UB, lowerBound);
 				double clampedUpper = std::min(MAX_UB, upperBound);
 
-				rtn.sol[idx] = rnd.Int(clampedLower, clampedUpper);
-				relaxedFMIP.setVarValue(idx,rtn.sol[idx]);
+				x[idx] = rnd.Int(clampedLower, clampedUpper);
+				relaxedFMIP.setVarValue(idx,x[idx]);
 				isFixed[idx] = true;
-				numFixedVars++;
 				fixedThisIteration++;
 			}
 		}
@@ -61,38 +59,34 @@ Solution FixPolicy::firstThetaFixing(std::string fileName, double theta, Random 
 		relaxedFMIP.solveRelaxation();
 
 		std::vector<double> lpSol = relaxedFMIP.getSol();
-		for (size_t i = 0; i < lpSol.size(); ++i) {
-			if (isInteger(lpSol[i])) {
-				rtn.sol[i] = lpSol[i];
-				relaxedFMIP.setVarValue(i,rtn.sol[i]);
+		for (size_t i = 0; i < numVarsToFix; ++i) {
+			if(isFixed[i]) continue;
+			if(isInteger(lpSol[i])) {
+				x[i] = lpSol[i];
+				relaxedFMIP.setVarValue(i,x[i]);
 				isFixed[i] = true;
-				numFixedVars++;
 			}
 		}
+
+		numFixedVars = std::accumulate(isFixed.begin(),isFixed.end(),0);
 	}
 
-	for (size_t i{ 0 }; i < rtn.sol.size();i++){
-		relaxedFMIP.setVarValue(i, rtn.sol[i]);
-	}
-	relaxedFMIP.solve();
-	rtn.sol.resize(numVarsToFix); //TODO: Kinda sus
-	rtn.slackSum = relaxedFMIP.getObjValue();
-	return rtn;
 }
 
-void FixPolicy::randomRhoFix(const std::vector<double>& sol, MIP& model, const size_t threadID, double rho, const char* type, Random& rnd) {
+void FixPolicy::randomRhoFix(const std::vector<double>& sol, MIP& model, const size_t threadID, double rho,const char* type, Random& rnd) {
 	if (rho < EPSILON || rho >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Rho par. must be within (0,1)!");
 
-	const size_t numFixedVars = static_cast<size_t>(rho * sol.size());
-	const size_t start = rnd.Int(0, sol.size() - 1);
+	size_t xLen{static_cast<size_t>(model.getMIPNumVars())};
+	const size_t numFixedVars = static_cast<size_t>(rho *xLen);
+	const size_t start = rnd.Int(0,xLen - 1);
 
 #if ACS_VERBOSE >= VERBOSE
 	PRINT_INFO("Proc: %3d [%s] - FixPolicy::randomRhoFix - %zu vars hard-fixed", threadID, type, numFixedVars);
 #endif
 
 	for (size_t i{ 0 }; i < numFixedVars; i++) {
-		size_t index{ (start + i) % sol.size() };
+		size_t index{ (start + i) % xLen};
 		model.setVarValue(index, sol[index]);
 	}
 }

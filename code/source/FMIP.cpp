@@ -29,11 +29,6 @@ FMIP::FMIP(const MIP& otherMIP) : MIP(otherMIP) {
 #endif
 }
 
-std::vector<double> FMIP::getSol() {
-	std::vector<double> x_star{ MIP::getSol() };
-	x_star.resize(getNumCols() - 2 * getNumRows());
-	return x_star;
-}
 
 void FMIP::setup() {
 	std::vector<double> obj(getNumCols(), FMIP_VAR_OBJ_COEFF);

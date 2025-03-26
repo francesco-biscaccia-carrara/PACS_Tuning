@@ -89,9 +89,9 @@ add_library(
     include/FMIP.hpp
 )
 add_library(
-    RlxMIP
-    source/RlxMIP.cpp
-    include/RlxMIP.hpp
+    RlxFMIP
+    source/RlxFMIP.cpp
+    include/RlxFMIP.hpp
 )
 
 add_library(
@@ -150,7 +150,7 @@ target_link_libraries(
     OMIP
     MTContext
     FixPol
-    RlxMIP
+    RlxFMIP
     MerPol
     Utils
     #pthread
