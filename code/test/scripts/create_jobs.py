@@ -62,7 +62,7 @@ def main():
 #SBATCH --cpus-per-task=4
 #SBATCH --time=00:10:00
 #SBATCH --output={jobs_outputs}/{job_name}.out
-#SBATCH --error={jobs_outputs}/{job_name}.out
+#SBATCH --error={jobs_outputs}/{job_name}.err
 
 # warm up processors
 sudo cpupower frequency-set -g performance
@@ -93,7 +93,7 @@ sudo cpupower frequency-set -g powersave"""
 #SBATCH --cpus-per-task=4
 #SBATCH --time=00:10:00
 #SBATCH --output={jobs_outputs}/{instance}_{exe}.out
-#SBATCH --error={jobs_outputs}/{instance}_{exe}.out
+#SBATCH --error={jobs_outputs}/{instance}_{exe}.err
 
 # warm up processors
 sudo cpupower frequency-set -g performance
