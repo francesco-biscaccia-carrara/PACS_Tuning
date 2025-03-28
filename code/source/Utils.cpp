@@ -84,6 +84,8 @@ void Logger::print(LogLevel typeMsg, const char* format, ...) {
 #else
 	printf("%s\n", ANSI_COLOR_RESET);
 #endif
+
+	fflush(stdin);
 }
 
 double Clock::getTime() {

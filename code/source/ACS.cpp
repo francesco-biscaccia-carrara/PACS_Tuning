@@ -37,7 +37,9 @@ int main(int argc, char* argv[]) {
 
 				MergePolicy::recombine(MergeFMIP, MTEnv.getTmpSolutions(), "1_Phase");
 
-				MergeFMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
+				if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {
+					MergeFMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
+				}
 
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
 #if ACS_VERBOSE >= VERBOSE
@@ -46,10 +48,10 @@ int main(int argc, char* argv[]) {
 					break;
 				}
 
-				int solveCode{ MergeFMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit)) };
+				int solveCode{ MergeFMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), DET_TL(MergeFMIP.getNumNonZeros())) };
 
-				if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS)
-					break;
+				if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE)
+					continue;;
 
 				tmpSol.sol = MergeFMIP.getSol();
 				tmpSol.slackSum = MergeFMIP.getObjValue();
@@ -85,10 +87,10 @@ int main(int argc, char* argv[]) {
 #endif
 				break;
 			}
-			int solveCode{ MergeOMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit)) };
+			int solveCode{ MergeOMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit),DET_TL(MergeOMIP.getNumNonZeros())) };
 
-			if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS)
-				break;
+			if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE)
+				continue;
 
 			tmpSol.sol = MergeOMIP.getSol();
 			tmpSol.slackSum = MergeOMIP.getSlackSum();

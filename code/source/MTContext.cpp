@@ -22,27 +22,17 @@ MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : numMIPs{
 
 
 MTContext& MTContext::setBestACSIncumbent(Solution& sol) {
-	if (sol.slackSum > bestACSIncumbent.slackSum) {
-		return *this;
+	if((sol.oMIPCost < bestACSIncumbent.oMIPCost && (sol.slackSum - bestACSIncumbent.slackSum) < EPSILON) || sol.slackSum< bestACSIncumbent.slackSum){
+
+		std::lock_guard<std::mutex> lock(updateSolMTX);
+		bestACSIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = sol.oMIPCost };
+	#if ACS_VERBOSE >= VERBOSE
+		if(bestACSIncumbent.slackSum < EPSILON && bestACSIncumbent.oMIPCost< CPX_INFBOUND)
+				PRINT_BEST("New MIP Incumbent found %12.2f\t[*]", bestACSIncumbent.oMIPCost);
+		else
+			PRINT_INFO("New ACS Incumbent found %12.2f|%-10.2f\t[*]", bestACSIncumbent.oMIPCost,bestACSIncumbent.slackSum);
+	#endif
 	}
-
-	if (sol.oMIPCost > bestACSIncumbent.oMIPCost) {
-		return *this;
-	}
-
-	if ( (bestACSIncumbent.slackSum-sol.slackSum) < EPSILON && sol.oMIPCost >= bestACSIncumbent.oMIPCost) {
-		return *this;
-	}
-
-
-	std::lock_guard<std::mutex> lock(updateSolMTX);
-	bestACSIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = sol.oMIPCost };
-#if ACS_VERBOSE >= VERBOSE
-	if(bestACSIncumbent.slackSum < EPSILON && bestACSIncumbent.oMIPCost< CPX_INFBOUND)
-			PRINT_BEST("New MIP Incumbent found %12.2f\t [*]", bestACSIncumbent.oMIPCost);
-	else
-		PRINT_INFO("New ACS Incumbent found %12.2f [*]", bestACSIncumbent.slackSum);
-#endif
 	return *this;
 }
 
@@ -109,7 +99,7 @@ void MTContext::FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs) {
 	FixPolicy::randomRhoFix(tmpSolutions[thID].sol, fMIP, thID, CLIArgs.rho, "FMIP", rndGens[thID]);
 
 	int solveCode{ fMIP.solve(remTime, DET_TL(fMIP.getNumNonZeros())) };
-	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS) {
+	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE){
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Proc: %3d [FMIP] - Aborted: Infeasible with given TL", thID);
 #endif
@@ -126,18 +116,17 @@ void MTContext::FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs) {
 void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, double slackSumUB) {
 
 	OMIP oMIP{ CLIArgs.fileName };
+	if (bestACSIncumbent.slackSum < CPX_INFBOUND) {
+		oMIP.addMIPStart(bestACSIncumbent.sol);
+	}
 	oMIP.setNumCores(CPLEX_CORE);
 	oMIP.updateBudgetConstr(slackSumUB);
 
 	FixPolicy::randomRhoFix(tmpSolutions[thID].sol, oMIP, thID, CLIArgs.rho, "OMIP", rndGens[thID]);
 
-	if (bestACSIncumbent.slackSum < CPX_INFBOUND) {
-		oMIP.addMIPStart(bestACSIncumbent.sol);
-	}
-
 	int solveCode{ oMIP.solve(remTime, DET_TL(oMIP.getNumNonZeros())) };
 
-	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS) {
+	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE) {
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Proc: %3d [OMIP] - Aborted: Infeasible with given TL", thID);
 #endif
