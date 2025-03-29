@@ -2,19 +2,6 @@
 
 using namespace Utils;
 
-constexpr const char* HELP_ACS = "Usage: ./ACS <PARS>\
-        \n '-h  / --help'\t\t\t\t Show help message\
-        \n '-f  / --filename <string>'\t\t Input file\
-        \n '-tl / --timelimit <double>'\t\t Max execution time\
-        \n '-th / --theta <double (0,1)>'\t\t %% of vars to fix in the initially vector\
-        \n '-rh / --rho <double (0,1)>'\t\t %% of vars to fix per ACS iteration\
-        \n '-sd / --seed <u long long>'\t\t Random seed\
-		\n '-nSMIPs/ --numsubMIPs <u long>'\t Number of subMIP in the parallel phase";
-
-constexpr const char* HELP_CPLEXRUN = "Usage: ./CPLEXRun <PARS>\
-        \n '-h  / --help'\t\t\t\t Show help message\
-        \n '-f  / --filename <string>'\t\t Input file\
-        \n '-tl / --timelimit <double>'\t\t Max execution time";
 
 Random::Random(unsigned long long newSeed) : seed{ newSeed } {
 	rng.seed(newSeed);
@@ -106,6 +93,23 @@ double Clock::timeRemaining(const double timeLimit) {
 	return timeLimit - timeElapsed();
 }
 
+
+constexpr const char* HELP_ACS = "Usage: ./ACS <PARS>\
+        \n '-h  / --help'\t\t\t\t Show help message\
+        \n '-f  / --filename <string>'\t\t Input file\
+        \n '-tl / --timelimit <double>'\t\t Max execution time\
+        \n '-th / --theta <double (0,1)>'\t\t %% of vars to fix in the initially vector\
+        \n '-rh / --rho <double (0,1)>'\t\t %% of vars to fix per ACS iteration\
+        \n '-sd / --seed <u long long>'\t\t Random seed\
+		\n '-nSMIPs/ --numsubMIPs <u long>'\t Number of subMIP in the parallel phase";
+
+
+constexpr const char* HELP_CPLEXRUN = "Usage: ./CPLEXRun <PARS>\
+        \n '-h  / --help'\t\t\t\t Show help message\
+        \n '-f  / --filename <string>'\t\t Input file\
+        \n '-tl / --timelimit <double>'\t\t Max execution time";
+
+
 CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = "", .timeLimit = 0.0, .theta = 0.0, .rho = 0.0, .numsubMIPs = 0, .seed = 0 } {
 	if (argc > 0 && argv != nullptr) {
 
@@ -130,15 +134,6 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 			{ "-sd", &Args::seed },
 			{ "--seed", &Args::seed },
 		} };
-
-		for (int i = 1; i < argc; ++i) {
-			if (std::string(argv[i]) == "-h" || std::string(argv[i]) == "-help") {
-				if (CPLEXRun)
-					throw ArgsParserException(HELP_CPLEXRUN);
-				else
-					throw ArgsParserException(HELP_ACS);
-			}
-		}
 
 		for (int i = 1; i < argc - 1; i++) {
 			std::string key = argv[i];
@@ -180,22 +175,15 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 				throw ArgsParserException(HELP_ACS);
 		}
 
-		const char* ACSversion = "";
-		if (!CPLEXRun) {
-			ACSversion = "\tv1.1.0";
-		}
-		PRINT_OUT("%s%s", argv[0] + 2,ACSversion);
+		printf("%s\t%s -- %s\n", argv[0] + 2,ACS_VERSION,LAST_UPDATE);
 		std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-		char		buffer[32];
-		strncpy(buffer, std::ctime(&time), 26);
-		buffer[strlen(buffer) - 1] = 0; // Remove the \n
-		PRINT_OUT("Date:\t %s", buffer);
+		printf("Date:\t%s", std::ctime(&time));
 
 #if ACS_VERBOSE >= VERBOSE
 		if (CPLEXRun) {
 			PRINT_INFO("Parsed Arguments:\
-			\n\t - File Name :  \t%s \
-			\n\t - Time Limit : \t%f",
+							\n\t - File Name :  \t%s \
+							\n\t - Time Limit : \t%f",
 					   args.fileName.c_str(), args.timeLimit);
 		} else {
 			PRINT_INFO("Parsed Arguments:\

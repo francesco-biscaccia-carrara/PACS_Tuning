@@ -1,3 +1,10 @@
+/**
+*   @author Francesco Biscaccia Carrara
+*   
+*   Last update: 03/29/2025
+*/
+
+
 #include "../include/FMIP.hpp"
 #include "../include/FixPolicy.hpp"
 #include "../include/MTContext.hpp"
@@ -50,9 +57,12 @@ int main(int argc, char* argv[]) {
 
 				int solveCode{ MergeFMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), DET_TL(MergeFMIP.getNumNonZeros())) };
 
-				if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE)
-					continue;;
-
+				if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE){
+#if ACS_VERBOSE >= VERBOSE
+			PRINT_INFO("MergeOMIP - Aborted: Infeasible with given TL");
+#endif
+					continue;
+				}
 				tmpSol.sol = MergeFMIP.getSol();
 				tmpSol.slackSum = MergeFMIP.getObjValue();
 				PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
@@ -89,9 +99,13 @@ int main(int argc, char* argv[]) {
 			}
 			int solveCode{ MergeOMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit),DET_TL(MergeOMIP.getNumNonZeros())) };
 
-			if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE)
+			if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE){
+#if ACS_VERBOSE >= VERBOSE
+			PRINT_INFO("MergeOMIP - Aborted: Infeasible with given TL");
+#endif
 				continue;
-
+			}
+			
 			tmpSol.sol = MergeOMIP.getSol();
 			tmpSol.slackSum = MergeOMIP.getSlackSum();
 			tmpSol.oMIPCost = MergeOMIP.getObjValue();

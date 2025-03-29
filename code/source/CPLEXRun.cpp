@@ -1,3 +1,10 @@
+/**
+*   @author Francesco Biscaccia Carrara
+*   
+*   Last update: 03/29/2025
+*/
+
+
 #include "../include/MIP.hpp"
 #define CPLEX_RUN true
 
@@ -5,7 +12,7 @@ int main(int argc, char* argv[]) {
 	try {
 		Clock::initTime = Clock::getTime();
 
-		Args	  CLIArgs = CLIParser(argc, argv,CPLEX_RUN).getArgs();
+		Args	  CLIArgs = CLIParser(argc, argv, CPLEX_RUN).getArgs();
 
         MIP ogMIP{CLIArgs.fileName};
         Solution CPLEXSol = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };

@@ -3,14 +3,6 @@ import sys,os
 sys.dont_write_bytecode = True
 
 import pandas as pd
-from pathlib import Path
-
-def clear_dir(dir: Path):
-    for item in dir.iterdir():
-        if item.is_file() or item.is_symlink():
-            item.unlink()
-        elif item.is_dir():
-            shutil.rmtree(item)
 
 def main():
     input_csv = "fHard_instances.csv"
@@ -25,9 +17,7 @@ def main():
     df = pd.read_csv(input_csv)
 
     instances = df["Instance"];
-
-    programms = ["ACS"]
-
+    
     # jobs
     jobs_folder = "../jobs"
     jobs_outputs = "../jobs_output"
@@ -44,7 +34,6 @@ def main():
 
     os.makedirs(jobs_folder, exist_ok=True)
     os.makedirs(jobs_outputs, exist_ok=True)
-    clear_dir(Path(jobs_outputs))
     
     count =0
     for instance in instances:

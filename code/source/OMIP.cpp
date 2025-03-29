@@ -3,6 +3,8 @@
 #define OMIP_SLACK_OBJ_COEFF 0
 #define OMIP_BUD_CONST_SENSE 'L'
 
+using MIPEx = MIPException::ExceptionType;
+
 OMIP::OMIP(const std::string fileName) : MIP(fileName) {
 	MIPNumVars = getNumCols();
 	setup();
@@ -36,18 +38,21 @@ OMIP& OMIP::updateBudgetConstr(double rhs) {
 }
 
 double OMIP::getSlackSum() {
-	std::vector<double> xStar = MIP::getSol();
-	return std::accumulate(xStar.begin()+getMIPNumVars(), xStar.end(), 0);
+	std::vector<double> xStar = getSol();
+	double sum =std::accumulate(xStar.begin()+getMIPNumVars(), xStar.end(), 0.0); 
+	/// FIXED: Bug#5c77b0d838cf9df00715d2bae81ef822eb7ddbd5  -- Unexpected cast to int if init = 0.
+	if(sum < -EPSILON) 
+		throw MIPException(MIPEx::OutOfBound, "Negative value obtained!");
+	return sum;
 }
-
 
 void OMIP::setup() {
 	for (size_t i{ 0 }; i < getNumRows(); i++) {
-		addCol(i,1, OMIP_SLACK_OBJ_COEFF, 0., CPX_INFBOUND, "SP_" + std::to_string(i + 1));
+		addCol(i,1, OMIP_SLACK_OBJ_COEFF, 0, CPX_INFBOUND, "SP_" + std::to_string(i + 1));
 	}
 
 	for (size_t i{ 0 }; i < getNumRows(); i++) {
-		addCol(i,-1, OMIP_SLACK_OBJ_COEFF, 0., CPX_INFBOUND, "SN_" + std::to_string(i + 1));
+		addCol(i,-1, OMIP_SLACK_OBJ_COEFF, 0, CPX_INFBOUND, "SN_" + std::to_string(i + 1));
 	}
 
 	addBudgetConstr(CPX_INFBOUND);

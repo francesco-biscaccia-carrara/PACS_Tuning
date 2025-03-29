@@ -240,24 +240,6 @@ VarBounds MIP::getVarBounds(const int index) {
 	return VarBounds{ .lowerBound = lb, .upperBound = ub };
 }
 
-char MIP::getVarType(const int index) {
-	if (index < 0 || index > getNumCols() - 1)
-		throw MIPException(MIPEx::OutOfBound, "Wrong index getVarType()!");
-
-	char type;
-	if (int error{ CPXgetctype(env, model, &type, index, index) })
-		throw MIPException(MIPEx::General, "Unable to get var " + std::to_string(index) + "type!\t" + std::to_string(error));
-	return type;
-}
-
-MIP& MIP::changeVarType(const int index, const char type) {
-	if (index < 0 || index > getNumCols() - 1)
-		throw MIPException(MIPEx::OutOfBound, "Wrong index changeVarType()!");
-
-	if (CPXchgctype(env, model, 1, &index, &type))
-		throw MIPException(MIPEx::General, "Type of var" + std::to_string(index) + "not changed!");
-	return *this;
-}
 
 MIP& MIP::setVarValue(const int index, const double val) {
 	if (index < 0 || index > getNumCols() - 1)

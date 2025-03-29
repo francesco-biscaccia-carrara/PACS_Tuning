@@ -1,3 +1,21 @@
+/**
+ * @file MT_CTX_H
+ * @brief This file defines the MTContext class, which manages the context for multi-threaded optimization 
+ *        using FMIP (Feasibility MIP) and OMIP (Optimality MIP) methods.
+ * 
+ * The MTContext class provides functionality for parallelizing optimization tasks across multiple threads, 
+ * maintaining temporary solutions, and ensuring thread synchronization when updating the best solution found 
+ * during the optimization process. It includes methods for starting optimization jobs, managing thread resources, 
+ * and updating shared solution data safely.
+ * 
+ * It also handles the configuration of the number of threads and random number generators required for optimization, 
+ * and it provides mechanisms to broadcast solutions across threads and handle solution updates with thread safety.
+ * 
+ * @author Francesco Biscaccia Carrara
+ * @version v1.0.2
+ * @since 03/29/2025
+ */
+
 #ifndef MT_CTX_H
 #define MT_CTX_H
 
@@ -13,46 +31,151 @@ using namespace FixPolicy;
 #include "FMIP.hpp"
 #include "OMIP.hpp"
 
-
+/**
+ * @class MTContext
+ * @brief The MTContext class provides a context for managing multiple threads 
+ *        to optimize solutions using the FMIP and OMIP methods in parallel.
+ * 
+ * This class is designed to handle optimization tasks with multiple threads,
+ * sharing a common solution state and ensuring synchronization when updating
+ * the best solution found during the optimization process.
+ */
 class MTContext {
 
 public:
+
+ 	/**
+     * @brief Constructs an MTContext object with a specified number of threads 
+     *        and an initial random seed.
+     * 
+     * @param subMIPNum The number of threads to be used for optimization (default is 
+     *                  the number of hardware threads available).
+     * @param initialSeed The initial seed for random number generation (default is 
+     *                    a random device seed).
+     */
 	MTContext(size_t subMIPNum = std::thread::hardware_concurrency(), unsigned long long intialSeed = std::random_device{}());
+
+	/**
+     * @brief Deleted copy constructor to prevent copying of MTContext objects.
+     */
 	MTContext(const MTContext&) = delete;
+
+	/**
+     * @brief Deleted assignment operator to prevent copying of MTContext objects.
+     */
 	MTContext& operator=(const MTContext&) = delete;
+
+	/**
+     * @brief Deleted move constructor to prevent moving of MTContext objects.
+     */
 	MTContext(const MTContext&&) = delete;
+
+	 /**
+     * @brief Deleted move assignment operator to prevent moving of MTContext objects.
+     */
 	MTContext& operator=(const MTContext&&) = delete;
 
+	 /**
+     * @brief Gets the best ACS incumbent solution.
+     * 
+     * @return The best ACS incumbent solution.
+     */
 	[[nodiscard]]
-	inline Solution getBestACSIncumbent() { return bestACSIncumbent; }
-	MTContext&		setBestACSIncumbent(Solution& sol);
+	inline const Solution& getBestACSIncumbent() { return bestACSIncumbent; }
 
+	/**
+     * @brief Sets the best ACS incumbent solution.
+     * 
+     * @param sol The solution to set as the best ACS incumbent.
+     */
+	void		setBestACSIncumbent(Solution& sol);
+
+	 /**
+     * @brief Gets the temporary solutions stored for optimization.
+     * 
+     * @return A reference to the vector of temporary solutions.
+     */
 	[[nodiscard]]
 	inline const std::vector<Solution>& getTmpSolutions() { return tmpSolutions; }
+
+	 /**
+     * @brief Broadcasts a temporary solution to all threads.
+     * 
+     * @param tmpSol The temporary solution to broadcast.
+     * @return Reference to the current MTContext object.
+     */
 	MTContext&		broadcastSol(Solution& tmpSol);
 
+	 /**
+     * @brief Gets the number of threads used for optimization.
+     * 
+     * @return The number of threads.
+     */
 	[[nodiscard]]
 	inline size_t getNumThreads() { return numMIPs; }
 
+	 /**
+     * @brief Starts parallel optimization using the FMIP method.
+     * 
+     * @param remTime The remaining time for the optimization process.
+     * @param CLIArgs The command-line arguments for optimization.
+     * @return Reference to the current MTContext object.
+     */
 	MTContext& parallelFMIPOptimization(double remTime, Args CLIArgs);
+
+	 /**
+     * @brief Starts parallel optimization using the OMIP method.
+     * 
+     * @param remTime The remaining time for the optimization process.
+     * @param CLIArgs The command-line arguments for optimization.
+     * @param slackSumUB The slack upper bound used in the OMIP method.
+     * @return Reference to the current MTContext object.
+     */
 	MTContext& parallelOMIPOptimization(double remTime, Args CLIArgs, double slackSumUB);
 
+	/**
+     * @brief Destructor for MTContext. Cleans up resources used by the context.
+     */
 	~MTContext();
 
 private:
-	size_t					 numMIPs;
-	std::vector<Solution>	 tmpSolutions;
-	std::vector<std::thread> threads;
-	std::vector<Random>		 rndGens;
-	Solution				bestACSIncumbent;
-	std::mutex				 updateSolMTX;
+	size_t numMIPs;                            ///< Number of threads used for optimization.
+	std::vector<Solution> tmpSolutions;        ///< Temporary solutions for optimization.
+	std::vector<std::thread> threads;          ///< Threads used for parallel optimization.
+	std::vector<Random> rndGens;               ///< Random number generators for each thread.
+	Solution bestACSIncumbent;                 ///< Best ACS incumbent solution found.
+	std::mutex updateSolMTX;                   ///< Mutex for synchronizing solution updates.
 
+	/**
+     * @brief Waits for all threads to complete their optimization jobs.
+     */
 	void waitAllJobs();
 
+	 /**
+     * @brief Sets a temporary solution at the specified index.
+     * 
+     * @param index The index of the solution to set.
+     * @param tmpSol The temporary solution to set.
+     */
 	inline void		setTmpSolution(int index, Solution& tmpSol){tmpSolutions[index] = tmpSol;}
-	[[nodiscard]]
-	inline Solution getTmpSolution(int index) { return tmpSolutions[index]; }
+
+	/**
+     * @brief Runs the FMIP optimization job for a given thread.
+     * 
+     * @param thID The ID of the thread running the job.
+     * @param remTime The remaining time for the optimization process.
+     * @param CLIArgs The command-line arguments for the optimization process.
+     */
 	void FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs);
+
+	 /**
+     * @brief Runs the OMIP optimization job for a given thread.
+     * 
+     * @param thID The ID of the thread running the job.
+     * @param remTime The remaining time for the optimization process.
+     * @param CLIArgs The command-line arguments for the optimization process.
+     * @param slackSumUB The slack upper bound used in the OMIP method.
+     */
 	void OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, double slackSumUB);
 };
 

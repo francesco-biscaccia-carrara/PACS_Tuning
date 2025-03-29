@@ -21,19 +21,18 @@ MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : numMIPs{
 }
 
 
-MTContext& MTContext::setBestACSIncumbent(Solution& sol) {
+void MTContext::setBestACSIncumbent(Solution& sol) {
 	if((sol.oMIPCost < bestACSIncumbent.oMIPCost && (sol.slackSum - bestACSIncumbent.slackSum) < EPSILON) || sol.slackSum< bestACSIncumbent.slackSum){
 
 		std::lock_guard<std::mutex> lock(updateSolMTX);
 		bestACSIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = sol.oMIPCost };
 	#if ACS_VERBOSE >= VERBOSE
 		if(bestACSIncumbent.slackSum < EPSILON && bestACSIncumbent.oMIPCost< CPX_INFBOUND)
-				PRINT_BEST("New MIP Incumbent found %12.2f\t[*]", bestACSIncumbent.oMIPCost);
+			PRINT_BEST("New MIP Incumbent found %12.2f\t[*]", bestACSIncumbent.oMIPCost);
 		else
 			PRINT_INFO("New ACS Incumbent found %12.2f|%-10.2f\t[*]", bestACSIncumbent.oMIPCost,bestACSIncumbent.slackSum);
 	#endif
 	}
-	return *this;
 }
 
 
