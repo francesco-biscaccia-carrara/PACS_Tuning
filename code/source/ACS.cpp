@@ -122,8 +122,12 @@ int main(int argc, char* argv[]) {
 		} else {
 			MIP		 og(CLIArgs.fileName);
 			incumbent.sol.resize(og.getNumCols());
-			assert(og.checkFeasibility(incumbent.sol) == true);
-			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
+
+			bool feas = og.checkFeasibility(incumbent.sol);
+			if(feas)
+				PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
+			else
+				PRINT_ERR("ERROR ON COMPUTATION");
 		}
 
 	} catch (const std::runtime_error& ex) {
