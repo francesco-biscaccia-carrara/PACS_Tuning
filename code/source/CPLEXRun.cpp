@@ -1,9 +1,10 @@
 /**
-*   @author Francesco Biscaccia Carrara
-*   
-*   Last update: 03/29/2025
+ * CPLEX Execution file 
+ * 
+ * @author Francesco Biscaccia Carrara
+ * @version v1.0.2
+ * @since 03/29/2025
 */
-
 
 #include "../include/MIP.hpp"
 #define CPLEX_RUN true
