@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Documentation for header files.
 
 ### Fixed
-- Resolved unexpected behavior in `OMIP::getSlackSum` function ([OMIP.cpp](../MIP_Heuristic/code/source/OMIP.cpp)).
+- Resolved unexpected behavior in `OMIP::getSlackSum` function ([OMIP.cpp](../code/source/OMIP.cpp)).
 
 
 # [1.0.1] - 2025-03-26
