@@ -67,7 +67,9 @@ cd {exec_dir}
 #####################
 
 # back to power saving mode
-sudo cpupower frequency-set -g powersave"""
+sudo cpupower frequency-set -g powersave
+
+"""
 
                         with open(job, "w") as f:
                             f.write(job_content)
@@ -98,7 +100,9 @@ cd {exec_dir}
 #####################
 
 # back to power saving mode
-sudo cpupower frequency-set -g powersave"""
+sudo cpupower frequency-set -g powersave
+
+"""
 
                 with open(job, "w") as f:
                     f.write(job_content)
