@@ -2,8 +2,8 @@
  * CPLEX Execution file 
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.0.2
- * @since 03/29/2025
+ * @version v1.0.3
+ * @since 03/30/2025
 */
 
 #include "../include/MIP.hpp"

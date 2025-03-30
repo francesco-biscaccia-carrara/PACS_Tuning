@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Reduced computational overhead  
 
 
+# [1.0.3] - 2025-03-30
+### Fixed
+- Resolved unexpected behavior in `Logger::print` function ([Utils.cpp](code/source/Utils.cpp))
+- Resolved error related to MIP tolerance in CPLEX optimization (`MIP::MIP_GAP_TOL`) ([MIP.hpp](code/include/MIP.hpp))
+
+
 # [1.0.2] - 2025-03-29
 ### Added
 - Documentation for header files.

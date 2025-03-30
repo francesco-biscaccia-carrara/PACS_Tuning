@@ -2,17 +2,15 @@
  * ACS Execution file
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.0.2
- * @since 03/29/2025
+ * @version v1.0.3
+ * @since 03/30/2025
 */
-
 
 #include "../include/FMIP.hpp"
 #include "../include/FixPolicy.hpp"
 #include "../include/MTContext.hpp"
 #include "../include/MergePolicy.hpp"
 #include "../include/OMIP.hpp"
-#include <assert.h>
 
 int main(int argc, char* argv[]) {
 	try {
@@ -69,8 +67,8 @@ int main(int argc, char* argv[]) {
 				tmpSol.slackSum = MergeFMIP.getObjValue();
 				PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
 
-				MTEnv.broadcastSol(tmpSol);
 				MTEnv.setBestACSIncumbent(tmpSol);
+				MTEnv.broadcastSol(tmpSol);
 			}
 
 			if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {

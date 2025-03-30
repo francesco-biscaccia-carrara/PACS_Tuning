@@ -53,26 +53,30 @@ void Logger::print(LogLevel typeMsg, const char* format, ...) {
 			msgPref = "";
 			break;
 	}
-#if LOG
-	printf("%s|%8.2f|", msgPref, Clock::timeElapsed());
-#else
-	printf("%s\033[1m\033[4m%s%s%s|%8.2f|", msgClr, msgPref, ANSI_COLOR_RESET, msgClr, Clock::timeElapsed());
-#endif
-
-	va_list args;
-	va_start(args, format);
-	vfprintf(stdout, format, args);
-
-
-	va_end(args);
-
-#if LOG
-	printf("\n");
-#else
-	printf("%s\n", ANSI_COLOR_RESET);
-#endif
-
-	fflush(stdin);
+	
+	/// FIXED: Bug #5860f1916463f69833a7cb9170845d492fabee8f –- Segmentation fault caused by overlapping printf calls.
+    flockfile(stdout);
+    
+    #if LOG
+    printf("%s|%8.2f|", msgPref, Clock::timeElapsed());
+    #else
+    printf("%s\033[1m\033[4m%s%s%s|%8.2f|", msgClr, msgPref, ANSI_COLOR_RESET, msgClr, Clock::timeElapsed());
+    #endif
+    
+    va_list args;
+    va_start(args, format);
+    vfprintf(stdout, format, args);
+    va_end(args);
+    
+    #if LOG
+    printf("\n");
+    #else
+    printf("%s\n", ANSI_COLOR_RESET);
+    #endif
+    
+    fflush(stdout);
+    
+    funlockfile(stdout);
 }
 
 double Clock::getTime() {

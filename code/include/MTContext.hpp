@@ -12,7 +12,7 @@
  * and it provides mechanisms to broadcast solutions across threads and handle solution updates with thread safety.
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.0.2
+ * @version v1.0.3
  * @since 03/29/2025
  */
 
