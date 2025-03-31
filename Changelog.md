@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Reduced computational overhead  
 
 
+# [1.0.4] - 2025-03-31
+### Fixed
+- Resolved error related to MIP Integrality tolerance in CPLEX optimization (`MIP::MIP_INT_TOL`) ([MIP.hpp](code/include/MIP.hpp))
+
+
 # [1.0.3] - 2025-03-30
 ### Fixed
 - Resolved unexpected behavior in `Logger::print` function ([Utils.cpp](code/source/Utils.cpp))
