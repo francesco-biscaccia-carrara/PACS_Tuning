@@ -4,14 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+### [Unreleased]
 - Enhanced performance and efficiency  
 - Reduced computational overhead  
 
 
 # [1.0.4] - 2025-03-31
 ### Fixed
-- Resolved error related to MIP Integrality tolerance in CPLEX optimization (`MIP::MIP_INT_TOL`) ([MIP.hpp](code/include/MIP.hpp))
+- Resolved error related to `MIP::MIP_INT_TOL` (MIP Integrality tolerance) in CPLEX optimization ([MIP.hpp](code/include/MIP.hpp))
+- Resolved error related to `MIP::MIP_SIMPLEX_FEAS_TOL` (MIP Simplex Feasibility tolerance) in CPLEX optimization ([MIP.hpp](code/include/MIP.hpp))
 
 
 # [1.0.3] - 2025-03-30
@@ -34,7 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Optimized ACS Incumbent overhead in ACS
 
 
-## [1.0.0] - 2025-03-20
+# [1.0.0] - 2025-03-20
 ### Added
 - Initial implementation of the ACS algorithm  
 
