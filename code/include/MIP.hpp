@@ -8,8 +8,8 @@
  *
  * @note Requires CPLEX library and Utils.hpp
  * @author Francesco Biscaccia Carrara
- * @version v1.0.3
- * @since 03/30/2025
+ * @version v1.0.4
+ * @since 03/31/2025
  */
 
 #ifndef MIP_SOL_H
@@ -28,6 +28,8 @@ using namespace Utils;
 #define MIP_DUAL_PRIM_GAP_TOL 1e-4
 /// FIXED: Bug #5860f1916463f69833a7cb9170845d492fabee8f –- Error in solution quality due to excessively tight tolerance.
 #define MIP_GAP_TOL 1e-4
+/// FIXED: Bug #62f2110b0d2547498c59d7c19c3490ac15330119 –- Error in solution quality due to excessively tight tolerance.
+#define MIP_INT_TOL 1e-3
 
 /**
  * @struct VarBounds

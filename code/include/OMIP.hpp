@@ -8,7 +8,7 @@
  * It inherits core functionality from the base MIP class while adding optimality-specific features.
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.0.3
+ * @version v1.0.4
  * @since 03/29/2025
  */
 

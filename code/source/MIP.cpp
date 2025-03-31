@@ -265,6 +265,7 @@ bool MIP::checkFeasibility(const std::vector<double>& sol) {
 	if (sol.size() != getNumCols())
 		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
 
+	CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_Integrality, MIP_INT_TOL);
 	setVarsValues(sol);
 	int status{solve()};
 	return (status == CPXMIP_OPTIMAL_TOL || status == CPXMIP_OPTIMAL);
