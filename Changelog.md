@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 # [1.0.4] - 2025-03-31
 ### Fixed
+- Resolved unexpected behavior in `OMIP::getSlackSum` function ([OMIP.cpp](code/source/OMIP.cpp)).
 - Resolved error related to `MIP::MIP_INT_TOL` (MIP Integrality tolerance) in CPLEX optimization ([MIP.hpp](code/include/MIP.hpp))
 - Resolved error related to `MIP::MIP_SIMPLEX_FEAS_TOL` (MIP Simplex Feasibility tolerance) in CPLEX optimization ([MIP.hpp](code/include/MIP.hpp))
 

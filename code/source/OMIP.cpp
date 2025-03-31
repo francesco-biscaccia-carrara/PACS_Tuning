@@ -39,7 +39,10 @@ OMIP& OMIP::updateBudgetConstr(double rhs) {
 
 double OMIP::getSlackSum() {
 	std::vector<double> xStar = getSol();
-	double sum =std::accumulate(xStar.begin()+getMIPNumVars(), xStar.end(), 0.0); 
+	/// FIXED: Bug#62f2110b0d2547498c59d7c19c3490ac15330119  -- Eliminated negligible value from the solution.
+	std::transform(xStar.begin() + getMIPNumVars(),xStar.end(), xStar.begin() + getMIPNumVars(), [](double d) -> double {abs(d)<EPSILON? 0.0 : d; });
+
+	double sum = std::accumulate(xStar.begin() + getMIPNumVars(), xStar.end(), 0.0); 
 	/// FIXED: Bug#5c77b0d838cf9df00715d2bae81ef822eb7ddbd5  -- Unexpected cast to int if init = 0.
 	if(sum < -EPSILON) 
 		throw MIPException(MIPEx::OutOfBound, "Negative value obtained!");

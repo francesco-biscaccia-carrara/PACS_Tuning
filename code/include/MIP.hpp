@@ -29,8 +29,8 @@ using namespace Utils;
 /// FIXED: Bug #5860f1916463f69833a7cb9170845d492fabee8f –- Error in solution quality due to excessively tight tolerance.
 #define MIP_GAP_TOL 1e-4
 /// FIXED: Bug #62f2110b0d2547498c59d7c19c3490ac15330119 –- Error in solution quality due to excessively tight tolerance.
-#define MIP_INT_TOL 1e-4
-#define MIP_SIMPLEX_FEAS_TOL 1e-4
+#define MIP_INT_TOL 1e-3
+#define MIP_SIMPLEX_FEAS_TOL 1e-3
 
 /**
  * @struct VarBounds
