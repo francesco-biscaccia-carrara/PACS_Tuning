@@ -45,7 +45,7 @@ double OMIP::getSlackSum() {
 	double sum = std::accumulate(xStar.begin() + getMIPNumVars(), xStar.end(), 0.0); 
 	/// FIXED: Bug#5c77b0d838cf9df00715d2bae81ef822eb7ddbd5  -- Unexpected cast to int if init = 0.
 	if(sum < -EPSILON) 
-		throw MIPException(MIPEx::OutOfBound, "Negative value obtained!");
+		throw MIPException(MIPEx::OutOfBound, "Negative value obtained! "+ std::to_string(sum));
 	return sum;
 }
 
