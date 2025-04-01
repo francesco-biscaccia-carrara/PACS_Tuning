@@ -7,7 +7,7 @@
  * It inherits core functionality from the base MIP class while adding FMIP-specific features.
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.0.4
+ * @version v1.0.5
  * @since 03/29/2025
  */
 
