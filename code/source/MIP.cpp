@@ -89,7 +89,7 @@ MIP& MIP::addMIPStart(const std::vector<double>& MIPStart, bool CPLEXCheck) {
 	int start_index = 0;
 	int effort_level = (CPLEXCheck) ? CPX_MIPSTART_CHECKFEAS : CPX_MIPSTART_NOCHECK;
 
-	std::vector<int> indices(MIPStart.size(), 0);
+	std::vector<int> indices(MIPStart.size(),0);
 	std::iota(indices.begin(), indices.end(), 0);
 
 	if (int error{ CPXaddmipstarts(env, model, 1, MIPStart.size(), &start_index, indices.data(), MIPStart.data(), &effort_level, NULL) })
@@ -101,7 +101,7 @@ double MIP::getObjValue() {
 	double objValue;
 	if (int error{ CPXgetobjval(env, model, &objValue) })
 		throw MIPException(MIPEx::General, "Unable to obtain obj value!\t" + std::to_string(error));
-	return (abs(objValue) <= EPSILON) ? 0 : objValue;
+	return (abs(objValue) <= EPSILON) ? 0.0 : objValue;
 }
 
 std::vector<double> MIP::getObjFunction() {
@@ -111,6 +111,9 @@ std::vector<double> MIP::getObjFunction() {
 		throw MIPException(MIPEx::General, "Unable to get obj_function coefficients!");
 	std::vector<double> obj(objFun, objFun + numCols);
 	free(objFun);
+
+	/// FIXED: Bug#8ccd9f4f2accb180c35b60b7a41880fe25fb38da  -- Eliminated negligible value from the objective function.
+	std::transform(obj.begin(),obj.end(),obj.begin(),[](double d) -> double { return (abs(d)<=EPSILON ? 0.0 : d); });
 	return obj;
 }
 
@@ -135,6 +138,9 @@ std::vector<double> MIP::getSol() {
 		throw MIPException(MIPEx::General, "Unable to obtain the solution!" + std::to_string(error));
 	std::vector<double> sol(xStar, xStar + numCols);
 	free(xStar);
+
+	/// FIXED: Bug#8ccd9f4f2accb180c35b60b7a41880fe25fb38da  -- Eliminated negligible value from the solution.
+	std::transform(sol.begin(),sol.end(),sol.begin(),[](double d) -> double { return (abs(d)<=EPSILON ? 0.0 : d); });
 	return sol;
 }
 
@@ -246,7 +252,8 @@ MIP& MIP::setVarValue(const int index, const double val) {
 		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarValue()!");
 
 	char bound{ BOTH_BOUNDS };
-	CPXchgbds(env, model, 1, &index, &bound, &val);
+	if(CPXchgbds(env, model, 1, &index, &bound, &val))
+		throw MIPException(MIPEx::General, "Unable to set the value to var " + std::to_string(val));
 	return *this;
 }
 
