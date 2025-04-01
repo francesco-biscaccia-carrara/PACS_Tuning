@@ -43,7 +43,7 @@
 #define DEBUG 10
 
 /** Mathematical and computational constants */
-#define EPSILON 1e-7
+#define EPSILON 1e-5
 #define ARGS_CONV_BASE 10
 
 /** Time limit regulation constants */
