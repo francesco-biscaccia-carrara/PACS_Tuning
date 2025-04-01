@@ -11,9 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 # [1.0.5] - 2025-04-01
 ### Fixed
+- Adjusted `Utils::EPSILON` zero-threshold for better numerical tolerance ([Utils.hpp](code/source/Utils.cpp)).
 - Discretized negligible values in `OMIP::updateBudgetConstr` function ([OMIP.cpp](code/source/OMIP.cpp)).
-- Discretized negligible values in the solution returned by `MIP::getObjFunction` function ([MIP.cpp](code/source/MIP.cpp)).
-- Discretized negligible values in the solution returned by `MIP::getSol` function ([MIP.cpp](code/source/MIP.cpp)).
+- Discretized negligible values returned by `MIP::getObjFunction` function ([MIP.cpp](code/source/MIP.cpp)).
+- Discretized negligible values returned by `MIP::getSol` function ([MIP.cpp](code/source/MIP.cpp)).
 
 
 # [1.0.4] - 2025-03-31
