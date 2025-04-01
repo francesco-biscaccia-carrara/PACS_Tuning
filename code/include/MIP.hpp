@@ -9,7 +9,7 @@
  * @note Requires CPLEX library and Utils.hpp
  * @author Francesco Biscaccia Carrara
  * @version v1.0.4
- * @since 03/31/2025
+ * @since 04/01/2025
  */
 
 #ifndef MIP_SOL_H
