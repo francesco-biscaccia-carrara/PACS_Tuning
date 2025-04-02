@@ -6,6 +6,7 @@
 /code/log
 /code/build
 /code/data
+/code/test/env
 /code/test/job*
 
 #Thesis stuff

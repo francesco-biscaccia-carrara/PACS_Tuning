@@ -11,7 +11,7 @@ test_file = data_folder + "test.csv"
 
 
 
-def extract_value_from_line(line):
+def extract_value_from_line(line : str):
     if "NO FEASIBLE SOLUTION" in line:
         return "NO SOL"
     elif "BEST INCUMBENT:" in line:
@@ -124,12 +124,16 @@ def main():
 
     for out in outs:
         with open(out_folder + "/" + out) as f1:
+            for line in f1:
+                pass
+            last_line = line
+            value = extract_value_from_line(last_line)
             if "CPLEXRun" in out:
-                cols["CPLEX"].append(extract_value_from_line(f1.readlines()[-1]))
+                cols["CPLEX"].append(value)
             match = re.search(r"ACS_\d+\.\d+_\d+", out)
             if match:
                 col = match.group()
-                cols[col].append(extract_value_from_line(f1.readlines()[-1]))
+                cols[col].append(value)
 
     data = pd.DataFrame.from_dict(cols, orient="index").T
     merged_df = pd.concat([existing_df, data], axis=1)
