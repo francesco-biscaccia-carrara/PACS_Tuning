@@ -9,13 +9,14 @@ if ("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
 project(ACS)
+set(CODE_VERSION "v1.0.5")
 
 # setting flags for optimization and debug builds
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "-Og -ggdb")
 
 # setting the default verbose/warn/intchecks (edited with the -D flag)
-set(VERBOSE "1" CACHE STRING "Verbose setting set from command line")
+set(VERBOSE "0" CACHE STRING "Verbose setting set from command line")
 set(LOG "0" CACHE STRING "Flag to enable log on file")
 #set(WARN "0" CACHE STRING "Flag to enable warning messages")
 #set(INTCHECK "0" CACHE STRING "Flag to enable integrity checks")
@@ -172,18 +173,25 @@ target_link_libraries(
 )
 
 # adding definitions
-add_definitions(-D ACS_HOME_DIR="${HOME_DIR}" -D ACS_VERBOSE=${VERBOSE} -D ACS_WARN=${WARN} -D ACS_INTCHECK=${INTCHECK} -D LOG=${LOG}) #ACS for us
+add_definitions(-DACS_HOME_DIR="${HOME_DIR}"
+                -DACS_VERBOSE=${VERBOSE} 
+                -DACS_WARN=${WARN} 
+                -DACS_INTCHECK=${INTCHECK} 
+                -DLOG=${LOG} 
+                -DCODE_VERSION=${CODE_VERSION}) #ACS for us
 
 # custom builds
 add_custom_target(opt
-    COMMAND echo "flags used: ${CMAKE_CXX_FLAGS_RELEASE}"
+    COMMAND echo "Code version: ${CODE_VERSION}"
+    COMMAND echo "Flags used: ${CMAKE_CXX_FLAGS_RELEASE}"
     COMMAND ${CMAKE_COMMAND} -D CMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ACS
     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target CPLEXRun
 )
 
 add_custom_target(debug
-    COMMAND echo "flags used: ${CMAKE_CXX_FLAGS_DEBUG}"
+    COMMAND echo "Code version: ${CODE_VERSION}"
+    COMMAND echo "Flags used: ${CMAKE_CXX_FLAGS_DEBUG} -VERBOSE=${VERBOSE} -LOG=${LOG}"
     COMMAND ${CMAKE_COMMAND} -D CMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ACS
     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target CPLEXRun
@@ -192,3 +200,5 @@ add_custom_target(debug
 add_custom_target(clear
     COMMAND rm -r ${CMAKE_HOME_DIRECTORY}/build/*
 )
+
+message(STATUS "Code version: ${CODE_VERSION}")

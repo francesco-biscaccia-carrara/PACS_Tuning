@@ -25,6 +25,7 @@ using namespace Utils;
 #define INST_DIR "../data/"
 #define CPLEX_CORE 1
 
+//TODO: (v1.0.6) -- Adjust tolerance parameter to prevent problem with solution returned
 #define MIP_DUAL_PRIM_GAP_TOL 1e-4
 /// FIXED: Bug #5860f1916463f69833a7cb9170845d492fabee8f –- Error in solution quality due to excessively tight tolerance.
 #define MIP_GAP_TOL 1e-4

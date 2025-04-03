@@ -8,6 +8,7 @@
 
 #include "../include/MIP.hpp"
 #define CPLEX_RUN true
+#define NUM_CORE 4
 
 int main(int argc, char* argv[]) {
 	try {
@@ -16,11 +17,12 @@ int main(int argc, char* argv[]) {
 		Args	  CLIArgs = CLIParser(argc, argv, CPLEX_RUN).getArgs();
 
         MIP ogMIP{CLIArgs.fileName};
+		ogMIP.setNumCores(NUM_CORE);
         Solution CPLEXSol = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
         
         int solveCode {ogMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit))};
 
-		if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS){
+		if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE){
 			PRINT_ERR("NO FEASIBLE SOLUTION FIND");
         }else{
             CPLEXSol.sol = ogMIP.getSol();

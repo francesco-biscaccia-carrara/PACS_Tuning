@@ -22,6 +22,7 @@ MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : numMIPs{
 
 
 void MTContext::setBestACSIncumbent(Solution& sol) {
+	//TODO: (v1.0.6) -- RECHECK this line to be more safe about taht
 	if((sol.oMIPCost < bestACSIncumbent.oMIPCost && abs(bestACSIncumbent.slackSum - sol.slackSum) < EPSILON) || sol.slackSum< bestACSIncumbent.slackSum){
 
 		std::lock_guard<std::mutex> lock(updateSolMTX);
@@ -30,7 +31,8 @@ void MTContext::setBestACSIncumbent(Solution& sol) {
 		if(bestACSIncumbent.slackSum < EPSILON && bestACSIncumbent.oMIPCost< CPX_INFBOUND)
 			PRINT_BEST("New MIP Incumbent found %12.2f\t[*]", bestACSIncumbent.oMIPCost);
 		else
-			PRINT_INFO("New ACS Incumbent found %12.2f|%-10.2f\t[*]", bestACSIncumbent.oMIPCost,bestACSIncumbent.slackSum);
+	//TODO: (v1.0.6) -- Print as standard output
+			PRINT_INFO("New ACS Incumbent found %12.2f|%-10.2f\t[*]", bestACSIncumbent.oMIPCost,bestACSIncumbent.slackSum); 
 	#endif
 	}
 }
@@ -58,6 +60,7 @@ void MTContext::waitAllJobs() {
 	}
 	threads.clear();
 }
+
 
 MTContext& MTContext::parallelFMIPOptimization(double remTime, Args CLIArgs) {
 	waitAllJobs();
@@ -87,6 +90,7 @@ MTContext::~MTContext() {
 #endif
 }
 
+//TODO: (v1.0.6) -- remTime could be removed and use CLIArgs info to set the remainign time
 void MTContext::FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs) {
 
 	FMIP fMIP{ CLIArgs.fileName };
@@ -112,6 +116,7 @@ void MTContext::FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs) {
 	setBestACSIncumbent(tmpSolutions[thID]);
 }
 
+//TODO: (v1.0.6) -- remTime could be removed and use CLIArgs info to set the remainign time
 void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, double slackSumUB) {
 
 	OMIP oMIP{ CLIArgs.fileName };
@@ -124,7 +129,6 @@ void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, doubl
 	FixPolicy::randomRhoFix(tmpSolutions[thID].sol, oMIP, thID, CLIArgs.rho, "OMIP", rndGens[thID]);
 
 	int solveCode{ oMIP.solve(remTime, DET_TL(oMIP.getNumNonZeros())) };
-
 	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE) {
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Proc: %3d [OMIP] - Aborted: Infeasible with given TL", thID);

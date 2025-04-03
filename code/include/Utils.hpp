@@ -43,6 +43,7 @@
 #define DEBUG 10
 
 /** Mathematical and computational constants */
+//TODO: (v1.0.6) -- Adjust EPSILON to control zero-threashold
 #define EPSILON 1e-5
 #define ARGS_CONV_BASE 10
 
