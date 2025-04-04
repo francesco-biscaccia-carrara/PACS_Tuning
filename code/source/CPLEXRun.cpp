@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
 		Args	  CLIArgs = CLIParser(argc, argv, CPLEX_RUN).getArgs();
 
         MIP ogMIP{CLIArgs.fileName};
-		ogMIP.setNumCores(NUM_CORE);
+		ogMIP.setNumCores(NUM_CORE).setNumSols(NUM_SOL_STOP);
         Solution CPLEXSol = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
         
         int solveCode {ogMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit))};

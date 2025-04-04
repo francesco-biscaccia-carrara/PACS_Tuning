@@ -14,8 +14,12 @@
 #define FIX_POL_H
 
 #include "RlxFMIP.hpp"
-
 using namespace Utils;
+
+#define DELTA_RHO 5e-2
+
+#define MAX_RHO 99e-2
+#define MIN_RHO 1e-2
 
 namespace FixPolicy {
 
@@ -84,6 +88,14 @@ namespace FixPolicy {
      * @param rnd Random number generator instance.
      */
 	void randomRhoFix(const std::vector<double>& sol, MIP& model, const size_t threadID, double rho,const char* type, Random& rnd);
+
+     
+     /**
+     * @brief Adjust rho parameter to better search in the LNS
+     * @param solveCode Code returned by CPXmipopt
+     * @param CLI Reference CLI argst to modify rho
+     */
+     void dynamicAdjustRho(const int solveCode, Args& CLI);
 };
 
 #endif

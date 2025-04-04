@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
 		MTEnv.broadcastSol(tmpSol);
 
 		while (Clock::timeElapsed() < CLIArgs.timeLimit) {
-			if (MTEnv.getBestACSIncumbent().slackSum > EPSILON) { //while works better?
+			if (MTEnv.getBestACSIncumbent().slackSum > EPSILON) { //TODO: while works better?
 
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
 #if ACS_VERBOSE >= VERBOSE
@@ -36,7 +36,9 @@ int main(int argc, char* argv[]) {
 #endif
 					break;
 				}
-				MTEnv.parallelFMIPOptimization(Clock::timeRemaining(CLIArgs.timeLimit), CLIArgs);
+				MTEnv.parallelFMIPOptimization(CLIArgs);
+
+				// if(MTEnv.isFeasibleSolFound()) break; 
 
 				// 1° Recombination phase
 				FMIP MergeFMIP(CLIArgs.fileName);
@@ -66,8 +68,9 @@ int main(int argc, char* argv[]) {
 				tmpSol.sol = MergeFMIP.getSol();
 				tmpSol.slackSum = MergeFMIP.getObjValue();
 				PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
-
 				MTEnv.setBestACSIncumbent(tmpSol);
+				
+			//	if(MTEnv.isFeasibleSolFound()) break; 
 				MTEnv.broadcastSol(tmpSol);
 			}
 
@@ -78,7 +81,9 @@ int main(int argc, char* argv[]) {
 				break;
 			}
 
-			MTEnv.parallelOMIPOptimization(Clock::timeRemaining(CLIArgs.timeLimit), CLIArgs, tmpSol.slackSum);
+			MTEnv.parallelOMIPOptimization(tmpSol.slackSum, CLIArgs);
+
+			//if(MTEnv.isFeasibleSolFound()) break; 
 
 			// 2° Recombination phase
 			OMIP MergeOMIP(CLIArgs.fileName);
@@ -112,6 +117,8 @@ int main(int argc, char* argv[]) {
 
 			PRINT_OUT("OptMIP Objective|SlackSum after merging: %12.2f|%-10.2f", MergeOMIP.getObjValue(), tmpSol.slackSum);
 			MTEnv.setBestACSIncumbent(tmpSol);
+
+			//if(MTEnv.isFeasibleSolFound()) break;
 			MTEnv.broadcastSol(tmpSol);
 		}
 

@@ -25,8 +25,10 @@ using namespace Utils;
 #define INST_DIR "../data/"
 #define CPLEX_CORE 1
 
-#define MIP_DUAL_PRIM_GAP_TOL 1e-4 //Default value for CPX_PARAM_EPAGAP (see IBM ILOG CPLEX doc)
-#define MIP_GAP_TOL 1e-6 //Default value for CPX_PARAM_EPGAP (see IBM ILOG CPLEX doc)
+#define NUM_SOL_STOP 1
+
+#define MIP_DUAL_PRIM_GAP_TOL 1e-4      //Default value for CPX_PARAM_EPAGAP (see IBM ILOG CPLEX doc)
+#define MIP_GAP_TOL 1e-6                //Default value for CPX_PARAM_EPGAP (see IBM ILOG CPLEX doc)
 
 //FIXME: can they be removed?
 #define MIP_INT_TOL 1e-3
@@ -137,6 +139,13 @@ public:
      * @return Reference to the current MIP object
      */
 	MIP& setNumCores(const int numCores);
+
+     /**
+     * @brief Sets the number of MIP solutions to be found before stopping
+     * @param numSols Number of solutions
+     * @return Reference to the current MIP object
+     */
+	MIP& setNumSols(const int numSols);
 
 	/**
      * @brief Get the number of non-zero elements in the problem

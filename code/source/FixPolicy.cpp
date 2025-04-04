@@ -90,3 +90,19 @@ void FixPolicy::randomRhoFix(const std::vector<double>& sol, MIP& model, const s
 		model.setVarValue(index, sol[index]);
 	}
 }
+
+
+void FixPolicy::dynamicAdjustRho(const int solveCode, Args& CLI){
+	// if solution is better then the one stored in ACSIncumbent (both on fMIP sol and oMIP sol) --> dont't change rho
+	// #include <atomic> , std::atomic_bool ArhoAdjusted; to prevent multiple adjustment of rho
+	// else adjust 
+	switch(solveCode){
+		case CPXMIP_OPTIMAL:
+		case CPXMIP_OPTIMAL_TOL:
+			CLI.rho-=DELTA_RHO;
+#if ACS_VERBOSE >= VERBOSE
+			PRINT_INFO("CPXMIP_OPTIMAL|CPXMIP_OPTIMAL_TOL --> Rho reduced");
+#endif
+			break;
+	}
+}

@@ -83,6 +83,15 @@ public:
 	[[nodiscard]]
 	inline const Solution& getBestACSIncumbent() { return bestACSIncumbent; }
 
+
+      /**
+     * @brief Check if bestACSIncumbent is a feasible solution for the MIP problem
+     * 
+     * @return Boolean statign wheter bestACSIncumbent is a feasible solution or not
+     */
+    [[nodiscard]]
+     inline bool isFeasibleSolFound(){ return (bestACSIncumbent.slackSum<= EPSILON && bestACSIncumbent.oMIPCost < CPX_INFBOUND);}
+
 	/**
      * @brief Sets the best ACS incumbent solution.
      * 
@@ -117,21 +126,18 @@ public:
 	 /**
      * @brief Starts parallel optimization using the FMIP method.
      * 
-     * @param remTime The remaining time for the optimization process.
      * @param CLIArgs The command-line arguments for optimization.
      * @return Reference to the current MTContext object.
      */
-	MTContext& parallelFMIPOptimization(double remTime, Args CLIArgs);
+	MTContext& parallelFMIPOptimization(Args& CLIArgs);
 
 	 /**
      * @brief Starts parallel optimization using the OMIP method.
-     * 
-     * @param remTime The remaining time for the optimization process.
-     * @param CLIArgs The command-line arguments for optimization.
      * @param slackSumUB The slack upper bound used in the OMIP method.
+     * @param CLIArgs The command-line arguments for optimization.
      * @return Reference to the current MTContext object.
      */
-	MTContext& parallelOMIPOptimization(double remTime, Args CLIArgs, double slackSumUB);
+	MTContext& parallelOMIPOptimization(const double slackSumUB, Args& CLIArgs);
 
 	/**
      * @brief Destructor for MTContext. Cleans up resources used by the context.
@@ -163,20 +169,18 @@ private:
      * @brief Runs the FMIP optimization job for a given thread.
      * 
      * @param thID The ID of the thread running the job.
-     * @param remTime The remaining time for the optimization process.
      * @param CLIArgs The command-line arguments for the optimization process.
      */
-	void FMIPInstanceJob(size_t thID, Args CLIArgs);
+	void FMIPInstanceJob(const size_t thID, Args& CLIArgs);
 
 	 /**
      * @brief Runs the OMIP optimization job for a given thread.
      * 
      * @param thID The ID of the thread running the job.
-     * @param remTime The remaining time for the optimization process.
      * @param CLIArgs The command-line arguments for the optimization process.
      * @param slackSumUB The slack upper bound used in the OMIP method.
      */
-    void  OMIPInstanceJob(size_t thID,  double slackSumUB, Args CLIArgs);
+    void  OMIPInstanceJob(const size_t thID, const double slackSumUB, Args& CLIArgs);
 };
 
 #endif

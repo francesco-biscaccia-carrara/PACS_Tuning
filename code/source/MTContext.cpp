@@ -23,7 +23,7 @@ MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : numMIPs{
 
 void MTContext::setBestACSIncumbent(Solution& sol) {
 
-	if((sol.oMIPCost < bestACSIncumbent.oMIPCost) /*&& (abs(bestACSIncumbent.slackSum ) - abs(sol.slackSum)) <= EPSILON)*/ || abs(sol.slackSum) < abs(bestACSIncumbent.slackSum)){
+	if(((sol.oMIPCost < bestACSIncumbent.oMIPCost) && abs(bestACSIncumbent.slackSum ) - abs(sol.slackSum) <= EPSILON) || abs(sol.slackSum) < abs(bestACSIncumbent.slackSum)){
 
 		std::lock_guard<std::mutex> lock(updateSolMTX);
 		bestACSIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = sol.oMIPCost };
@@ -62,22 +62,22 @@ void MTContext::waitAllJobs() {
 }
 
 
-MTContext& MTContext::parallelFMIPOptimization(double remTime, Args CLIArgs) {
+MTContext& MTContext::parallelFMIPOptimization(Args& CLIArgs) {
 	waitAllJobs();
 
 	for (size_t i{ 0 }; i < CLIArgs.numsubMIPs; i++) {
-		threads.emplace_back(&MTContext::FMIPInstanceJob, this, i, CLIArgs);
+		threads.emplace_back(&MTContext::FMIPInstanceJob, this, i, std::ref(CLIArgs));
 	}
 
 	waitAllJobs();
 	return *this;
 }
 
-MTContext& MTContext::parallelOMIPOptimization(double remTime, Args CLIArgs, double slackSumUB) {
+MTContext& MTContext::parallelOMIPOptimization(double slackSumUB, Args& CLIArgs) {
 	waitAllJobs();
 
 	for (size_t i{ 0 }; i < CLIArgs.numsubMIPs; i++) {
-		threads.emplace_back(&MTContext::OMIPInstanceJob, this, i, slackSumUB, CLIArgs);
+		threads.emplace_back(&MTContext::OMIPInstanceJob, this, i, slackSumUB, std::ref(CLIArgs));
 	}
 
 	waitAllJobs();
@@ -91,7 +91,7 @@ MTContext::~MTContext() {
 }
 
 
-void MTContext::FMIPInstanceJob(size_t thID, Args CLIArgs) {
+void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 
 	FMIP fMIP{ CLIArgs.fileName };
 	if (bestACSIncumbent.slackSum < CPX_INFBOUND) {
@@ -109,6 +109,8 @@ void MTContext::FMIPInstanceJob(size_t thID, Args CLIArgs) {
 		return;
 	}
 
+	FixPolicy::dynamicAdjustRho(solveCode,CLIArgs);
+
 	tmpSolutions[thID].sol = fMIP.getSol();
 	tmpSolutions[thID].slackSum = fMIP.getObjValue();
 
@@ -117,7 +119,7 @@ void MTContext::FMIPInstanceJob(size_t thID, Args CLIArgs) {
 }
 
 
-void MTContext::OMIPInstanceJob(size_t thID,  double slackSumUB, Args CLIArgs) {
+void MTContext::OMIPInstanceJob(const size_t thID, const double slackSumUB, Args& CLIArgs) {
 
 	OMIP oMIP{ CLIArgs.fileName };
 	if (bestACSIncumbent.slackSum < CPX_INFBOUND) {
@@ -135,6 +137,8 @@ void MTContext::OMIPInstanceJob(size_t thID,  double slackSumUB, Args CLIArgs) {
 #endif
 		return;
 	}
+
+	FixPolicy::dynamicAdjustRho(solveCode,CLIArgs);
 
 	tmpSolutions[thID].sol = oMIP.getSol();
 	tmpSolutions[thID].slackSum = oMIP.getSlackSum();

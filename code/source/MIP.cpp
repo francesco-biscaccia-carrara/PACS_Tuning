@@ -51,11 +51,20 @@ MIP::MIP(const MIP& otherMIP) {
 #endif
 }
 
+
 MIP& MIP::setNumCores(const int numCores) {
 	if (CPXsetintparam(env, CPX_PARAM_THREADS, numCores))
 		throw MIPException(MIPEx::General, "Number of dedicated cores not changed!");
 	return *this;
 }
+
+
+MIP& MIP::setNumSols(const int numSols) {
+	if (CPXsetintparam(env, CPX_PARAM_INTSOLLIM, numSols))
+		throw MIPException(MIPEx::General, "Number of max solutions not changed!");
+	return *this;
+}
+
 
 size_t MIP::getNumNonZeros() {
 	size_t nnz{static_cast<size_t>(CPXgetnumnz(env, model))};
@@ -76,6 +85,8 @@ int MIP::solve(const double timeLimit, const double detTimeLimit) {
 		CPXsetdblparam(env, CPX_PARAM_DETTILIM, detTimeLimit);
 
 	if (int error{ CPXmipopt(env, model) })
+
+	
 		throw MIPException(MIPEx::MIPOptimizationError, "CPLEX cannot solve this problem!\t" + std::to_string(error));
 
 	return CPXgetstat(env, model);

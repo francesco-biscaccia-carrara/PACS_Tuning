@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Dynamic `FixPolicy` strategies
 
 
+## [1.1.0] - 2025-04-05
+### Added
+- Early-stop when a max number of solution is found `MIP::setNumSols` ([MIP.cpp](code/source/MIP.cpp))
+- Eerly-stop when a feasible solution is found by ACS algorithm ([ACS.cpp](code/source/ACS.cpp))
+
 ## [1.0.6] - 2025-04-04  
 ### Fixed  
 - Removed Version 1.0.5 due to a value cleanup error.  
