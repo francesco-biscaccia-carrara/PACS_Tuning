@@ -33,8 +33,7 @@ OMIP::OMIP(const MIP& otherMIP) : MIP(otherMIP) {
 
 OMIP& OMIP::updateBudgetConstr(double rhs) {
 	removeRow(getNumRows() - 1);
-	/// FIXED: Bug#8ccd9f4f2accb180c35b60b7a41880fe25fb38da  -- Negligible small value were passed as number different from 0.
-	addBudgetConstr( abs(rhs)<=EPSILON ? 0.0: rhs);   //TODO: (v1.0.6) -- RCK
+	addBudgetConstr(rhs);
 	return *this;
 }
 
@@ -42,9 +41,6 @@ double OMIP::getSlackSum() {
 	std::vector<double> xStar = getSol();
 	/// FIXED: Bug#5c77b0d838cf9df00715d2bae81ef822eb7ddbd5  -- Unexpected cast to int if init = 0.
 	double sum = std::accumulate(xStar.begin() + getMIPNumVars(), xStar.end(), 0.0);
-	
-	if(sum < -EPSILON) //TODO: (v1.0.6) -- RCK
-		throw MIPException(MIPEx::OutOfBound, "Negative value obtained! "+ std::to_string(sum));
 	return sum;
 }
 

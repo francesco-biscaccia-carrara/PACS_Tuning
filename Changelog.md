@@ -7,11 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### [Unreleased]
 - Dynamic `FixPolicy` strategies
-- Enhanced performance and efficiency  
-- Reduced computational overhead  
 
 
-## [1.0.5] - 2025-04-01 
+## [1.0.6] - 2025-04-04  
+### Fixed  
+- Removed Version 1.0.5 due to a value cleanup error.  
+- Reduced overhead in `MTContext::FMIPInstanceJob` and `MTContext::OMIPInstanceJob` functions ([MTContext.cpp](code/source/MTContext.cpp)).
+
+
+## [1.0.5] - 2025-04-01 [YANKED]
 ### Fixed
 - Adjusted `Utils::EPSILON` zero-threshold for better numerical tolerance ([Utils.hpp](code/source/Utils.cpp)).
 - Discretized negligible values in `OMIP::updateBudgetConstr` function ([OMIP.cpp](code/source/OMIP.cpp)).

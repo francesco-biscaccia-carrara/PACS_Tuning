@@ -22,17 +22,17 @@ MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : numMIPs{
 
 
 void MTContext::setBestACSIncumbent(Solution& sol) {
-	//TODO: (v1.0.6) -- RECHECK this line to be more safe about taht
-	if((sol.oMIPCost < bestACSIncumbent.oMIPCost && abs(bestACSIncumbent.slackSum - sol.slackSum) < EPSILON) || sol.slackSum< bestACSIncumbent.slackSum){
+
+	if((sol.oMIPCost < bestACSIncumbent.oMIPCost) /*&& (abs(bestACSIncumbent.slackSum ) - abs(sol.slackSum)) <= EPSILON)*/ || abs(sol.slackSum) < abs(bestACSIncumbent.slackSum)){
 
 		std::lock_guard<std::mutex> lock(updateSolMTX);
 		bestACSIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = sol.oMIPCost };
-	#if ACS_VERBOSE >= VERBOSE
-		if(bestACSIncumbent.slackSum < EPSILON && bestACSIncumbent.oMIPCost< CPX_INFBOUND)
+
+		if(bestACSIncumbent.oMIPCost< CPX_INFBOUND && bestACSIncumbent.slackSum<= EPSILON)
 			PRINT_BEST("New MIP Incumbent found %12.2f\t[*]", bestACSIncumbent.oMIPCost);
-		else
-	//TODO: (v1.0.6) -- Print as standard output
-			PRINT_INFO("New ACS Incumbent found %12.2f|%-10.2f\t[*]", bestACSIncumbent.oMIPCost,bestACSIncumbent.slackSum); 
+			
+	#if ACS_VERBOSE >= VERBOSE
+		PRINT_INFO("New ACS Incumbent found %12.2f|%-10.2f\t[*]", bestACSIncumbent.oMIPCost,bestACSIncumbent.slackSum); 
 	#endif
 	}
 }
@@ -66,7 +66,7 @@ MTContext& MTContext::parallelFMIPOptimization(double remTime, Args CLIArgs) {
 	waitAllJobs();
 
 	for (size_t i{ 0 }; i < CLIArgs.numsubMIPs; i++) {
-		threads.emplace_back(&MTContext::FMIPInstanceJob, this, i, remTime, CLIArgs);
+		threads.emplace_back(&MTContext::FMIPInstanceJob, this, i, CLIArgs);
 	}
 
 	waitAllJobs();
@@ -77,7 +77,7 @@ MTContext& MTContext::parallelOMIPOptimization(double remTime, Args CLIArgs, dou
 	waitAllJobs();
 
 	for (size_t i{ 0 }; i < CLIArgs.numsubMIPs; i++) {
-		threads.emplace_back(&MTContext::OMIPInstanceJob, this, i, remTime, CLIArgs, slackSumUB);
+		threads.emplace_back(&MTContext::OMIPInstanceJob, this, i, slackSumUB, CLIArgs);
 	}
 
 	waitAllJobs();
@@ -90,8 +90,8 @@ MTContext::~MTContext() {
 #endif
 }
 
-//TODO: (v1.0.6) -- remTime could be removed and use CLIArgs info to set the remainign time
-void MTContext::FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs) {
+
+void MTContext::FMIPInstanceJob(size_t thID, Args CLIArgs) {
 
 	FMIP fMIP{ CLIArgs.fileName };
 	if (bestACSIncumbent.slackSum < CPX_INFBOUND) {
@@ -101,7 +101,7 @@ void MTContext::FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs) {
 
 	FixPolicy::randomRhoFix(tmpSolutions[thID].sol, fMIP, thID, CLIArgs.rho, "FMIP", rndGens[thID]);
 
-	int solveCode{ fMIP.solve(remTime, DET_TL(fMIP.getNumNonZeros())) };
+	int solveCode{ fMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), DET_TL(fMIP.getNumNonZeros())) };
 	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE){
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Proc: %3d [FMIP] - Aborted: Infeasible with given TL", thID);
@@ -116,8 +116,8 @@ void MTContext::FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs) {
 	setBestACSIncumbent(tmpSolutions[thID]);
 }
 
-//TODO: (v1.0.6) -- remTime could be removed and use CLIArgs info to set the remainign time
-void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, double slackSumUB) {
+
+void MTContext::OMIPInstanceJob(size_t thID,  double slackSumUB, Args CLIArgs) {
 
 	OMIP oMIP{ CLIArgs.fileName };
 	if (bestACSIncumbent.slackSum < CPX_INFBOUND) {
@@ -128,7 +128,7 @@ void MTContext::OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, doubl
 
 	FixPolicy::randomRhoFix(tmpSolutions[thID].sol, oMIP, thID, CLIArgs.rho, "OMIP", rndGens[thID]);
 
-	int solveCode{ oMIP.solve(remTime, DET_TL(oMIP.getNumNonZeros())) };
+	int solveCode{ oMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), DET_TL(oMIP.getNumNonZeros())) };
 	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE) {
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Proc: %3d [OMIP] - Aborted: Infeasible with given TL", thID);

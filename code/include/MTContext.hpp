@@ -12,8 +12,8 @@
  * and it provides mechanisms to broadcast solutions across threads and handle solution updates with thread safety.
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.0.5
- * @since 03/29/2025
+ * @version v1.0.6
+ * @since 04/04/2025
  */
 
 #ifndef MT_CTX_H
@@ -166,7 +166,7 @@ private:
      * @param remTime The remaining time for the optimization process.
      * @param CLIArgs The command-line arguments for the optimization process.
      */
-	void FMIPInstanceJob(size_t thID, double remTime, Args CLIArgs);
+	void FMIPInstanceJob(size_t thID, Args CLIArgs);
 
 	 /**
      * @brief Runs the OMIP optimization job for a given thread.
@@ -176,7 +176,7 @@ private:
      * @param CLIArgs The command-line arguments for the optimization process.
      * @param slackSumUB The slack upper bound used in the OMIP method.
      */
-	void OMIPInstanceJob(size_t thID, double remTime, Args CLIArgs, double slackSumUB);
+    void  OMIPInstanceJob(size_t thID,  double slackSumUB, Args CLIArgs);
 };
 
 #endif

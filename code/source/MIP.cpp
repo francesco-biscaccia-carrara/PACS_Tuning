@@ -21,7 +21,7 @@ MIP::MIP(const std::string fileName) {
 	if (status)
 		throw MIPException(MIPEx::FileNotFound, "Failed to read the problem from file!\t" + std::to_string(status));
 
-	CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
+	CPXsetdblparam(env, CPX_PARAM_EPGAP, MIP_GAP_TOL);
 	CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
 #if ACS_VERBOSE == DEBUG
 	CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
@@ -101,7 +101,7 @@ double MIP::getObjValue() {
 	double objValue;
 	if (int error{ CPXgetobjval(env, model, &objValue) })
 		throw MIPException(MIPEx::General, "Unable to obtain obj value!\t" + std::to_string(error));
-	return (abs(objValue) <= EPSILON) ? 0.0 : objValue;
+	return objValue;
 }
 
 std::vector<double> MIP::getObjFunction() {
@@ -111,9 +111,6 @@ std::vector<double> MIP::getObjFunction() {
 		throw MIPException(MIPEx::General, "Unable to get obj_function coefficients!");
 	std::vector<double> obj(objFun, objFun + numCols);
 	free(objFun);
-
-	/// FIXED: Bug#8ccd9f4f2accb180c35b60b7a41880fe25fb38da  -- Eliminated negligible value from the objective function.
-	std::transform(obj.begin(),obj.end(),obj.begin(),[](double d) -> double { return (abs(d)<=EPSILON ? 0.0 : d); });
 	return obj;
 }
 
@@ -138,9 +135,6 @@ std::vector<double> MIP::getSol() {
 		throw MIPException(MIPEx::General, "Unable to obtain the solution!" + std::to_string(error));
 	std::vector<double> sol(xStar, xStar + numCols);
 	free(xStar);
-
-	/// FIXED: Bug#8ccd9f4f2accb180c35b60b7a41880fe25fb38da  -- Eliminated negligible value from the solution.
-	std::transform(sol.begin(),sol.end(),sol.begin(),[](double d) -> double { return (abs(d)<=EPSILON ? 0.0 : d); });
 	return sol;
 }
 
@@ -272,8 +266,8 @@ bool MIP::checkFeasibility(const std::vector<double>& sol) {
 	if (sol.size() != getNumCols())
 		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
 
-	CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_Integrality, MIP_INT_TOL);
-	CPXsetdblparam(env, CPXPARAM_Simplex_Tolerances_Feasibility, MIP_SIMPLEX_FEAS_TOL);
+	//CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_Integrality, MIP_INT_TOL);
+	//CPXsetdblparam(env, CPXPARAM_Simplex_Tolerances_Feasibility, MIP_SIMPLEX_FEAS_TOL);
 	
 	setVarsValues(sol);
 	int status{solve()};

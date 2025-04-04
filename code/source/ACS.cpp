@@ -2,8 +2,8 @@
  * ACS Execution file
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.0.5
- * @since 04/01/2025
+ * @version v1.0.6
+ * @since 04/04/2025
 */
 
 #include "../include/FMIP.hpp"
@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
 		MTEnv.broadcastSol(tmpSol);
 
 		while (Clock::timeElapsed() < CLIArgs.timeLimit) {
-			if (MTEnv.getBestACSIncumbent().slackSum > EPSILON) {
+			if (MTEnv.getBestACSIncumbent().slackSum > EPSILON) { //while works better?
 
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
 #if ACS_VERBOSE >= VERBOSE

@@ -8,8 +8,8 @@
  *
  * @note Requires CPLEX library and Utils.hpp
  * @author Francesco Biscaccia Carrara
- * @version v1.0.5
- * @since 04/01/2025
+ * @version v1.0.6
+ * @since 04/04/2025
  */
 
 #ifndef MIP_SOL_H
@@ -25,11 +25,10 @@ using namespace Utils;
 #define INST_DIR "../data/"
 #define CPLEX_CORE 1
 
-//TODO: (v1.0.6) -- Adjust tolerance parameter to prevent problem with solution returned
-#define MIP_DUAL_PRIM_GAP_TOL 1e-4
-/// FIXED: Bug #5860f1916463f69833a7cb9170845d492fabee8f –- Error in solution quality due to excessively tight tolerance.
-#define MIP_GAP_TOL 1e-4
-/// FIXED: Bug #62f2110b0d2547498c59d7c19c3490ac15330119 –- Error in solution quality due to excessively tight tolerance.
+#define MIP_DUAL_PRIM_GAP_TOL 1e-4 //Default value for CPX_PARAM_EPAGAP (see IBM ILOG CPLEX doc)
+#define MIP_GAP_TOL 1e-6 //Default value for CPX_PARAM_EPGAP (see IBM ILOG CPLEX doc)
+
+//FIXME: can they be removed?
 #define MIP_INT_TOL 1e-3
 #define MIP_SIMPLEX_FEAS_TOL 1e-3
 

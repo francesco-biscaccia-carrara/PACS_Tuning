@@ -3,8 +3,8 @@
  * @brief Utility header file providing various helper classes and macros for the project.
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.0.5
- * @since 04/01/2025
+ * @version v1.0.6
+ * @since 04/04/2025
  */
 
 #ifndef UTILS_H
@@ -32,9 +32,9 @@
 #pragma region UTILS_DEFINTION
 
 /** Current version of the code */
-#define ACS_VERSION "v1.0.5"
+#define ACS_VERSION "v1.0.6"
 /** Last update date */
-#define LAST_UPDATE "04/01/2025"
+#define LAST_UPDATE "04/04/2025"
 
 /** Verbosity level constants */
 #define NO_VER -1 
@@ -43,7 +43,6 @@
 #define DEBUG 10
 
 /** Mathematical and computational constants */
-//TODO: (v1.0.6) -- Adjust EPSILON to control zero-threashold
 #define EPSILON 1e-5
 #define ARGS_CONV_BASE 10
 
