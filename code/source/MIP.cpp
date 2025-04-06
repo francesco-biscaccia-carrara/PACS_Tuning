@@ -21,8 +21,8 @@ MIP::MIP(const std::string fileName) {
 	if (status)
 		throw MIPException(MIPEx::FileNotFound, "Failed to read the problem from file!\t" + std::to_string(status));
 
-	CPXsetdblparam(env, CPX_PARAM_EPGAP, MIP_GAP_TOL);
-	CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
+	// CPXsetdblparam(env, CPX_PARAM_EPGAP, MIP_GAP_TOL);
+	// CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
 #if ACS_VERBOSE == DEBUG
 	CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
@@ -43,8 +43,8 @@ MIP::MIP(const MIP& otherMIP) {
 	if (status)
 		throw MIPException(MIPEx::ModelCreation, "Model not cloned!");
 
-	CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
-	CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
+	//CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
+	//CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
 #if ACS_VERBOSE == DEBUG
 	CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);

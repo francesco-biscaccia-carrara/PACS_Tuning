@@ -5,8 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-### [Unreleased]
-- Dynamic `FixPolicy` strategies
+### [Unreleased]  
+- Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks.  
+- Enforced FMIP resolution in the ACS workflow prior to transitioning to the OMIP phase.
+
+
+## [1.1.1] - 2025-04-06  
+### Changed
+- Removed all tolerance settings from CPLEX execution to ensure solver consistency.  
+
+### Added  
+- Support for dynamic adjustment of the `Args::rho` parameter in multi-threaded scenarios via `FixPolicy::dynamicAdjustRhoMT` ([FixPolicy.cpp](code/source/FixPolicy.cpp)).  
+- Support for dynamic adjustment of the `Args::rho` parameter during recombination phases via `FixPolicy::dynamicAdjustRho` ([FixPolicy.cpp](code/source/FixPolicy.cpp)).
 
 
 ## [1.1.0] - 2025-04-05

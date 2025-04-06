@@ -23,8 +23,9 @@ using namespace Utils;
 #define CPLEX_LOG_DIR "../log/cplex_out/log/"
 #define MIP_LOG_DIR "../log/cplex_out/mip/"
 #define INST_DIR "../data/"
-#define CPLEX_CORE 1
 
+/** CPELX Execution Constants */
+#define CPLEX_CORE 1
 #define NUM_SOL_STOP 1
 
 #define MIP_DUAL_PRIM_GAP_TOL 1e-4      //Default value for CPX_PARAM_EPAGAP (see IBM ILOG CPLEX doc)

@@ -82,7 +82,7 @@ void FixPolicy::randomRhoFix(const std::vector<double>& sol, MIP& model, const s
 	const size_t start = rnd.Int(0,xLen - 1);
 
 #if ACS_VERBOSE >= VERBOSE
-	PRINT_INFO("Proc: %3d [%s] - FixPolicy::randomRhoFix - %zu vars hard-fixed", threadID, type, numFixedVars);
+	PRINT_INFO("Proc: %3d [%s] - FixPolicy::randomRhoFix - %zu vars hard-fixed [%5.4f]", threadID, type, numFixedVars,rho);
 #endif
 
 	for (size_t i{ 0 }; i < numFixedVars; i++) {
@@ -92,17 +92,87 @@ void FixPolicy::randomRhoFix(const std::vector<double>& sol, MIP& model, const s
 }
 
 
-void FixPolicy::dynamicAdjustRho(const int solveCode, Args& CLI){
-	// if solution is better then the one stored in ACSIncumbent (both on fMIP sol and oMIP sol) --> dont't change rho
-	// #include <atomic> , std::atomic_bool ArhoAdjusted; to prevent multiple adjustment of rho
-	// else adjust 
+void FixPolicy::dynamicAdjustRho(const char* phase, const size_t numMIPs, const int solveCode,double& CLIRho, const size_t A_RhoChanges){
+	if( A_RhoChanges >= numMIPs) return;
+
+	double scaledDeltaRho = 2*DELTA_RHO/numMIPs;
+
 	switch(solveCode){
 		case CPXMIP_OPTIMAL:
 		case CPXMIP_OPTIMAL_TOL:
-			CLI.rho-=DELTA_RHO;
+			CLIRho = (CLIRho-scaledDeltaRho < MIN_RHO)? MIN_RHO : CLIRho-scaledDeltaRho;
 #if ACS_VERBOSE >= VERBOSE
-			PRINT_INFO("CPXMIP_OPTIMAL|CPXMIP_OPTIMAL_TOL --> Rho reduced");
+			PRINT_INFO("[%s] - FixPolicy::dynamicAdjustRho - Rho Decreased [%5.4f]", phase, CLIRho);
 #endif
 			break;
+
+
+		case CPXMIP_DETTIME_LIM_FEAS:
+		case CPXMIP_TIME_LIM_FEAS:
+			CLIRho = (CLIRho+scaledDeltaRho > MAX_RHO)? MAX_RHO : CLIRho+scaledDeltaRho;
+#if ACS_VERBOSE >= VERBOSE
+			PRINT_INFO("[%s] - FixPolicy::dynamicAdjustRho - Rho Increased [%5.4f]", phase, CLIRho);
+#endif
+			break;
+
+		default: 
+#if ACS_VERBOSE >= VERBOSE
+		PRINT_ERR("Unexpected value for solvecode: %d",solveCode);
+#endif
+
+			break;
 	}
+}
+
+
+
+//Values to count the number of decrements/increments of Rho parameter in 1 iteration
+static size_t  numDecRho=0;
+static size_t  numIncRho=0;
+
+void FixPolicy::dynamicAdjustRhoMT(const size_t threadID,const char* type, const int solveCode,const size_t numMIPs, double& CLIRho, std::atomic_size_t& A_RhoChanges){
+	
+	if( A_RhoChanges >= numMIPs) return; // Whenever an incumbent is found, we don't touch Rho anymore
+	if( A_RhoChanges == 0 ) numDecRho = numIncRho = 0;
+
+	double scaledDeltaRho = DELTA_RHO/numMIPs;
+	
+	switch(solveCode){
+		case CPXMIP_OPTIMAL:
+		case CPXMIP_OPTIMAL_TOL:
+			CLIRho = (CLIRho-scaledDeltaRho < MIN_RHO)? MIN_RHO : CLIRho-scaledDeltaRho;
+			A_RhoChanges++;
+			numDecRho++;
+#if ACS_VERBOSE >= VERBOSE
+			PRINT_INFO("Proc: %3d [%s] - FixPolicy::dynamicAdjustRhoMT - Rho Decreased [%5.4f]", threadID, type, CLIRho);
+#endif
+			break;
+
+
+		case CPXMIP_DETTIME_LIM_FEAS:
+		case CPXMIP_TIME_LIM_FEAS:
+		CLIRho = (CLIRho+scaledDeltaRho > MAX_RHO)? MAX_RHO : CLIRho+scaledDeltaRho;
+			A_RhoChanges++;
+			numIncRho++;
+#if ACS_VERBOSE >= VERBOSE
+			PRINT_INFO("Proc: %3d [%s] - FixPolicy::dynamicAdjustRhoMT - Rho Increased [%5.4f]", threadID, type, CLIRho);
+#endif
+			break;
+
+		default: 
+#if ACS_VERBOSE >= VERBOSE
+		PRINT_ERR("Unexpected value for solvecode: %d",solveCode);
+#endif
+
+			break;
+	}
+
+	//Policy in the coin-flip case: make the problem harder
+	if(A_RhoChanges == numMIPs && numIncRho==numDecRho){
+		CLIRho = (CLIRho-DELTA_RHO < MIN_RHO)? MIN_RHO : CLIRho-DELTA_RHO;
+#if ACS_VERBOSE >= VERBOSE
+		PRINT_WARN("[\"COINFLIP\" CASE] - FixPolicy::dynamicAdjustRhoMT - Rho decreased [%5.4f]", CLIRho);
+#endif	
+	} 
+
 }

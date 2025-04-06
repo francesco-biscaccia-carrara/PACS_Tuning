@@ -5,6 +5,7 @@ MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : numMIPs{
 	bestACSIncumbent = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
 	tmpSolutions = std::vector<Solution>();
 	threads = std::vector<std::thread>();
+	A_RhoChanges = 0;
 
 	threads.reserve(numMIPs);
 	tmpSolutions.reserve(numMIPs);
@@ -25,8 +26,9 @@ void MTContext::setBestACSIncumbent(Solution& sol) {
 
 	if(((sol.oMIPCost < bestACSIncumbent.oMIPCost) && abs(bestACSIncumbent.slackSum ) - abs(sol.slackSum) <= EPSILON) || abs(sol.slackSum) < abs(bestACSIncumbent.slackSum)){
 
-		std::lock_guard<std::mutex> lock(updateSolMTX);
+		std::lock_guard<std::mutex> lock(MTContextMTX);
 		bestACSIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = sol.oMIPCost };
+		A_RhoChanges = numMIPs;
 
 		if(bestACSIncumbent.oMIPCost< CPX_INFBOUND && bestACSIncumbent.slackSum<= EPSILON)
 			PRINT_BEST("New MIP Incumbent found %12.2f\t[*]", bestACSIncumbent.oMIPCost);
@@ -59,6 +61,7 @@ void MTContext::waitAllJobs() {
 		}
 	}
 	threads.clear();
+	A_RhoChanges=0;
 }
 
 
@@ -109,13 +112,13 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 		return;
 	}
 
-	FixPolicy::dynamicAdjustRho(solveCode,CLIArgs);
-
 	tmpSolutions[thID].sol = fMIP.getSol();
 	tmpSolutions[thID].slackSum = fMIP.getObjValue();
 
 	PRINT_OUT("Proc: %3d - FeasMIP Objective: %20.2f", thID, tmpSolutions[thID].slackSum);
 	setBestACSIncumbent(tmpSolutions[thID]);
+
+	FixPolicy::dynamicAdjustRhoMT(thID,"FMIP",solveCode,numMIPs,CLIArgs.rho,A_RhoChanges);
 }
 
 
@@ -138,12 +141,12 @@ void MTContext::OMIPInstanceJob(const size_t thID, const double slackSumUB, Args
 		return;
 	}
 
-	FixPolicy::dynamicAdjustRho(solveCode,CLIArgs);
-
 	tmpSolutions[thID].sol = oMIP.getSol();
 	tmpSolutions[thID].slackSum = oMIP.getSlackSum();
 	tmpSolutions[thID].oMIPCost = oMIP.getObjValue();
 
 	PRINT_OUT("Proc: %3d - OptMIP Objective: %20.2f|%-10.2f", thID, tmpSolutions[thID].oMIPCost, tmpSolutions[thID].slackSum);
 	setBestACSIncumbent(tmpSolutions[thID]);
+
+	FixPolicy::dynamicAdjustRhoMT(thID,"OMIP",solveCode,numMIPs,CLIArgs.rho,A_RhoChanges);
 }

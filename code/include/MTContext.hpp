@@ -20,6 +20,7 @@
 #define MT_CTX_H
 
 #include <mutex>
+#include <atomic>
 #include <thread>
 
 #include "Utils.hpp"
@@ -82,6 +83,15 @@ public:
      */
 	[[nodiscard]]
 	inline const Solution& getBestACSIncumbent() { return bestACSIncumbent; }
+
+     /**
+      * @brief Gets the number of times Rho has been changed.
+      * BE CAREFULL:: use only in a single-thread scenario!
+      * 
+      * @return Number of times Rho has been changed.
+      */
+     [[nodiscard]]
+     inline const size_t getRhoChanges() { return A_RhoChanges; }
 
 
       /**
@@ -150,7 +160,8 @@ private:
 	std::vector<std::thread> threads;          ///< Threads used for parallel optimization.
 	std::vector<Random> rndGens;               ///< Random number generators for each thread.
 	Solution bestACSIncumbent;                 ///< Best ACS incumbent solution found.
-	std::mutex updateSolMTX;                   ///< Mutex for synchronizing solution updates.
+	std::mutex MTContextMTX;                   ///< Mutex for synchronizing solution updates.
+     std::atomic_size_t A_RhoChanges;           ///< Size_t value used to manage the DynamicFixPolicy
 
 	/**
      * @brief Waits for all threads to complete their optimization jobs.

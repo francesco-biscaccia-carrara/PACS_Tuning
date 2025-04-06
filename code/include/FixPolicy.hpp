@@ -13,6 +13,8 @@
 #ifndef FIX_POL_H
 #define FIX_POL_H
 
+#include <atomic>
+
 #include "RlxFMIP.hpp"
 using namespace Utils;
 
@@ -89,13 +91,26 @@ namespace FixPolicy {
      */
 	void randomRhoFix(const std::vector<double>& sol, MIP& model, const size_t threadID, double rho,const char* type, Random& rnd);
 
-     
-     /**
-     * @brief Adjust rho parameter to better search in the LNS
-     * @param solveCode Code returned by CPXmipopt
-     * @param CLI Reference CLI argst to modify rho
+     /** 
+     * @brief Adjust Rho parameter to speed up ACS (in the recombination phases).
+     * @param type String that define the phase.
+     * @param numMIPs Number of logical sub-MIPs executing in parallel.
+     * @param solveCode Code returned by CPXmipopt.
+     * @param CLIRho Reference rho value in the CLI args.
+     * @param A_RhoChanges Value of atomic size_t var used to handle adjustment.
      */
-     void dynamicAdjustRho(const int solveCode, Args& CLI);
+     void dynamicAdjustRho(const char* phase, const size_t numMIPs, const int solveCode,double& CLIRho, const size_t A_RhoChanges);
+
+     /**
+     * @brief Adjust Rho parameter to speed up ACS (multi-threading scenario).
+     * @param threadID ID of the thread executing this function.
+     * @param type String that define which type of subMIP is modifing rho.
+     * @param solveCode Code returned by CPXmipopt
+     * @param numMIPs Number of logical sub-MIPs executing in parallel.
+     * @param CLIRho Reference rho value in the CLI args.
+     * @param A_RhoChanges Reference to a atomic size_t var used to handle adjustment.
+     */
+     void dynamicAdjustRhoMT(const size_t threadID,const char* type, const int solveCode,const size_t numMIPs, double& CLIRho, std::atomic_size_t& A_RhoChanges);
 };
 
 #endif
