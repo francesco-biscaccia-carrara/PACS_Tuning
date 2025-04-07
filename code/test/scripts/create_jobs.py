@@ -39,9 +39,9 @@ def main():
     for instance in instances:
         for exe in  ["CPLEXRun","ACS"]:
             if exe == "ACS":
-                for rho in [0.10,0.25,0.50,0.75,0.9]:
-                    for seed in [2120934,3409212,240931]:
-                        job_name =f"{instance}_{exe}_{rho}_{seed}"
+                for rho in [0.9]:
+                    for seed in [10493847, 83274910, 70938475, 98312048, 19283746]:
+                        job_name =f"{instance}_{exe}_{seed}"
                         job = f"{jobs_folder}/{job_name}"
                         job_content = f"""#!/bin/bash
 #SBATCH --job-name={job_name}
@@ -61,6 +61,11 @@ stress-ng -c 4 --cpu-ops=100
 ulimit -v 16777216
 
 #####################
+echo "CPU info via SLURM environment:"
+echo "SLURM_NTASKS: $SLURM_NTASKS"
+echo "SLURM_NODELIST: $SLURM_NODELIST"
+echo "SLURM_CPUS_PER_TASK: $SLURM_CPUS_PER_TASK"
+
 cd {exec_dir}
 ./{exe} -f {instance} -tl 300 -th 0.25 -nSMIPs 4 -rh {rho} -sd {seed}
 
@@ -94,6 +99,11 @@ stress-ng -c 4 --cpu-ops=100
 ulimit -v 16777216
 
 #####################
+echo "CPU info via SLURM environment:"
+echo "SLURM_NTASKS: $SLURM_NTASKS"
+echo "SLURM_NODELIST: $SLURM_NODELIST"
+echo "SLURM_CPUS_PER_TASK: $SLURM_CPUS_PER_TASK"
+
 cd {exec_dir}
 ./{exe} -f {instance} -tl 300
 
