@@ -8,7 +8,7 @@
  *
  * @note Requires CPLEX library and Utils.hpp
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0
+ * @version v1.1.2
  * @since 04/07/2025
  */
 

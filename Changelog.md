@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Enforced FMIP resolution in the ACS workflow prior to transitioning to the OMIP phase.
 
 
+## [1.1.2] - 2025-04-07
+### Fixed
+- Resolved potential `MIPException` caused by negligible time-limit in `MTContext::FMIPInstanceJob` and `MTContext::OMIPInstanceJob` functions ([MTContext.cpp](code/source/MTContext.cpp)).
+
+
+
 ## [1.1.1] - 2025-04-06  
 ### Changed
 - Removed all tolerance settings from CPLEX execution to ensure solver consistency.  

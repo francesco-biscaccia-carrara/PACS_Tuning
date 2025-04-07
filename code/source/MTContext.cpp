@@ -104,6 +104,14 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 
 	FixPolicy::randomRhoFix(tmpSolutions[thID].sol, fMIP, thID, CLIArgs.rho, "FMIP", rndGens[thID]);
 
+	/// FIXED: Bug #e15760bcfd3dcca51cf9ea23f70072dd6cb2ac14 — Resolved MIPException::WrongTimeLimit triggered by a negligible time limit.
+	if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
+#if ACS_VERBOSE >= VERBOSE
+		PRINT_INFO("TIME_LIMIT REACHED");
+#endif
+		return;
+	}
+
 	int solveCode{ fMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), DET_TL(fMIP.getNumNonZeros())) };
 	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE){
 #if ACS_VERBOSE >= VERBOSE
@@ -132,6 +140,14 @@ void MTContext::OMIPInstanceJob(const size_t thID, const double slackSumUB, Args
 	oMIP.updateBudgetConstr(slackSumUB);
 
 	FixPolicy::randomRhoFix(tmpSolutions[thID].sol, oMIP, thID, CLIArgs.rho, "OMIP", rndGens[thID]);
+
+	/// FIXED: Bug #e15760bcfd3dcca51cf9ea23f70072dd6cb2ac14 — Resolved MIPException::WrongTimeLimit triggered by a negligible time limit.
+	if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
+#if ACS_VERBOSE >= VERBOSE
+		PRINT_INFO("TIME_LIMIT REACHED");
+#endif
+		return;
+	}
 
 	int solveCode{ oMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), DET_TL(oMIP.getNumNonZeros())) };
 	if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE) {
