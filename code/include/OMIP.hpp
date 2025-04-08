@@ -8,8 +8,8 @@
  * It inherits core functionality from the base MIP class while adding optimality-specific features.
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.2
- * @since 04/07/2025
+ * @version v1.1.3
+ * @since 04/08/2025
  */
 
 #ifndef OMIP_H

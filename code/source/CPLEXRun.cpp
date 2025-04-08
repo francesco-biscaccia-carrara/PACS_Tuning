@@ -2,8 +2,8 @@
  * CPLEX Execution file 
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.2
- * @since 04/07/2025
+ * @version v1.1.3
+ * @since 04/08/2025
 */
 
 #include "../include/MIP.hpp"
@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
         
         int solveCode {ogMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit))};
 
-		if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE){
+		if (MIP::isINForUNBD(solveCode)){
 			PRINT_ERR("NO FEASIBLE SOLUTION FIND");
         }else{
             CPLEXSol.sol = ogMIP.getSol();

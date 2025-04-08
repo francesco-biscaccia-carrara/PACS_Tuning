@@ -2,8 +2,8 @@
  * ACS Execution file
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.2
- * @since 04/07/2025
+ * @version v1.1.3
+ * @since 04/08/2025
 */
 
 #include "../include/FMIP.hpp"
@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
 
 				int solveCode{ MergeFMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), DET_TL(MergeFMIP.getNumNonZeros())) };
 
-				if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE){
+				if (MIP::isINForUNBD(solveCode)){
 #if ACS_VERBOSE >= VERBOSE
 			PRINT_INFO("MergeOMIP - Aborted: Infeasible with given TL");
 #endif
@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
 			}
 			int solveCode{ MergeOMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit),DET_TL(MergeOMIP.getNumNonZeros())) };
 
-			if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE){
+			if (MIP::isINForUNBD(solveCode)){
 #if ACS_VERBOSE >= VERBOSE
 			PRINT_INFO("MergeOMIP - Aborted: Infeasible with given TL");
 #endif

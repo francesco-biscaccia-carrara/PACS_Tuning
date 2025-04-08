@@ -9,6 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks.  
 - Enforced FMIP resolution in the ACS workflow prior to transitioning to the OMIP phase.
 
+## [1.1.3] - 2025-04-08
+### Fixed
+- Addressed bug where the `UNBOUNDED` case was not covered in the `MIP::isINForUNBD` function ([MIP.hpp](code/include/MIP.hpp)).
+
+### Added  
+- Added static `MIP::isINForUNBD` function to check for infeasibility or unboundedness of a MIP problem ([MIP.hpp](code/include/MIP.hpp)).
+
 
 ## [1.1.2] - 2025-04-07
 ### Fixed

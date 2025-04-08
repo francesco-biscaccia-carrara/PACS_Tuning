@@ -8,8 +8,8 @@
  *
  * @note Requires CPLEX library and Utils.hpp
  * @author Francesco Biscaccia Carrara
- * @version v1.1.2
- * @since 04/07/2025
+ * @version v1.1.3
+ * @since 04/08/2025
  */
 
 #ifndef MIP_SOL_H
@@ -198,6 +198,21 @@ public:
 	[[nodiscard]]
 	std::vector<double> getSol();
 
+     /// FIXED: Bug #68f1c9b8703f4f30f98c6bf5b01fb3253799a9c6 — UNBOUNDED case was not handled in the infeasibility check.
+     /**
+     * @brief Check wheter a solve code from CPLEXgetstat says that the problem is INFeasible or UNBounDed
+     * @return Bool that is true if the problem is INF or UNBD
+     */
+     [[nodiscard]]
+     static bool isINForUNBD(const int solveCode){ 
+          return (  solveCode == CPXMIP_TIME_LIM_INFEAS || 
+                    solveCode == CPXMIP_DETTIME_LIM_INFEAS || 
+                    solveCode == CPXMIP_INFEASIBLE || 
+                    solveCode == CPXMIP_INForUNBD||
+                    solveCode == CPXMIP_UNBOUNDED);
+     }
+
+
 	/**
      * @brief Get the number of MIP variables
      * @return Number of variables
@@ -294,6 +309,7 @@ public:
      */
 	[[nodiscard]]
 	bool checkFeasibility(const std::vector<double>& sol);
+
 
 // Debug-specific methods
 #if ACS_VERBOSE == DEBUG
