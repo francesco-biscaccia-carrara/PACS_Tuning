@@ -156,9 +156,8 @@ MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef, const 
 		throw MIPException(MIPEx::InputSizeError, "Wrong new column size");
 
 	char** cname{ (char**)calloc(1, sizeof(char*)) };
-	char   colName[name.length() + 1];
-	strcpy(colName, name.c_str());
-	cname[0] = colName;
+	cname[0] = strdup(name.c_str());
+
 	int*	indices{ (int*)malloc(numRow * sizeof(int)) };
 	double* values{ (double*)malloc(numRow * sizeof(double)) };
 	int		start = 0, nnz = 0;
@@ -183,9 +182,7 @@ MIP& MIP::addCol(const size_t index, const double value, const double objCoef, c
 		throw MIPException(MIPEx::OutOfBound, "Wrong index addCol()!");
 
 	char** cname{ (char**)calloc(1, sizeof(char*)) };
-	char   colName[name.length() + 1];
-	strcpy(colName, name.c_str());
-	cname[0] = colName;
+	cname[0] = strdup(name.c_str());
 
 	int	   tmpIndex{ static_cast<int>(index) };
 	double tmpValue{ value };

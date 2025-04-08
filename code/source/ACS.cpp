@@ -2,7 +2,7 @@
  * ACS Execution file
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.3
+ * @version v1.1.0
  * @since 04/08/2025
 */
 
@@ -19,9 +19,10 @@ int main(int argc, char* argv[]) {
 		Args	  CLIArgs = CLIParser(argc, argv).getArgs();
 		MTContext MTEnv(CLIArgs.numsubMIPs, CLIArgs.seed);
 
-		std::vector<double> initSol;
-		FixPolicy::firstThetaFixing(initSol,CLIArgs.fileName, CLIArgs.theta, Random(CLIArgs.seed));
-		Solution tmpSol = {.sol = initSol, .slackSum = CPX_INFBOUND,  .oMIPCost = CPX_INFBOUND};
+		std::vector<double> startSol;
+		Random				mainRnd = Random(CLIArgs.seed);
+		FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, mainRnd);
+		Solution tmpSol = {.sol = startSol, .slackSum = CPX_INFBOUND,  .oMIPCost = CPX_INFBOUND};
 #if ACS_VERBOSE >= VERBOSE	
 		PRINT_INFO("Init FeasMIP solution found!");
 #endif
@@ -69,7 +70,7 @@ int main(int argc, char* argv[]) {
 				tmpSol.slackSum = MergeFMIP.getObjValue();
 				PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
 				MTEnv.setBestACSIncumbent(tmpSol);
-				FixPolicy::dynamicAdjustRho("1_Phase",CLIArgs.numsubMIPs,solveCode,CLIArgs.rho,MTEnv.getRhoChanges());
+				FixPolicy::dynamicAdjustRho("1_Phase",solveCode,CLIArgs.numsubMIPs,CLIArgs.rho,MTEnv.getRhoChanges());
 				
 				if(MTEnv.isFeasibleSolFound()) break; 
 				MTEnv.broadcastSol(tmpSol);
@@ -118,7 +119,7 @@ int main(int argc, char* argv[]) {
 
 			PRINT_OUT("OptMIP Objective|SlackSum after merging: %12.2f|%-10.2f", MergeOMIP.getObjValue(), tmpSol.slackSum);
 			MTEnv.setBestACSIncumbent(tmpSol);
-			FixPolicy::dynamicAdjustRho("2_Phase",CLIArgs.numsubMIPs,solveCode,CLIArgs.rho,MTEnv.getRhoChanges());
+			FixPolicy::dynamicAdjustRho("2_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho,MTEnv.getRhoChanges());
 
 			if(MTEnv.isFeasibleSolFound()) break;
 			MTEnv.broadcastSol(tmpSol);

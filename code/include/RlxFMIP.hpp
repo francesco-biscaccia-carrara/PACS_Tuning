@@ -9,7 +9,7 @@
  * to restore original problem formulations.
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.3
+ * @version v1.1.0
  * @since 04/08/2025
  */
 

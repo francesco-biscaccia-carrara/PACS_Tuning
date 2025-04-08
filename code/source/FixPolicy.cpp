@@ -8,14 +8,14 @@ bool isInteger(double n) {
 	return ((n < CPX_INFBOUND) && (static_cast<int>(n) == n));
 }
 
-void FixPolicy::firstThetaFixing(std::vector<double>& x,std::string fileName, double theta, Random rnd) {
+void FixPolicy::startSolTheta(std::vector<double>& sol,std::string fileName, double theta, Random& rnd) {
 	if (theta < EPSILON || theta > 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Theta par. must be within (0,1)!");
 
 
 	RlxFMIP	 relaxedFMIP{ fileName };
 	int		 numVarsToFix{ relaxedFMIP.getMIPNumVars() };
-	x.resize(numVarsToFix,CPX_INFBOUND);	
+	sol.resize(numVarsToFix,CPX_INFBOUND);	
 
 	
 	std::vector<size_t>					varRangesIndices(numVarsToFix);
@@ -45,15 +45,15 @@ void FixPolicy::firstThetaFixing(std::vector<double>& x,std::string fileName, do
 				double clampedLower = std::max(-MAX_UB, lowerBound);
 				double clampedUpper = std::min(MAX_UB, upperBound);
 
-				x[idx] = rnd.Int(clampedLower, clampedUpper);
-				relaxedFMIP.setVarValue(idx,x[idx]);
+				sol[idx] = rnd.Int(clampedLower, clampedUpper);
+				relaxedFMIP.setVarValue(idx,sol[idx]);
 				isFixed[idx] = true;
 				fixedThisIteration++;
 			}
 		}
 
 #if ACS_VERBOSE >= VERBOSE
-		PRINT_INFO("FixPolicy::firstThetaFixing - %zu vars hard-fixed", varsToFix);
+		PRINT_INFO("FixPolicy::startSolTheta - %zu vars hard-fixed", varsToFix);
 #endif
 
 		relaxedFMIP.solveRelaxation();
@@ -62,8 +62,8 @@ void FixPolicy::firstThetaFixing(std::vector<double>& x,std::string fileName, do
 		for (size_t i = 0; i < numVarsToFix; ++i) {
 			if(isFixed[i]) continue;
 			if(isInteger(lpSol[i])) {
-				x[i] = lpSol[i];
-				relaxedFMIP.setVarValue(i,x[i]);
+				sol[i] = lpSol[i];
+				relaxedFMIP.setVarValue(i,sol[i]);
 				isFixed[i] = true;
 			}
 		}
@@ -73,7 +73,7 @@ void FixPolicy::firstThetaFixing(std::vector<double>& x,std::string fileName, do
 
 }
 
-void FixPolicy::randomRhoFix(const std::vector<double>& sol, MIP& model, const size_t threadID, double rho,const char* type, Random& rnd) {
+void FixPolicy::randomRhoFixMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol, double rho, Random& rnd) {
 	if (rho < EPSILON || rho >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Rho par. must be within (0,1)!");
 
@@ -82,7 +82,7 @@ void FixPolicy::randomRhoFix(const std::vector<double>& sol, MIP& model, const s
 	const size_t start = rnd.Int(0,xLen - 1);
 
 #if ACS_VERBOSE >= VERBOSE
-	PRINT_INFO("Proc: %3d [%s] - FixPolicy::randomRhoFix - %zu vars hard-fixed [%5.4f]", threadID, type, numFixedVars,rho);
+	PRINT_INFO("Proc: %3d [%s] - FixPolicy::randomRhoFixMT - %zu vars hard-fixed [%5.4f]", threadID, type, numFixedVars,rho);
 #endif
 
 	for (size_t i{ 0 }; i < numFixedVars; i++) {
@@ -92,7 +92,7 @@ void FixPolicy::randomRhoFix(const std::vector<double>& sol, MIP& model, const s
 }
 
 
-void FixPolicy::dynamicAdjustRho(const char* phase, const size_t numMIPs, const int solveCode,double& CLIRho, const size_t A_RhoChanges){
+void FixPolicy::dynamicAdjustRho(const char* phase, const int solveCode, const size_t numMIPs, double& CLIRho, const size_t A_RhoChanges){
 	if( A_RhoChanges >= numMIPs) return;
 
 	double scaledDeltaRho = 2*DELTA_RHO/numMIPs;

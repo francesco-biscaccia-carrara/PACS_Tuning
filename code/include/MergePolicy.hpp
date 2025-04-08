@@ -5,7 +5,7 @@
  *        and a function for recombining solutions.
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.3
+ * @version v1.1.0
  * @since 04/08/2025
  */
 

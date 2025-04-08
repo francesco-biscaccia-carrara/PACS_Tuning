@@ -9,32 +9,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks.  
 - Enforced FMIP resolution in the ACS workflow prior to transitioning to the OMIP phase.
 
-## [1.1.3] - 2025-04-08
+## [1.1.0] - 2025-04-08
+### Added
+- Early stop when a max number of solutions is found via `MIP::setNumSols` ([MIP.cpp](code/source/MIP.cpp)).
+- Early stop when a feasible solution is found by the ACS algorithm ([ACS.cpp](code/source/ACS.cpp)).
+- Support for dynamic adjustment of the `Args::rho` parameter in multi-threaded scenarios via `FixPolicy::dynamicAdjustRhoMT` ([FixPolicy.cpp](code/source/FixPolicy.cpp)).
+- Support for dynamic adjustment of the `Args::rho` parameter during recombination phases via `FixPolicy::dynamicAdjustRho` ([FixPolicy.cpp](code/source/FixPolicy.cpp)).
+- Static `MIP::isINForUNBD` function to check for infeasibility or unboundedness of a MIP problem ([MIP.hpp](code/include/MIP.hpp)).
+
 ### Fixed
 - Addressed bug where the `UNBOUNDED` case was not covered in the `MIP::isINForUNBD` function ([MIP.hpp](code/include/MIP.hpp)).
-
-### Added  
-- Added static `MIP::isINForUNBD` function to check for infeasibility or unboundedness of a MIP problem ([MIP.hpp](code/include/MIP.hpp)).
-
-
-## [1.1.2] - 2025-04-07
-### Fixed
 - Resolved potential `MIPException` caused by negligible time-limit in `MTContext::FMIPInstanceJob` and `MTContext::OMIPInstanceJob` functions ([MTContext.cpp](code/source/MTContext.cpp)).
 
-
-## [1.1.1] - 2025-04-06  
 ### Changed
-- Removed all tolerance settings from CPLEX execution to ensure solver consistency.  
+- Removed all tolerance settings from CPLEX execution to ensure solver consistency.
+- Refined documentation in header files for improved clarity and maintainability.
 
-### Added  
-- Support for dynamic adjustment of the `Args::rho` parameter in multi-threaded scenarios via `FixPolicy::dynamicAdjustRhoMT` ([FixPolicy.cpp](code/source/FixPolicy.cpp)).  
-- Support for dynamic adjustment of the `Args::rho` parameter during recombination phases via `FixPolicy::dynamicAdjustRho` ([FixPolicy.cpp](code/source/FixPolicy.cpp)).
-
-
-## [1.1.0] - 2025-04-05
-### Added
-- Early-stop when a max number of solution is found `MIP::setNumSols` ([MIP.cpp](code/source/MIP.cpp))
-- Eerly-stop when a feasible solution is found by ACS algorithm ([ACS.cpp](code/source/ACS.cpp))
 
 ## [1.0.6] - 2025-04-04  
 ### Fixed  
@@ -72,7 +62,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [1.0.1] - 2025-03-26
 ### Fixed
-- Resolved issue in `FixPolicy::firstThetaFixing` function
+- Resolved issue in `FixPolicy::startSolTheta` function
 - Optimized ACS Incumbent overhead in ACS
 
 
