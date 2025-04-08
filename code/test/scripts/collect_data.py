@@ -116,9 +116,9 @@ def main():
     outs.sort()
 
     cols = {}
-    for rho in [0.9]:
+    for rho in [0.25,0.5,0.75]:
         for seed in [10493847, 83274910, 70938475, 98312048, 19283746]:
-            col = f"ACS_{seed}"
+            col = f"ACS_{rho}_{seed}"
             cols[col] = []
     cols["CPLEX"] = []
 
