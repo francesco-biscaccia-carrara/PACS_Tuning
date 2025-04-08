@@ -12,14 +12,15 @@
  * and it provides mechanisms to broadcast solutions across threads and handle solution updates with thread safety.
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.0.6
- * @since 04/04/2025
+ * @version v1.1.0
+ * @since 04/08/2025
  */
 
 #ifndef MT_CTX_H
 #define MT_CTX_H
 
 #include <mutex>
+#include <atomic>
 #include <thread>
 
 #include "Utils.hpp"
@@ -83,6 +84,24 @@ public:
 	[[nodiscard]]
 	inline const Solution& getBestACSIncumbent() { return bestACSIncumbent; }
 
+     /**
+      * @brief Gets the number of times Rho has been changed.
+      * BE CAREFULL:: use only in a single-thread scenario!
+      * 
+      * @return Number of times Rho has been changed.
+      */
+     [[nodiscard]]
+     inline const size_t getRhoChanges() { return A_RhoChanges; }
+
+
+      /**
+     * @brief Check if bestACSIncumbent is a feasible solution for the MIP problem
+     * 
+     * @return Boolean statign wheter bestACSIncumbent is a feasible solution or not
+     */
+    [[nodiscard]]
+     inline bool isFeasibleSolFound(){ return (bestACSIncumbent.slackSum<= EPSILON && bestACSIncumbent.oMIPCost < CPX_INFBOUND);}
+
 	/**
      * @brief Sets the best ACS incumbent solution.
      * 
@@ -117,21 +136,18 @@ public:
 	 /**
      * @brief Starts parallel optimization using the FMIP method.
      * 
-     * @param remTime The remaining time for the optimization process.
      * @param CLIArgs The command-line arguments for optimization.
      * @return Reference to the current MTContext object.
      */
-	MTContext& parallelFMIPOptimization(double remTime, Args CLIArgs);
+	MTContext& parallelFMIPOptimization(Args& CLIArgs);
 
 	 /**
      * @brief Starts parallel optimization using the OMIP method.
-     * 
-     * @param remTime The remaining time for the optimization process.
-     * @param CLIArgs The command-line arguments for optimization.
      * @param slackSumUB The slack upper bound used in the OMIP method.
+     * @param CLIArgs The command-line arguments for optimization.
      * @return Reference to the current MTContext object.
      */
-	MTContext& parallelOMIPOptimization(double remTime, Args CLIArgs, double slackSumUB);
+	MTContext& parallelOMIPOptimization(const double slackSumUB, Args& CLIArgs);
 
 	/**
      * @brief Destructor for MTContext. Cleans up resources used by the context.
@@ -144,7 +160,8 @@ private:
 	std::vector<std::thread> threads;          ///< Threads used for parallel optimization.
 	std::vector<Random> rndGens;               ///< Random number generators for each thread.
 	Solution bestACSIncumbent;                 ///< Best ACS incumbent solution found.
-	std::mutex updateSolMTX;                   ///< Mutex for synchronizing solution updates.
+	std::mutex MTContextMTX;                   ///< Mutex for synchronizing solution updates.
+     std::atomic_size_t A_RhoChanges;           ///< Size_t value used to manage the DynamicFixPolicy
 
 	/**
      * @brief Waits for all threads to complete their optimization jobs.
@@ -163,20 +180,18 @@ private:
      * @brief Runs the FMIP optimization job for a given thread.
      * 
      * @param thID The ID of the thread running the job.
-     * @param remTime The remaining time for the optimization process.
      * @param CLIArgs The command-line arguments for the optimization process.
      */
-	void FMIPInstanceJob(size_t thID, Args CLIArgs);
+	void FMIPInstanceJob(const size_t thID, Args& CLIArgs);
 
 	 /**
      * @brief Runs the OMIP optimization job for a given thread.
      * 
      * @param thID The ID of the thread running the job.
-     * @param remTime The remaining time for the optimization process.
      * @param CLIArgs The command-line arguments for the optimization process.
      * @param slackSumUB The slack upper bound used in the OMIP method.
      */
-    void  OMIPInstanceJob(size_t thID,  double slackSumUB, Args CLIArgs);
+    void  OMIPInstanceJob(const size_t thID, const double slackSumUB, Args& CLIArgs);
 };
 
 #endif

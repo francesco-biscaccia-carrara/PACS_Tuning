@@ -2,8 +2,8 @@
  * CPLEX Execution file 
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.0.6
- * @since 04/04/2025
+ * @version v1.1.0
+ * @since 04/08/2025
 */
 
 #include "../include/MIP.hpp"
@@ -17,12 +17,12 @@ int main(int argc, char* argv[]) {
 		Args	  CLIArgs = CLIParser(argc, argv, CPLEX_RUN).getArgs();
 
         MIP ogMIP{CLIArgs.fileName};
-		ogMIP.setNumCores(NUM_CORE);
+		ogMIP.setNumCores(NUM_CORE).setNumSols(NUM_SOL_STOP);
         Solution CPLEXSol = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
         
         int solveCode {ogMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit))};
 
-		if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE){
+		if (MIP::isINForUNBD(solveCode)){
 			PRINT_ERR("NO FEASIBLE SOLUTION FIND");
         }else{
             CPLEXSol.sol = ogMIP.getSol();

@@ -8,8 +8,8 @@
  *
  * @note Requires CPLEX library and Utils.hpp
  * @author Francesco Biscaccia Carrara
- * @version v1.0.6
- * @since 04/04/2025
+ * @version v1.1.0
+ * @since 04/08/2025
  */
 
 #ifndef MIP_SOL_H
@@ -23,10 +23,13 @@ using namespace Utils;
 #define CPLEX_LOG_DIR "../log/cplex_out/log/"
 #define MIP_LOG_DIR "../log/cplex_out/mip/"
 #define INST_DIR "../data/"
-#define CPLEX_CORE 1
 
-#define MIP_DUAL_PRIM_GAP_TOL 1e-4 //Default value for CPX_PARAM_EPAGAP (see IBM ILOG CPLEX doc)
-#define MIP_GAP_TOL 1e-6 //Default value for CPX_PARAM_EPGAP (see IBM ILOG CPLEX doc)
+/** CPELX Execution Constants */
+#define CPLEX_CORE 1
+#define NUM_SOL_STOP 1
+
+#define MIP_DUAL_PRIM_GAP_TOL 1e-4      //Default value for CPX_PARAM_EPAGAP (see IBM ILOG CPLEX doc)
+#define MIP_GAP_TOL 1e-6                //Default value for CPX_PARAM_EPGAP (see IBM ILOG CPLEX doc)
 
 //FIXME: can they be removed?
 #define MIP_INT_TOL 1e-3
@@ -138,6 +141,13 @@ public:
      */
 	MIP& setNumCores(const int numCores);
 
+     /**
+     * @brief Sets the number of MIP solutions to be found before stopping
+     * @param numSols Number of solutions
+     * @return Reference to the current MIP object
+     */
+	MIP& setNumSols(const int numSols);
+
 	/**
      * @brief Get the number of non-zero elements in the problem
      * @return Number of non-zero elements
@@ -187,6 +197,21 @@ public:
      */
 	[[nodiscard]]
 	std::vector<double> getSol();
+
+     /// FIXED: Bug #68f1c9b8703f4f30f98c6bf5b01fb3253799a9c6 — UNBOUNDED case was not handled in the infeasibility check.
+     /**
+     * @brief Check wheter a solve code from CPLEXgetstat says that the problem is INFeasible or UNBounDed
+     * @return Bool that is true if the problem is INF or UNBD
+     */
+     [[nodiscard]]
+     static bool isINForUNBD(const int solveCode){ 
+          return (  solveCode == CPXMIP_TIME_LIM_INFEAS || 
+                    solveCode == CPXMIP_DETTIME_LIM_INFEAS || 
+                    solveCode == CPXMIP_INFEASIBLE || 
+                    solveCode == CPXMIP_INForUNBD||
+                    solveCode == CPXMIP_UNBOUNDED);
+     }
+
 
 	/**
      * @brief Get the number of MIP variables
@@ -284,6 +309,7 @@ public:
      */
 	[[nodiscard]]
 	bool checkFeasibility(const std::vector<double>& sol);
+
 
 // Debug-specific methods
 #if ACS_VERBOSE == DEBUG

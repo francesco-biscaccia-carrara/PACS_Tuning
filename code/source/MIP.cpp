@@ -21,8 +21,8 @@ MIP::MIP(const std::string fileName) {
 	if (status)
 		throw MIPException(MIPEx::FileNotFound, "Failed to read the problem from file!\t" + std::to_string(status));
 
-	CPXsetdblparam(env, CPX_PARAM_EPGAP, MIP_GAP_TOL);
-	CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
+	// CPXsetdblparam(env, CPX_PARAM_EPGAP, MIP_GAP_TOL);
+	// CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
 #if ACS_VERBOSE == DEBUG
 	CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
@@ -43,19 +43,28 @@ MIP::MIP(const MIP& otherMIP) {
 	if (status)
 		throw MIPException(MIPEx::ModelCreation, "Model not cloned!");
 
-	CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
-	CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
+	//CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
+	//CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
 #if ACS_VERBOSE == DEBUG
 	CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
 #endif
 }
 
+
 MIP& MIP::setNumCores(const int numCores) {
 	if (CPXsetintparam(env, CPX_PARAM_THREADS, numCores))
 		throw MIPException(MIPEx::General, "Number of dedicated cores not changed!");
 	return *this;
 }
+
+
+MIP& MIP::setNumSols(const int numSols) {
+	if (CPXsetintparam(env, CPX_PARAM_INTSOLLIM, numSols))
+		throw MIPException(MIPEx::General, "Number of max solutions not changed!");
+	return *this;
+}
+
 
 size_t MIP::getNumNonZeros() {
 	size_t nnz{static_cast<size_t>(CPXgetnumnz(env, model))};
@@ -76,6 +85,8 @@ int MIP::solve(const double timeLimit, const double detTimeLimit) {
 		CPXsetdblparam(env, CPX_PARAM_DETTILIM, detTimeLimit);
 
 	if (int error{ CPXmipopt(env, model) })
+
+	
 		throw MIPException(MIPEx::MIPOptimizationError, "CPLEX cannot solve this problem!\t" + std::to_string(error));
 
 	return CPXgetstat(env, model);
@@ -132,7 +143,7 @@ std::vector<double> MIP::getSol() {
 	int		numCols{ getNumCols() };
 	double* xStar{ (double*)calloc(numCols, sizeof(double)) };
 	if (int error{ CPXgetx(env, model, xStar, 0, numCols - 1) })
-		throw MIPException(MIPEx::General, "Unable to obtain the solution!" + std::to_string(error));
+		throw MIPException(MIPEx::General, "Unable to obtain the solution! " + std::to_string(error)+" State: "+std::to_string(CPXgetstat(env, model)));
 	std::vector<double> sol(xStar, xStar + numCols);
 	free(xStar);
 	return sol;
@@ -145,9 +156,8 @@ MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef, const 
 		throw MIPException(MIPEx::InputSizeError, "Wrong new column size");
 
 	char** cname{ (char**)calloc(1, sizeof(char*)) };
-	char   colName[name.length() + 1];
-	strcpy(colName, name.c_str());
-	cname[0] = colName;
+	cname[0] = strdup(name.c_str());
+
 	int*	indices{ (int*)malloc(numRow * sizeof(int)) };
 	double* values{ (double*)malloc(numRow * sizeof(double)) };
 	int		start = 0, nnz = 0;
@@ -172,9 +182,7 @@ MIP& MIP::addCol(const size_t index, const double value, const double objCoef, c
 		throw MIPException(MIPEx::OutOfBound, "Wrong index addCol()!");
 
 	char** cname{ (char**)calloc(1, sizeof(char*)) };
-	char   colName[name.length() + 1];
-	strcpy(colName, name.c_str());
-	cname[0] = colName;
+	cname[0] = strdup(name.c_str());
 
 	int	   tmpIndex{ static_cast<int>(index) };
 	double tmpValue{ value };

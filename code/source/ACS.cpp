@@ -2,8 +2,8 @@
  * ACS Execution file
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.0.6
- * @since 04/04/2025
+ * @version v1.1.0
+ * @since 04/08/2025
 */
 
 #include "../include/FMIP.hpp"
@@ -19,16 +19,17 @@ int main(int argc, char* argv[]) {
 		Args	  CLIArgs = CLIParser(argc, argv).getArgs();
 		MTContext MTEnv(CLIArgs.numsubMIPs, CLIArgs.seed);
 
-		std::vector<double> initSol;
-		FixPolicy::firstThetaFixing(initSol,CLIArgs.fileName, CLIArgs.theta, Random(CLIArgs.seed));
-		Solution tmpSol = {.sol = initSol, .slackSum = CPX_INFBOUND,  .oMIPCost = CPX_INFBOUND};
+		std::vector<double> startSol;
+		Random				mainRnd = Random(CLIArgs.seed);
+		FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, mainRnd);
+		Solution tmpSol = {.sol = startSol, .slackSum = CPX_INFBOUND,  .oMIPCost = CPX_INFBOUND};
 #if ACS_VERBOSE >= VERBOSE	
 		PRINT_INFO("Init FeasMIP solution found!");
 #endif
 		MTEnv.broadcastSol(tmpSol);
 
 		while (Clock::timeElapsed() < CLIArgs.timeLimit) {
-			if (MTEnv.getBestACSIncumbent().slackSum > EPSILON) { //while works better?
+			if (MTEnv.getBestACSIncumbent().slackSum > EPSILON) {
 
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
 #if ACS_VERBOSE >= VERBOSE
@@ -36,7 +37,9 @@ int main(int argc, char* argv[]) {
 #endif
 					break;
 				}
-				MTEnv.parallelFMIPOptimization(Clock::timeRemaining(CLIArgs.timeLimit), CLIArgs);
+				//PARALLEL FMIP Phase
+				MTEnv.parallelFMIPOptimization(CLIArgs);
+				if(MTEnv.isFeasibleSolFound()) break; 
 
 				// 1° Recombination phase
 				FMIP MergeFMIP(CLIArgs.fileName);
@@ -57,7 +60,7 @@ int main(int argc, char* argv[]) {
 
 				int solveCode{ MergeFMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), DET_TL(MergeFMIP.getNumNonZeros())) };
 
-				if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE){
+				if (MIP::isINForUNBD(solveCode)){
 #if ACS_VERBOSE >= VERBOSE
 			PRINT_INFO("MergeOMIP - Aborted: Infeasible with given TL");
 #endif
@@ -66,8 +69,10 @@ int main(int argc, char* argv[]) {
 				tmpSol.sol = MergeFMIP.getSol();
 				tmpSol.slackSum = MergeFMIP.getObjValue();
 				PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
-
 				MTEnv.setBestACSIncumbent(tmpSol);
+				FixPolicy::dynamicAdjustRho("1_Phase",solveCode,CLIArgs.numsubMIPs,CLIArgs.rho,MTEnv.getRhoChanges());
+				
+				if(MTEnv.isFeasibleSolFound()) break; 
 				MTEnv.broadcastSol(tmpSol);
 			}
 
@@ -78,7 +83,9 @@ int main(int argc, char* argv[]) {
 				break;
 			}
 
-			MTEnv.parallelOMIPOptimization(Clock::timeRemaining(CLIArgs.timeLimit), CLIArgs, tmpSol.slackSum);
+			//PARALLEL OMIP Phase
+			MTEnv.parallelOMIPOptimization(tmpSol.slackSum, CLIArgs);
+			if(MTEnv.isFeasibleSolFound()) break; 
 
 			// 2° Recombination phase
 			OMIP MergeOMIP(CLIArgs.fileName);
@@ -99,7 +106,7 @@ int main(int argc, char* argv[]) {
 			}
 			int solveCode{ MergeOMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit),DET_TL(MergeOMIP.getNumNonZeros())) };
 
-			if (solveCode == CPXMIP_TIME_LIM_INFEAS || solveCode == CPXMIP_DETTIME_LIM_INFEAS || solveCode == CPXMIP_INFEASIBLE){
+			if (MIP::isINForUNBD(solveCode)){
 #if ACS_VERBOSE >= VERBOSE
 			PRINT_INFO("MergeOMIP - Aborted: Infeasible with given TL");
 #endif
@@ -112,6 +119,9 @@ int main(int argc, char* argv[]) {
 
 			PRINT_OUT("OptMIP Objective|SlackSum after merging: %12.2f|%-10.2f", MergeOMIP.getObjValue(), tmpSol.slackSum);
 			MTEnv.setBestACSIncumbent(tmpSol);
+			FixPolicy::dynamicAdjustRho("2_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho,MTEnv.getRhoChanges());
+
+			if(MTEnv.isFeasibleSolFound()) break;
 			MTEnv.broadcastSol(tmpSol);
 		}
 
