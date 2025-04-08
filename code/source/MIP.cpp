@@ -143,7 +143,7 @@ std::vector<double> MIP::getSol() {
 	int		numCols{ getNumCols() };
 	double* xStar{ (double*)calloc(numCols, sizeof(double)) };
 	if (int error{ CPXgetx(env, model, xStar, 0, numCols - 1) })
-		throw MIPException(MIPEx::General, "Unable to obtain the solution!" + std::to_string(error));
+		throw MIPException(MIPEx::General, "Unable to obtain the solution! " + std::to_string(error)+" State: "+std::to_string(CPXgetstat(env, model)));
 	std::vector<double> sol(xStar, xStar + numCols);
 	free(xStar);
 	return sol;
