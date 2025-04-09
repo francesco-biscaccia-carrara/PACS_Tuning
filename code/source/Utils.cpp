@@ -22,6 +22,15 @@ int Random::Int(int min, int max) {
 	return get(rng);
 }
 
+// MIN and MAX are included
+double Random::Double(double min, double max) {
+	if (min > max)
+		return Random::Double(max, min);
+
+	std::uniform_real_distribution get{ min, max };
+	return get(rng);
+}
+
 
 void Logger::print(LogLevel typeMsg, const char* format, ...) {
 	const char* msgClr;
@@ -105,7 +114,8 @@ constexpr const char* HELP_ACS = "Usage: ./ACS <PARS>\
         \n '-th / --theta <double (0,1)>'\t\t %% of vars to fix in the initially vector\
         \n '-rh / --rho <double (0,1)>'\t\t %% of vars to fix per ACS iteration\
         \n '-sd / --seed <u long long>'\t\t Random seed\
-		\n '-nSMIPs/ --numsubMIPs <u long>'\t Number of subMIP in the parallel phase";
+		\n '-nSMIPs/ --numsubMIPs <u long>'\t Number of subMIP in the parallel phase\
+		\n '-ag/ --algorithm <char>'\t\t Type of algorithm for the initial vector (tbd value<->algo)";
 
 
 constexpr const char* HELP_CPLEXRUN = "Usage: ./CPLEXRun <PARS>\
@@ -114,8 +124,13 @@ constexpr const char* HELP_CPLEXRUN = "Usage: ./CPLEXRun <PARS>\
         \n '-tl / --timelimit <double>'\t\t Max execution time";
 
 
-CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = "", .timeLimit = 0.0, .theta = 0.0, .rho = 0.0, .numsubMIPs = 0, .seed = 0 } {
+CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = "", .timeLimit = 0.0, .theta = 0.0, .rho = 0.0, .numsubMIPs = 0, .seed = 0, .algo = 0} {
 	if (argc > 0 && argv != nullptr) {
+
+		constexpr std::array<std::pair<const char*, char Args::*>, 2> charArgs{ {
+			{ "-ag", &Args::algo },
+			{ "--algorithm", &Args::algo},
+		} };
 
 		constexpr std::array<std::pair<const char*, std::string Args::*>, 2> stringArgs{ {
 			{ "-f", &Args::fileName },
@@ -141,6 +156,13 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 
 		for (int i = 1; i < argc - 1; i++) {
 			std::string key = argv[i];
+
+			for (const auto& [flag, member] : charArgs) {
+				if (key == flag) {
+					args.*member = argv[++i][0];
+					break;
+				}
+			}
 
 			for (const auto& [flag, member] : stringArgs) {
 				if (key == flag) {
@@ -175,7 +197,7 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 			if (args.fileName.empty() || !args.timeLimit)
 				throw ArgsParserException(HELP_CPLEXRUN);
 		} else {
-			if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.numsubMIPs)
+			if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.numsubMIPs || !args.algo)
 				throw ArgsParserException(HELP_ACS);
 		}
 
@@ -191,13 +213,14 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 					   args.fileName.c_str(), args.timeLimit);
 		} else {
 			PRINT_INFO("Parsed Arguments:\
+							\n\t - Algorithm :  \t%c \
                             \n\t - File Name :  \t%s \
                             \n\t - Time Limit : \t%f\
                             \n\t - Theta : \t\t%f\
                             \n\t - Rho : \t\t%f\
 							\n\t - Seed : \t\t%d\
 							\n\t - Num sub-MIP : \t%d",
-					   args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs);
+					   		args.algo,args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs);
 		}
 
 #endif

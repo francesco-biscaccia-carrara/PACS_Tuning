@@ -92,8 +92,9 @@ namespace Utils {
         double rho; ///< Rho parameter
         unsigned long numsubMIPs; ///< Number of sub-MIPs
         unsigned long long seed; ///< Random number generator see
-	};
+		char   algo;		///< Flag to set the type of algorithm (0,1,2,3,4)
 
+	}; 
 
 	/**
      * Provides random number generation functionality.
@@ -118,6 +119,15 @@ namespace Utils {
          * @return A random integer within the specified range
          */
 		int Int(int min, int max);
+
+		/**
+         * Generates a random double within a specified range.
+         * 
+         * @param min Minimum value of the range (inclusive)
+         * @param max Maximum value of the range (inclusive)
+         * @return A random double within the specified range
+         */
+		double Double(double min, double max);
 
 		/**
          * Gets the current seed of the random number generator.

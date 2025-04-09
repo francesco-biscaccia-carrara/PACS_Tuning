@@ -85,6 +85,16 @@ namespace FixPolicy {
      */
 	void startSolTheta(std::vector<double>& sol,std::string fileName, double theta, Random& rnd);
 
+
+     /**
+     * @brief Modifies the sol vector to obtain a starting solution for FMIP optimization.
+     * @param sol Vector of double values to be updated.
+     * @param MTEnv Reference to Multi-threading context.
+     * @param filename Name of the file used to build the RelaxedFMIP object.
+     */
+     void startSolMerge(std::vector<double>& sol, MTContext& MTEnv, std::string fileName);
+
+
 	/**
      * @brief Modifies the rho parameter in the given model based on a solution vector.
      * @param threadID ID of the thread executing this function.
@@ -96,6 +106,7 @@ namespace FixPolicy {
      */
 	void randomRhoFixMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol, double rho, Random& rnd);
 
+
      /** 
      * @brief Adjusts Rho parameter dynamically to speed up ACS (in the recombination phases).
      * @param phase String that define the phase.
@@ -106,6 +117,7 @@ namespace FixPolicy {
      */
      void dynamicAdjustRho(const char* phase, const int solveCode, const size_t numMIPs, double& CLIRho, const size_t A_RhoChanges);
 
+     
      /**
      * @brief Adjust Rho parameter to speed up ACS (multi-threading scenario).
      * @param threadID ID of the thread executing this function.
