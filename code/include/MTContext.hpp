@@ -12,8 +12,8 @@
  * and it provides mechanisms to broadcast solutions across threads and handle solution updates with thread safety.
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0
- * @since 04/08/2025
+ * @version v1.1.0 - InitSol v0.0.1
+ * @since 04/12/2025
  */
 
 #ifndef MT_CTX_H
@@ -149,9 +149,17 @@ public:
      */
 	MTContext& parallelOMIPOptimization(const double slackSumUB, Args& CLIArgs);
 
-	/**
-     * @brief Destructor for MTContext. Cleans up resources used by the context.
+      /**
+     * @brief Compute the starting vector by exploring in parallel a set of possible candidates.
+     * @param fileName The name of the file that contains the MIP problem.
+     * @param sol The reference to the vector to be updated.
+     * @param rnd The reference to the main random generator.
      */
+	MTContext& parallelInitSolMerge(std::string fileName, std::vector<double>& sol, Random& rnd);
+	
+     /**
+	 * @brief Destructor for MTContext. Cleans up resources used by the context.
+	 */
 	~MTContext();
 
 private:
@@ -184,7 +192,7 @@ private:
      */
 	void FMIPInstanceJob(const size_t thID, Args& CLIArgs);
 
-	 /**
+	/**
      * @brief Runs the OMIP optimization job for a given thread.
      * 
      * @param thID The ID of the thread running the job.
@@ -192,6 +200,14 @@ private:
      * @param slackSumUB The slack upper bound used in the OMIP method.
      */
     void  OMIPInstanceJob(const size_t thID, const double slackSumUB, Args& CLIArgs);
+
+    /**
+     * @brief Runs the job that compute one of the subMIPs merged sol.
+     * 
+     * @param thID The ID of the thread running the job.
+     * @param vBounds Reference to the vector containing all the vars bounds.
+     */
+    void initSolMergJob(const size_t thID, const std::vector<VarBounds>& vBounds);
 };
 
 #endif

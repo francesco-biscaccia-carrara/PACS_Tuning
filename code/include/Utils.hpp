@@ -3,8 +3,8 @@
  * @brief Utility header file providing various helper classes and macros for the project.
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0
- * @since 04/08/2025
+ * @version v1.1.0 - InitSol v0.0.1
+ * @since 04/12/2025
  */
 
 #ifndef UTILS_H
@@ -32,9 +32,9 @@
 #pragma region UTILS_DEFINTION
 
 /** Current version of the code */
-#define ACS_VERSION "v1.1.0"
+#define ACS_VERSION "v1.1.0 - InitSol v0.0.1"
 /** Last update date */
-#define LAST_UPDATE "04/08/2025"
+#define LAST_UPDATE "04/12/2025"
 
 /** Verbosity level constants */
 #define NO_VER -1 
@@ -92,8 +92,7 @@ namespace Utils {
         double rho; ///< Rho parameter
         unsigned long numsubMIPs; ///< Number of sub-MIPs
         unsigned long long seed; ///< Random number generator see
-		char   algo;		///< Flag to set the type of algorithm (0,1,2,3,4)
-
+        unsigned long algo;		///< Flag to set the type of algorithm (0,1,2,3,4)
 	}; 
 
 	/**

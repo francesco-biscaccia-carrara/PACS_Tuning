@@ -87,6 +87,33 @@ MTContext& MTContext::parallelOMIPOptimization(double slackSumUB, Args& CLIArgs)
 	return *this;
 }
 
+
+MTContext& MTContext::parallelInitSolMerge(std::string fileName, std::vector<double>& sol, Random& rnd){
+
+	RlxFMIP	 relaxedFMIP{ fileName };
+	size_t	numVarsToFix{ static_cast<size_t> (relaxedFMIP.getMIPNumVars()) };
+	sol.resize(numVarsToFix, CPX_INFBOUND);
+
+	std::vector<VarBounds> varRanges(numVarsToFix);
+	for (size_t i{ 0 }; i < numVarsToFix; i++) varRanges[i] = relaxedFMIP.getVarBounds(i);
+
+	waitAllJobs();
+
+	for (size_t i{ 0 }; i < numMIPs; i++) {
+		threads.emplace_back(&MTContext::initSolMergJob, this, i, std::ref(varRanges));
+	}
+
+	waitAllJobs();
+
+	std::vector<std::vector<double>> sols;
+	sols.reserve(tmpSolutions.size()); 
+	std::transform(tmpSolutions.begin(), tmpSolutions.end(), std::back_inserter(sols),[](const Solution& s) { return s.sol; });
+	
+	FixPolicy::fixMergeOnStartSol(numMIPs,numMIPs,sols, varRanges,rnd, sol);
+	return *this;
+}
+
+
 MTContext::~MTContext() {
 #if ACS_VERBOSE >= VERBOSE
 	PRINT_INFO("MT Context: Closed");
@@ -165,4 +192,27 @@ void MTContext::OMIPInstanceJob(const size_t thID, const double slackSumUB, Args
 	setBestACSIncumbent(tmpSolutions[thID]);
 
 	FixPolicy::dynamicAdjustRhoMT(thID,"OMIP",solveCode,numMIPs,CLIArgs.rho,A_RhoChanges);
+}
+
+
+void MTContext::initSolMergJob(const size_t thID, const std::vector<VarBounds>& vBounds){
+	std::vector<std::vector<double>> draftSols(numMIPs);
+	
+	
+	size_t lenSol = static_cast<size_t>(vBounds.size());
+	tmpSolutions[thID].sol.resize(lenSol, CPX_INFBOUND);
+	for (size_t i{ 0 }; i < numMIPs; i++)
+		draftSols[i].resize(lenSol, CPX_INFBOUND);
+
+	for (size_t i{ 0 }; i < numMIPs;i++){
+		for(size_t j { 0 }; j < lenSol;j++){
+			auto [lb, ub] = vBounds[j];
+		
+			double clampedLower = std::max(-MAX_UB, lb);
+			double clampedUpper = std::min(MAX_UB, ub);
+			draftSols[i][j] = rndGens[thID].Int(clampedLower, clampedUpper);
+		}
+	}
+
+	FixPolicy::fixMergeOnStartSol(thID,numMIPs, draftSols, vBounds, rndGens[thID], tmpSolutions[thID].sol);
 }

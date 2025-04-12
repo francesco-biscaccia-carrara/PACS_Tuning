@@ -4,8 +4,8 @@
  *        specific policy-based fixing strategies in the ACS framework. 
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0
- * @since 04/08/2025
+ * @version v1.1.0 - InitSol v0.0.1
+ * @since 04/12/2025
  */
 
 
@@ -16,6 +16,12 @@
 
 #include "RlxFMIP.hpp"
 using namespace Utils;
+
+#pragma region DYN_ADJUST_RHO_DEF
+/** Clamping value for fixing */
+#define MAX_UB 1e6
+
+#pragma endregion
 
 #pragma region DYN_ADJUST_RHO_DEF
 /** Rho dicrepancy from the original one*/
@@ -85,15 +91,16 @@ namespace FixPolicy {
      */
 	void startSolTheta(std::vector<double>& sol,std::string fileName, double theta, Random& rnd);
 
-
      /**
      * @brief Modifies the sol vector to obtain a starting solution for FMIP optimization.
-     * @param sol Vector of double values to be updated.
-     * @param MTEnv Reference to Multi-threading context.
-     * @param filename Name of the file used to build the RelaxedFMIP object.
+     * @param thID ID of the thread executing this function.
+     * @param numMIPs Number of logical sub-MIPs executing in parallel.
+     * @param sols Reference to a vector of vector containing the mergable sols.
+     * @param vBounds Referenct to the vector of var bounds.
+     * @param rnd Random number generator instance.
+     * @param sol Vector that stores the updated sol. 
      */
-     void startSolMerge(std::vector<double>& sol, MTContext& MTEnv, std::string fileName);
-
+	void fixMergeOnStartSol(const size_t thID, const size_t numMIP, const std::vector<std::vector<double>>& sols,  const std::vector<VarBounds>& vBounds, Random& rnd, std::vector<double>& finalSol);
 
 	/**
      * @brief Modifies the rho parameter in the given model based on a solution vector.
@@ -117,7 +124,7 @@ namespace FixPolicy {
      */
      void dynamicAdjustRho(const char* phase, const int solveCode, const size_t numMIPs, double& CLIRho, const size_t A_RhoChanges);
 
-     
+
      /**
      * @brief Adjust Rho parameter to speed up ACS (multi-threading scenario).
      * @param threadID ID of the thread executing this function.

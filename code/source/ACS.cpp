@@ -2,8 +2,8 @@
  * ACS Execution file
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0
- * @since 04/08/2025
+ * @version v1.1.0 - InitSol v0.0.1
+ * @since 04/12/2025
 */
 
 #include "../include/FMIP.hpp"
@@ -21,8 +21,12 @@ int main(int argc, char* argv[]) {
 
 		std::vector<double> startSol;
 		Random				mainRnd = Random(CLIArgs.seed);
-		FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, mainRnd);
-		Solution tmpSol = {.sol = startSol, .slackSum = CPX_INFBOUND,  .oMIPCost = CPX_INFBOUND};
+
+		if(CLIArgs.algo==0) 
+			FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, mainRnd);
+		else 
+			MTEnv.parallelInitSolMerge(CLIArgs.fileName, startSol, mainRnd);
+		Solution tmpSol = { .sol = startSol, .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
 #if ACS_VERBOSE >= VERBOSE	
 		PRINT_INFO("Init FeasMIP solution found!");
 #endif

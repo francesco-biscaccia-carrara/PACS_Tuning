@@ -127,19 +127,16 @@ constexpr const char* HELP_CPLEXRUN = "Usage: ./CPLEXRun <PARS>\
 CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = "", .timeLimit = 0.0, .theta = 0.0, .rho = 0.0, .numsubMIPs = 0, .seed = 0, .algo = 0} {
 	if (argc > 0 && argv != nullptr) {
 
-		constexpr std::array<std::pair<const char*, char Args::*>, 2> charArgs{ {
-			{ "-ag", &Args::algo },
-			{ "--algorithm", &Args::algo},
-		} };
-
 		constexpr std::array<std::pair<const char*, std::string Args::*>, 2> stringArgs{ {
 			{ "-f", &Args::fileName },
 			{ "--filename", &Args::fileName },
 		} };
 
-		constexpr std::array<std::pair<const char*, unsigned long Args::*>, 2> uLongArgs{ {
+		constexpr std::array<std::pair<const char*, unsigned long Args::*>, 4> uLongArgs{ {
 			{ "-nSMIPs", &Args::numsubMIPs },
 			{ "--numsubMIPs", &Args::numsubMIPs },
+			{ "-ag", &Args::algo },
+			{ "--algorithm", &Args::algo},
 		} };
 
 		constexpr std::array<std::pair<const char*, double Args::*>, 6> doubleArgs{ { { "-tl", &Args::timeLimit },
@@ -156,13 +153,6 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 
 		for (int i = 1; i < argc - 1; i++) {
 			std::string key = argv[i];
-
-			for (const auto& [flag, member] : charArgs) {
-				if (key == flag) {
-					args.*member = argv[++i][0];
-					break;
-				}
-			}
 
 			for (const auto& [flag, member] : stringArgs) {
 				if (key == flag) {
@@ -197,7 +187,7 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 			if (args.fileName.empty() || !args.timeLimit)
 				throw ArgsParserException(HELP_CPLEXRUN);
 		} else {
-			if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.numsubMIPs || !args.algo)
+			if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.numsubMIPs || args.algo<0)
 				throw ArgsParserException(HELP_ACS);
 		}
 
@@ -213,7 +203,7 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 					   args.fileName.c_str(), args.timeLimit);
 		} else {
 			PRINT_INFO("Parsed Arguments:\
-							\n\t - Algorithm :  \t%c \
+							\n\t - Algorithm :  \t%d \
                             \n\t - File Name :  \t%s \
                             \n\t - Time Limit : \t%f\
                             \n\t - Theta : \t\t%f\
