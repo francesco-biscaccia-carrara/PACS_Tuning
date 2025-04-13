@@ -22,10 +22,25 @@ int main(int argc, char* argv[]) {
 		std::vector<double> startSol;
 		Random				mainRnd = Random(CLIArgs.seed);
 
-		if(CLIArgs.algo==0) 
-			FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, mainRnd);
-		else 
-			MTEnv.parallelInitSolMerge(CLIArgs.fileName, startSol, mainRnd);
+		switch (CLIArgs.algo){
+			case 0:
+				FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, mainRnd);
+			break;
+
+			case 1:
+				PRINT_WARN("CLIArgs.theta = 1.0");
+				FixPolicy::startSolTheta(startSol, CLIArgs.fileName, 1, mainRnd); // Random fixing of all vars
+			break;
+
+			case 2:
+				MTEnv.parallelInitSolMerge(CLIArgs.fileName, startSol, mainRnd);
+			break;
+
+		default:
+			PRINT_ERR("Something goes wrong! Alg value: %d", CLIArgs.algo);
+			break;
+		}
+			
 		Solution tmpSol = { .sol = startSol, .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
 #if ACS_VERBOSE >= VERBOSE	
 		PRINT_INFO("Init FeasMIP solution found!");
