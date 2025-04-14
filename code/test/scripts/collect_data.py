@@ -72,9 +72,6 @@ def geo_mean(df):
     # Create a copy of the dataframe to avoid modifying the original
     processed_df = df.copy()
     
-    # Get the objective column name
-    obj_col = 'Objective'
-    
     # Columns to process (ACS columns)
     acs_cols = [col for col in df.columns if col.startswith('ACS')]
     
@@ -116,7 +113,7 @@ def main():
     outs.sort()
 
     cols = {}
-    for rho in [0.25,0.5,0.75]:
+    for rho in [0,1,2]:
         for seed in [10493847, 83274910, 70938475, 98312048, 19283746]:
             col = f"ACS_{rho}_{seed}"
             cols[col] = []

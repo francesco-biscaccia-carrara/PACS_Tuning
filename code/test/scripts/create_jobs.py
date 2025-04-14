@@ -39,7 +39,7 @@ def main():
     for instance in instances:
         for exe in  ["CPLEXRun","ACS"]:
             if exe == "ACS":
-                for rho in [0.25,0.50,0.75]:
+                for rho in [0,1,2]:
                     for seed in [10493847, 83274910, 70938475, 98312048, 19283746]:
                         job_name =f"{instance}_{exe}_{rho}_{seed}"
                         job = f"{jobs_folder}/{job_name}"
@@ -54,27 +54,25 @@ def main():
 #SBATCH --error={jobs_outputs}/{job_name}.err
 
 # warm up processors
-sudo cpupower frequency-set -g performance
+sudo cpupower frequency-set -g performance > /dev/null
 sleep 0.1
 stress-ng -c 4 --cpu-ops=100
 # set limits
 ulimit -v 16777216
 
 #####################
-echo "-----"
-echo "INFO:"
-echo "  SLURM_NODELIST: $SLURM_NODELIST"
-echo "  SLURM_CPUS_PER_TASK: $SLURM_CPUS_PER_TASK"
-echo "-----"
+echo "----------INFO----------"
+echo "NODE: $SLURM_NODELIST"
+echo "CPUS: $SLURM_CPUS_PER_TASK"
+echo "------------------------"
 
 cd {exec_dir}
-./{exe} -f {instance} -tl 300 -th 0.25 -nSMIPs 4 -rh {rho} -sd {seed}
+./{exe} -f {instance} -tl 300 -th 0.25 -nSMIPs 4 -rh 0.25 -sd {seed} -ag {rho}
 
 #####################
 
 # back to power saving mode
-sudo cpupower frequency-set -g powersave
-
+sudo cpupower frequency-set -g powersave > /dev/null
 """
 
                         with open(job, "w") as f:
@@ -93,18 +91,17 @@ sudo cpupower frequency-set -g powersave
 #SBATCH --error={jobs_outputs}/{instance}_{exe}.err
 
 # warm up processors
-sudo cpupower frequency-set -g performance
+sudo cpupower frequency-set -g performance > /dev/null
 sleep 0.1
 stress-ng -c 4 --cpu-ops=100
 # set limits
 ulimit -v 16777216
 
 #####################
-echo "-----"
-echo "INFO:"
-echo "  SLURM_NODELIST: $SLURM_NODELIST"
-echo "  SLURM_CPUS_PER_TASK: $SLURM_CPUS_PER_TASK"
-echo "-----"
+echo "----------INFO----------"
+echo "NODE: $SLURM_NODELIST"
+echo "CPUS: $SLURM_CPUS_PER_TASK"
+echo "------------------------"
 
 cd {exec_dir}
 ./{exe} -f {instance} -tl 300
@@ -112,7 +109,7 @@ cd {exec_dir}
 #####################
 
 # back to power saving mode
-sudo cpupower frequency-set -g powersave
+sudo cpupower frequency-set -g powersave > /dev/null
 
 """
 

@@ -8,6 +8,7 @@
 /code/data
 /code/test/env
 /code/test/job*
+/code/Doxyfile
 
 #Thesis stuff
 /thesis/*.aux
