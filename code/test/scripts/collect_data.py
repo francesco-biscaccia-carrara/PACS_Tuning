@@ -107,7 +107,6 @@ def geo_mean(df):
 
 
 def main():
-    i = 0
 
     existing_df = pd.read_csv(inst_file)
     outs.sort()
@@ -127,7 +126,7 @@ def main():
             value = extract_value_from_line(last_line)
             if "CPLEXRun" in out:
                 cols["CPLEX"].append(value)
-            match = re.search(r"ACS_\d+\.\d+_\d+", out)
+            match = re.search(r"ACS_\d+_\d+", out)
             if match:
                 col = match.group()
                 cols[col].append(value)
@@ -135,7 +134,7 @@ def main():
     data = pd.DataFrame.from_dict(cols, orient="index").T
     merged_df = pd.concat([existing_df, data], axis=1)
     merged_df.to_csv(test_file, index=False)
-
+    
     processed_df = geo_mean(process_dataframe(merged_df))
 
     processed_df.to_csv(data_file, index=False)

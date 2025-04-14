@@ -34,5 +34,8 @@ int main(int argc, char* argv[]) {
 		PRINT_ERR(ex.what());
 		return EXIT_FAILURE;
 	}
+#if LOG >= 1
+    printf("[ACK] - CPLEXRun terminates correctly, no corrupted execution.\n");
+#endif
 	return EXIT_SUCCESS;
 }
