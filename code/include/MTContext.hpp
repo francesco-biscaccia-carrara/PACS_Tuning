@@ -12,8 +12,8 @@
  * and it provides mechanisms to broadcast solutions across threads and handle solution updates with thread safety.
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.1
- * @since 04/12/2025
+ * @version v1.1.0 - InitSol v0.0.2
+ * @since 04/15/2025
  */
 
 #ifndef MT_CTX_H
@@ -206,8 +206,9 @@ private:
      * 
      * @param thID The ID of the thread running the job.
      * @param vBounds Reference to the vector containing all the vars bounds.
+     * @param obj Reference to the vector containing the objective function.
      */
-    void initSolMergJob(const size_t thID, const std::vector<VarBounds>& vBounds);
+    void initSolMergeJob(const size_t thID, const std::vector<VarBounds>& vBounds, const std::vector<double>& obj);
 };
 
 #endif

@@ -9,7 +9,8 @@ if ("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
 project(ACS)
-set(CODE_VERSION "v1.1.0 - InitSol v0.0.1")
+set(CODE_VERSION "v1.1.0 - InitSol v0.0.2")
+set(LAST_UPDATE "04/15/2025")
 
 # setting flags for optimization and debug builds
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
@@ -180,9 +181,10 @@ add_definitions(-DACS_HOME_DIR="${HOME_DIR}"
                 -DLOG=${LOG} 
                 -DCODE_VERSION=${CODE_VERSION}) #ACS for us
 
+
 # custom builds
 add_custom_target(opt
-    COMMAND echo "Code version: ${CODE_VERSION}"
+    COMMAND echo "Code version: ${CODE_VERSION} - Last update: ${LAST_UPDATE}"
     COMMAND echo "Flags used: ${CMAKE_CXX_FLAGS_RELEASE}"
     COMMAND ${CMAKE_COMMAND} -D CMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ACS
@@ -190,7 +192,7 @@ add_custom_target(opt
 )
 
 add_custom_target(debug
-    COMMAND echo "Code version: ${CODE_VERSION}"
+    COMMAND echo "Code version: ${CODE_VERSION} - Last update: ${LAST_UPDATE}"
     COMMAND echo "Flags used: ${CMAKE_CXX_FLAGS_DEBUG} -VERBOSE=${VERBOSE} -LOG=${LOG}"
     COMMAND ${CMAKE_COMMAND} -D CMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ACS

@@ -90,17 +90,19 @@ MTContext& MTContext::parallelOMIPOptimization(double slackSumUB, Args& CLIArgs)
 
 MTContext& MTContext::parallelInitSolMerge(std::string fileName, std::vector<double>& sol, Random& rnd){
 
-	RlxFMIP	 relaxedFMIP{ fileName };
-	size_t	numVarsToFix{ static_cast<size_t> (relaxedFMIP.getMIPNumVars()) };
+	MIP	 MIP{ fileName };
+	size_t	numVarsToFix{ static_cast<size_t> (MIP.getMIPNumVars()) };
 	sol.resize(numVarsToFix, CPX_INFBOUND);
 
 	std::vector<VarBounds> varRanges(numVarsToFix);
-	for (size_t i{ 0 }; i < numVarsToFix; i++) varRanges[i] = relaxedFMIP.getVarBounds(i);
+	for (size_t i{ 0 }; i < numVarsToFix; i++) varRanges[i] = MIP.getVarBounds(i);
+
+	std::vector<double> obj = MIP.getObjFunction();
 
 	waitAllJobs();
 
 	for (size_t i{ 0 }; i < numMIPs; i++) {
-		threads.emplace_back(&MTContext::initSolMergJob, this, i, std::ref(varRanges));
+		threads.emplace_back(&MTContext::initSolMergeJob, this, i, std::ref(varRanges), std::ref(obj));
 	}
 
 	waitAllJobs();
@@ -108,8 +110,18 @@ MTContext& MTContext::parallelInitSolMerge(std::string fileName, std::vector<dou
 	std::vector<std::vector<double>> sols;
 	sols.reserve(tmpSolutions.size()); 
 	std::transform(tmpSolutions.begin(), tmpSolutions.end(), std::back_inserter(sols),[](const Solution& s) { return s.sol; });
-	
-	FixPolicy::fixMergeOnStartSol(numMIPs,numMIPs,sols, varRanges,rnd, sol);
+
+	double minObj = CPX_INFBOUND;
+	for (size_t i{ 0 }; i < sols.size(); i++) {
+		double newObj = std::inner_product(sols[i].begin(), sols[i].end(), obj.begin(), 0.0);
+		if(newObj < minObj){	
+#if ACS_VERBOSE >= VERBOSE
+		PRINT_INFO("[Start_point] - MTContext::parallelInitSolMerge - New MIN sol \t %10.2f",newObj); 
+#endif
+			minObj = newObj;
+			sol = sols[i];
+		}
+	}
 	return *this;
 }
 
@@ -195,7 +207,7 @@ void MTContext::OMIPInstanceJob(const size_t thID, const double slackSumUB, Args
 }
 
 
-void MTContext::initSolMergJob(const size_t thID, const std::vector<VarBounds>& vBounds){
+void MTContext::initSolMergeJob(const size_t thID, const std::vector<VarBounds>& vBounds, const std::vector<double>& obj){
 	std::vector<std::vector<double>> draftSols(numMIPs);
 	
 	
@@ -204,7 +216,8 @@ void MTContext::initSolMergJob(const size_t thID, const std::vector<VarBounds>& 
 	for (size_t i{ 0 }; i < numMIPs; i++)
 		draftSols[i].resize(lenSol, CPX_INFBOUND);
 
-	for (size_t i{ 0 }; i < numMIPs;i++){
+	double min_obj = CPX_INFBOUND;
+	for (size_t i{ 0 }; i < numMIPs; i++) {
 		for(size_t j { 0 }; j < lenSol;j++){
 			auto [lb, ub] = vBounds[j];
 		
@@ -212,7 +225,15 @@ void MTContext::initSolMergJob(const size_t thID, const std::vector<VarBounds>& 
 			double clampedUpper = std::min(MAX_UB, ub);
 			draftSols[i][j] = rndGens[thID].Int(clampedLower, clampedUpper);
 		}
-	}
 
-	FixPolicy::fixMergeOnStartSol(thID,numMIPs, draftSols, vBounds, rndGens[thID], tmpSolutions[thID].sol);
+		double objCost = std::inner_product(draftSols[i].begin(), draftSols[i].end(), obj.begin(), 0.0);
+		if (objCost < min_obj) {
+			std::lock_guard<std::mutex> lock(MTContextMTX);
+#if ACS_VERBOSE >= VERBOSE
+			PRINT_INFO("Proc: %3d [Start_point] - MTContext::initSolMergeJob - New MIN sol \t %10.2f",thID,objCost); 
+#endif
+			min_obj = objCost;
+			tmpSolutions[thID].sol = draftSols[i];
+		}
+	}
 }

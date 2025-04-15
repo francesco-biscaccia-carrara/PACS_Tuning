@@ -9,6 +9,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks.  
 - Enforced FMIP resolution in the ACS workflow prior to transitioning to the OMIP phase.
 
+## InitSol[0.0.2] - 2025-04-08
+### Added
+- ACK signature at the end to execution to track unexpected execution behaviours both on ACS and CPLEX.
+
+### Changed
+- Updated recombination phase guided by the MIP objective funciton in function `MTContext::parallelInitSolMerge` ([MTContext.cpp](code/source/MTContext.cpp)).
+
+## InitSol[0.0.1] - 2025-04-08 [YANKED]
+### Added
+- Merge-recombination of random solutions
+- Tested against single random vector and standard fixing: no effective results
+
 ## [1.1.0] - 2025-04-08
 ### Added
 - Early stop when a max number of solutions is found via `MIP::setNumSols` ([MIP.cpp](code/source/MIP.cpp)).

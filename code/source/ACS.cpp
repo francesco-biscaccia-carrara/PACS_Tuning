@@ -2,8 +2,8 @@
  * ACS Execution file
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.1
- * @since 04/12/2025
+ * @version v1.1.0 - InitSol v0.0.2
+ * @since 04/15/2025
 */
 
 #include "../include/FMIP.hpp"
@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
 			
 		Solution tmpSol = { .sol = startSol, .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
 #if ACS_VERBOSE >= VERBOSE	
-		PRINT_INFO("Init FeasMIP solution found!");
+		PRINT_INFO("Starting vector found!");
 #endif
 		MTEnv.broadcastSol(tmpSol);
 

@@ -8,8 +8,8 @@
  * It inherits core functionality from the base MIP class while adding optimality-specific features.
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.1
- * @since 04/12/2025
+ * @version v1.1.0 - InitSol v0.0.2
+ * @since 04/15/2025
  */
 
 #ifndef OMIP_H
