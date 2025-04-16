@@ -6,7 +6,7 @@
  * 
  * @author Francesco Biscaccia Carrara
  * @version v1.1.0 - InitSol v0.0.2
- * @since 04/15/2025
+ * @since 04/16/2025
  */
 
 #ifndef MER_POL_H

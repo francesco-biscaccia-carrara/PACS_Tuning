@@ -3,7 +3,7 @@
  * 
  * @author Francesco Biscaccia Carrara
  * @version v1.1.0 - InitSol v0.0.2
- * @since 04/15/2025
+ * @since 04/16/2025
 */
 
 #include "../include/MIP.hpp"
@@ -35,7 +35,8 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 #if LOG >= 1
-    printf("[ACK] - CPLEXRun terminates correctly, no corrupted execution.\n");
+	printf("----- DUMMY LINE FOR DATA SCRAPING ------\n");
+	printf("[ACK] - CPLEXRun terminates correctly, no corrupted execution.\n");
 #endif
 	return EXIT_SUCCESS;
 }

@@ -4,7 +4,7 @@
  * 
  * @author Francesco Biscaccia Carrara
  * @version v1.1.0 - InitSol v0.0.2
- * @since 04/15/2025
+ * @since 04/16/2025
  */
 
 #ifndef UTILS_H
@@ -34,7 +34,7 @@
 /** Current version of the code */
 #define ACS_VERSION "v1.1.0 - InitSol v0.0.2"
 /** Last update date */
-#define LAST_UPDATE "04/15/2025"
+#define LAST_UPDATE "04/16/2025"
 
 /** Verbosity level constants */
 #define NO_VER -1 

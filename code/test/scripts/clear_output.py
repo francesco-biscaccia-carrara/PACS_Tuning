@@ -11,7 +11,7 @@ def clear_file(filename):
         lines = f1.readlines()
 
     with open(out_folder+"/"+filename, 'w') as f2:
-        f2.writelines(lines[:-1])
+        f2.writelines(lines[:-2])
 
 def main():
     if (

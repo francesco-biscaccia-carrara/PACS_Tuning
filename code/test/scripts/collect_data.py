@@ -108,33 +108,34 @@ def geo_mean(df):
 
 def main():
 
-    existing_df = pd.read_csv(inst_file)
-    outs.sort()
+    # existing_df = pd.read_csv(inst_file)
+    # outs.sort()
 
-    cols = {}
-    for rho in [0,1,2]:
-        for seed in [10493847, 83274910, 70938475, 98312048, 19283746]:
-            col = f"ACS_{rho}_{seed}"
-            cols[col] = []
-    cols["CPLEX"] = []
+    # cols = {}
+    # for rho in [0,1,2]:
+    #     for seed in [10493847, 83274910, 70938475, 98312048, 19283746]:
+    #         col = f"ACS_{rho}_{seed}"
+    #         cols[col] = []
+    # cols["CPLEX"] = []
 
-    for out in outs:
-        with open(out_folder + "/" + out) as f1:
-            for line in f1:
-                pass
-            last_line = line
-            value = extract_value_from_line(last_line)
-            if "CPLEXRun" in out:
-                cols["CPLEX"].append(value)
-            match = re.search(r"ACS_\d+_\d+", out)
-            if match:
-                col = match.group()
-                cols[col].append(value)
+    # for out in outs:
+    #     with open(out_folder + "/" + out) as f1:
+    #         for line in f1:
+    #             pass
+    #         last_line = line
+    #         value = extract_value_from_line(last_line)
+    #         if "CPLEXRun" in out:
+    #             cols["CPLEX"].append(value)
+    #         match = re.search(r"ACS_\d+_\d+", out)
+    #         if match:
+    #             col = match.group()
+    #             cols[col].append(value)
 
-    data = pd.DataFrame.from_dict(cols, orient="index").T
-    merged_df = pd.concat([existing_df, data], axis=1)
-    merged_df.to_csv(test_file, index=False)
+    # data = pd.DataFrame.from_dict(cols, orient="index").T
+    # merged_df = pd.concat([existing_df, data], axis=1)
+    # merged_df.to_csv(test_file, index=False)
     
+    merged_df = pd.read_csv(test_file)
     processed_df = geo_mean(process_dataframe(merged_df))
 
     processed_df.to_csv(data_file, index=False)
