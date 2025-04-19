@@ -89,17 +89,12 @@ void Logger::print(LogLevel typeMsg, const char* format, ...) {
 }
 
 double Clock::getTime() {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-
-	return ((double)tv.tv_sec) + ((double)tv.tv_usec / 1e+6);
+	auto now = std::chrono::steady_clock::now();
+	return std::chrono::duration<double>(now.time_since_epoch()).count();
 }
 
 double Clock::timeElapsed(const double initTime) {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-
-	return ((double)tv.tv_sec) + ((double)tv.tv_usec / 1e+6) - initTime;
+	return getTime() - initTime;
 }
 
 double Clock::timeRemaining(const double timeLimit) {
@@ -115,7 +110,7 @@ constexpr const char* HELP_ACS = "Usage: ./ACS <PARS>\
         \n '-rh / --rho <double (0,1)>'\t\t %% of vars to fix per ACS iteration\
         \n '-sd / --seed <u long long>'\t\t Random seed\
 		\n '-nSMIPs/ --numsubMIPs <u long>'\t Number of subMIP in the parallel phase\
-		\n '-ag/ --algorithm <char>'\t\t Type of algorithm for the initial vector (tbd value<->algo)";
+		\n '-ag/ --algorithm <u long>'\t\t Type of algorithm for the initial vector (tbd value<->algo)";
 
 
 constexpr const char* HELP_CPLEXRUN = "Usage: ./CPLEXRun <PARS>\

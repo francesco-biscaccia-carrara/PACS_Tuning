@@ -9,7 +9,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks.  
 - Enforced FMIP resolution in the ACS workflow prior to transitioning to the OMIP phase.
 
-## InitSol[0.0.2] - 2025-04-08
+## InitSol [0.0.3] - 2025-04-19  
+### Added  
+- Introduced `FixPolicy::startSolMin`, a method to set the initial solution based on variable bounds and objective value ([FixPolicy.cpp](code/source/FixPolicy.cpp)).  
+
+### Changed  
+- Redesigned output formatting for message types in `Utils::Logger::print` ([Utils.cpp](code/source/Utils.cpp)).  
+- Refactored timer handling logic in `Utils::Clock` for improved clarity and maintainability ([Utils.cpp](code/source/Utils.cpp)).  
+
+## InitSol[0.0.2] - 2025-04-16
 ### Added
 - ACK signature at the end to execution to track unexpected execution behaviours both on ACS and CPLEX.
 
