@@ -39,7 +39,7 @@ def main():
     for instance in instances:
         for exe in  ["CPLEXRun","ACS"]:
             if exe == "ACS":
-                for rho in [0,1,2]:
+                for rho in [0,1,2,3]:
                     for seed in [10493847, 83274910, 70938475, 98312048, 19283746]:
                         job_name =f"{instance}_{exe}_{rho}_{seed}"
                         job = f"{jobs_folder}/{job_name}"
