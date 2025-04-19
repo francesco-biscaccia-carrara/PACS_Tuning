@@ -2,8 +2,8 @@
  * ACS Execution file
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.2
- * @since 04/16/2025
+ * @version v1.1.0 - InitSol v0.0.3
+ * @since 04/19/2025
 */
 
 #include "../include/FMIP.hpp"
@@ -34,6 +34,10 @@ int main(int argc, char* argv[]) {
 
 			case 2:
 				MTEnv.parallelInitSolMerge(CLIArgs.fileName, startSol, mainRnd);
+			break;
+			
+			case 3:
+				FixPolicy::startSolMin(startSol, CLIArgs.fileName, mainRnd);
 			break;
 
 		default:
@@ -152,11 +156,11 @@ int main(int argc, char* argv[]) {
 			MIP		 og(CLIArgs.fileName);
 			incumbent.sol.resize(og.getNumCols());
 
-			bool feas = og.checkFeasibility(incumbent.sol);
-			if(feas)
-				PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
-			else
-				PRINT_ERR("ERROR ON COMPUTATION");
+			// bool feas = og.checkFeasibility(incumbent.sol);
+			// if(feas)
+			 	PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
+			// else
+			// 	PRINT_ERR("ERROR ON COMPUTATION");
 		}
 
 	} catch (const std::runtime_error& ex) {

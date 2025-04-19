@@ -71,6 +71,52 @@ void FixPolicy::startSolTheta(std::vector<double>& sol,std::string fileName, dou
 
 }
 
+void FixPolicy::startSolMin(std::vector<double>& sol, std::string fileName, Random& rnd){
+	
+	MIP	 MIP{ fileName };
+	size_t	numVarsToFix{ static_cast<size_t> (MIP.getMIPNumVars()) };
+	sol.resize(numVarsToFix, CPX_INFBOUND);
+
+	std::vector<VarBounds> varRanges(numVarsToFix);
+	for (size_t i{ 0 }; i < numVarsToFix; i++)
+		varRanges[i] = MIP.getVarBounds(i);
+
+	std::vector<double> obj = MIP.getObjFunction();
+
+	size_t zeros=0,lbs = 0,ubs = 0,rnds= 0;
+	for (size_t i{ 0 }; i < numVarsToFix; i++) {
+		auto [lb, ub] = varRanges[i];
+
+		if(lb == -CPX_INFBOUND && ub == CPX_INFBOUND){
+			sol[i] = 0;
+			zeros++;
+		} else if (lb >= -CPX_INFBOUND && ub == CPX_INFBOUND) {
+			sol[i] = lb;
+			lbs++;
+		} else if (lb == -CPX_INFBOUND && ub <= CPX_INFBOUND) {
+			sol[i] = ub;
+			ubs++;
+		} else {
+			if(obj[i]<=-EPSILON){
+				sol[i] = lb;
+				lbs++;
+			} else if (obj[i] >= EPSILON) {
+				sol[i] = ub;
+				ubs++;
+			} else {
+				double clampedLower = std::max(-MAX_UB, lb);
+				double clampedUpper = std::min(MAX_UB, ub);
+
+				sol[i]=rnd.Int(clampedLower, clampedUpper);
+				rnds++;
+			}
+		}
+	}
+#if ACS_VERBOSE >= VERBOSE
+	PRINT_INFO("FixPolicy::startSolMin - %zu zeros vars | %zu vars at LB | %zu vars at UB | %zu random vars",zeros,lbs,ubs,rnds);
+#endif
+}
+
 
 void FixPolicy::fixMergeOnStartSol(const size_t thID,const size_t numMIP, const std::vector<std::vector<double>>& sols,  const std::vector<VarBounds>& vBounds, Random& rnd, std::vector<double>& finalSol) {
 	if(finalSol.size() != vBounds.size())

@@ -7,8 +7,8 @@
  * It inherits core functionality from the base MIP class while adding FMIP-specific features.
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.2
- * @since 04/16/2025
+ * @version v1.1.0 - InitSol v0.0.3
+ * @since 04/19/2025
  */
 
 #ifndef FMIP_H

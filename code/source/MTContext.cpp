@@ -111,17 +111,7 @@ MTContext& MTContext::parallelInitSolMerge(std::string fileName, std::vector<dou
 	sols.reserve(tmpSolutions.size()); 
 	std::transform(tmpSolutions.begin(), tmpSolutions.end(), std::back_inserter(sols),[](const Solution& s) { return s.sol; });
 
-	double minObj = CPX_INFBOUND;
-	for (size_t i{ 0 }; i < sols.size(); i++) {
-		double newObj = std::inner_product(sols[i].begin(), sols[i].end(), obj.begin(), 0.0);
-		if(newObj < minObj){	
-#if ACS_VERBOSE >= VERBOSE
-		PRINT_INFO("[Start_point] - MTContext::parallelInitSolMerge - New MIN sol \t %10.2f",newObj); 
-#endif
-			minObj = newObj;
-			sol = sols[i];
-		}
-	}
+	FixPolicy::fixMergeOnStartSol(numMIPs,numMIPs,sols, varRanges,rnd, sol);
 	return *this;
 }
 

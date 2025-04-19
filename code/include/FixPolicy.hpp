@@ -4,8 +4,8 @@
  *        specific policy-based fixing strategies in the ACS framework. 
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.2
- * @since 04/16/2025
+ * @version v1.1.0 - InitSol v0.0.3
+ * @since 04/19/2025
  */
 
 
@@ -93,13 +93,21 @@ namespace FixPolicy {
 
      /**
      * @brief Modifies the sol vector to obtain a starting solution for FMIP optimization.
-     * @param thID ID of the thread executing this function.
-     * @param numMIPs Number of logical sub-MIPs executing in parallel.
-     * @param sols Reference to a vector of vector containing the mergable sols.
-     * @param vBounds Referenct to the vector of var bounds.
+     * @param sol Vector of double values to be updated.
+     * @param fileName Name of the file used to build the RelaxedFMIP object.
      * @param rnd Random number generator instance.
-     * @param sol Vector that stores the updated sol. 
      */
+	void startSolMin(std::vector<double>& sol, std::string fileName, Random& rnd);
+
+	/**
+	 * @brief Modifies the sol vector to obtain a starting solution for FMIP optimization.
+	 * @param thID ID of the thread executing this function.
+	 * @param numMIPs Number of logical sub-MIPs executing in parallel.
+	 * @param sols Reference to a vector of vector containing the mergable sols.
+	 * @param vBounds Referenct to the vector of var bounds.
+	 * @param rnd Random number generator instance.
+	 * @param sol Vector that stores the updated sol.
+	 */
 	void fixMergeOnStartSol(const size_t thID, const size_t numMIP, const std::vector<std::vector<double>>& sols,  const std::vector<VarBounds>& vBounds, Random& rnd, std::vector<double>& finalSol);
 
 	/**

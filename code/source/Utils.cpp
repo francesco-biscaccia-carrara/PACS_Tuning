@@ -39,23 +39,23 @@ void Logger::print(LogLevel typeMsg, const char* format, ...) {
 	switch (typeMsg) {
 		case LogLevel::ERROR:
 			msgClr = ANSI_COLOR_RED;
-			msgPref = "[ ERR  ]";
+			msgPref = "[  ERR  ]";
 			break;
 		case LogLevel::WARN:
 			msgClr = ANSI_COLOR_YELLOW;
-			msgPref = "[ WARN ]";
+			msgPref = "[  WAR  ]";
 			break;
 		case LogLevel::INFO:
 			msgClr = ANSI_COLOR_BLUE;
-			msgPref = "[ INFO ]";
+			msgPref = "[  DEB  ]";
 			break;
 		case LogLevel::OUT:
 			msgClr = ANSI_COLOR_RESET;
-			msgPref = "[ OUT  ]";
+			msgPref = "[  OUT  ]";
 			break;
 		case LogLevel::BEST:
 			msgClr = ANSI_COLOR_GREEN;
-			msgPref = "[ OUT* ]";
+			msgPref = "[  OUT* ]";
 			break;
 		default:
 			msgClr = ANSI_COLOR_RESET;
