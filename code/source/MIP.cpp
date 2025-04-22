@@ -42,9 +42,7 @@ MIP::MIP(const MIP& otherMIP) {
 
 	if (status)
 		throw MIPException(MIPEx::ModelCreation, "Model not cloned!");
-
-	//CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_MIPGap, MIP_GAP_TOL);
-	//CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
+		
 #if ACS_VERBOSE == DEBUG
 	CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
