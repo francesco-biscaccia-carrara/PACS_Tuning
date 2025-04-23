@@ -83,32 +83,43 @@ void FixPolicy::startSolMin(std::vector<double>& sol, std::string fileName, Rand
 
 	std::vector<double> obj = MIP.getObjFunction();
 
+#if ACS_VERBOSE >= VERBOSE
 	size_t zeros=0,lbs = 0,ubs = 0,rnds= 0;
+#endif
 	for (size_t i{ 0 }; i < numVarsToFix; i++) {
 		auto [lb, ub] = varRanges[i];
 
 		if(lb == -CPX_INFBOUND && ub == CPX_INFBOUND){
 			sol[i] = 0;
+#if ACS_VERBOSE >= VERBOSE
 			zeros++;
+#endif
 		} else if (lb >= -CPX_INFBOUND && ub == CPX_INFBOUND) {
 			sol[i] = lb;
+#if ACS_VERBOSE >= VERBOSE
 			lbs++;
+#endif
 		} else if (lb == -CPX_INFBOUND && ub <= CPX_INFBOUND) {
 			sol[i] = ub;
+#if ACS_VERBOSE >= VERBOSE
 			ubs++;
+#endif
 		} else {
 			if(obj[i]<=-EPSILON){
 				sol[i] = lb;
+#if ACS_VERBOSE >= VERBOSE
 				lbs++;
+#endif
 			} else if (obj[i] >= EPSILON) {
 				sol[i] = ub;
+#if ACS_VERBOSE >= VERBOSE
 				ubs++;
+#endif
 			} else {
-				double clampedLower = std::max(-MAX_UB, lb);
-				double clampedUpper = std::min(MAX_UB, ub);
-
-				sol[i]=rnd.Int(clampedLower, clampedUpper);
+				sol[i]=rnd.Int(lb, ub);
+#if ACS_VERBOSE >= VERBOSE
 				rnds++;
+#endif
 			}
 		}
 	}

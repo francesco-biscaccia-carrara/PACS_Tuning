@@ -133,9 +133,9 @@ def main():
 
     data = pd.DataFrame.from_dict(cols, orient="index").T
     merged_df = pd.concat([existing_df, data], axis=1)
-    merged_df.to_csv(test_file, index=False)
+    #merged_df.to_csv(test_file, index=False)
     
-    #merged_df = pd.read_csv(test_file)
+    merged_df = pd.read_csv(test_file)
     processed_df = geo_mean(process_dataframe(merged_df))
 
     processed_df.to_csv(data_file, index=False)
