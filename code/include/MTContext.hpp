@@ -12,8 +12,8 @@
  * and it provides mechanisms to broadcast solutions across threads and handle solution updates with thread safety.
  * 
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.3
- * @since 04/19/2025
+ * @version v1.1.0 - InitSol v0.0.4
+ * @since 04/24/2025
  */
 
 #ifndef MT_CTX_H
