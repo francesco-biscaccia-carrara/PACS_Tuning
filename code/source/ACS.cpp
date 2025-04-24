@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
 			break;
 
 			case 2:
-				MTEnv.parallelInitSolMerge(CLIArgs.fileName, startSol, mainRnd);
+				MTEnv.parallelInitSolMerge(CLIArgs.fileName, startSol, mainRnd); //New idea 0.0.4
 			break;
 			
 			case 3:

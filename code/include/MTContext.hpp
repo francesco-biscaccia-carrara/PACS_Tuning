@@ -208,7 +208,7 @@ private:
      * @param vBounds Reference to the vector containing all the vars bounds.
      * @param obj Reference to the vector containing the objective function.
      */
-    void initSolMergeJob(const size_t thID, const std::vector<VarBounds>& vBounds, const std::vector<double>& obj);
+    void initSolMergeJob(const size_t thID, std::string fileName);
 };
 
 #endif

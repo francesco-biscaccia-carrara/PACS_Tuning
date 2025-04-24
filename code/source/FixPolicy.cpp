@@ -129,7 +129,7 @@ void FixPolicy::startSolMin(std::vector<double>& sol, std::string fileName, Rand
 }
 
 
-void FixPolicy::fixMergeOnStartSol(const size_t thID,const size_t numMIP, const std::vector<std::vector<double>>& sols,  const std::vector<VarBounds>& vBounds, Random& rnd, std::vector<double>& finalSol) {
+void FixPolicy::fixMergeOnStartSol(const size_t numMIP, const std::vector<std::vector<double>>& sols,  const std::vector<VarBounds>& vBounds, Random& rnd, std::vector<double>& finalSol) {
 	if(finalSol.size() != vBounds.size())
 		throw FixPolicyException(FPEx::InputSizeError, "Incosistency between sizes!");
 
@@ -151,7 +151,7 @@ void FixPolicy::fixMergeOnStartSol(const size_t thID,const size_t numMIP, const 
 				break;
 			}
 		}
-		if (commonValue) {
+		if (commonValue && isInteger(sols[0][i])) {
 			finalSol[i] = sols[0][i];
 #if ACS_VERBOSE>= VERBOSE
 			commVars++;
@@ -160,10 +160,7 @@ void FixPolicy::fixMergeOnStartSol(const size_t thID,const size_t numMIP, const 
 	}
 
 #if ACS_VERBOSE>= VERBOSE
-	if(thID<numMIP) 
-		PRINT_INFO("Proc: %3d [Start_point] - FixPolicy::fixMergeOnStartSol - %zu common vars /%d sols",thID, commVars, numMIP);
-	else
-		PRINT_INFO("[Start_point] - FixPolicy::fixMergeOnStartSol - %zu common vars /%d sols", commVars,numMIP*numMIP);
+		PRINT_INFO("[Start_point] - FixPolicy::fixMergeOnStartSol - %zu common vars", commVars);
 #endif
 
 	//Random fix the non-common vars
