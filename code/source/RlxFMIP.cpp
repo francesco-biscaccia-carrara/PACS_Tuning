@@ -1,8 +1,8 @@
 #include "../include/RlxFMIP.hpp"
 using MIPEx = MIPException::ExceptionType;
 
-RlxFMIP::RlxFMIP(std::string fileName): FMIP(fileName){
-    restoreVarType.reserve(getNumCols());
+RlxFMIP::RlxFMIP(std::string fileName) : FMIP(fileName) {
+	restoreVarType.reserve(getNumCols());
 #if ACS_VERBOSE == DEBUG
 	this->fileName += "_RlxFMIP";
 #endif

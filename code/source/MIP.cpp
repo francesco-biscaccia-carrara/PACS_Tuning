@@ -17,12 +17,12 @@ MIP::MIP(const std::string fileName) {
 		throw MIPException(MIPEx::ModelCreation, "Model not created!");
 
 	status = CPXreadcopyprob(env, model, (INST_DIR + fileName + ".mps.gz").c_str(), NULL);
-	
+
 	if (status)
 		throw MIPException(MIPEx::FileNotFound, "Failed to read the problem from file!\t" + std::to_string(status));
 
-	// CPXsetdblparam(env, CPX_PARAM_EPGAP, MIP_GAP_TOL);
-	// CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
+		// CPXsetdblparam(env, CPX_PARAM_EPGAP, MIP_GAP_TOL);
+		// CPXsetdblparam(env, CPX_PARAM_EPAGAP, MIP_DUAL_PRIM_GAP_TOL);
 #if ACS_VERBOSE == DEBUG
 	CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
@@ -42,13 +42,12 @@ MIP::MIP(const MIP& otherMIP) {
 
 	if (status)
 		throw MIPException(MIPEx::ModelCreation, "Model not cloned!");
-		
+
 #if ACS_VERBOSE == DEBUG
 	CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
 #endif
 }
-
 
 MIP& MIP::setNumCores(const int numCores) {
 	if (CPXsetintparam(env, CPX_PARAM_THREADS, numCores))
@@ -56,22 +55,20 @@ MIP& MIP::setNumCores(const int numCores) {
 	return *this;
 }
 
-
 MIP& MIP::setNumSols(const int numSols) {
 	if (CPXsetintparam(env, CPX_PARAM_INTSOLLIM, numSols))
 		throw MIPException(MIPEx::General, "Number of max solutions not changed!");
 	return *this;
 }
 
-MIP& MIP::setCallbackFunction(CPXLONG contextMask, CPXCALLBACKFUNC* callback, void* data){
-	if(CPXcallbacksetfunc(env,model,contextMask,callback,data))
+MIP& MIP::setCallbackFunction(CPXLONG contextMask, CPXCALLBACKFUNC* callback, void* data) {
+	if (CPXcallbacksetfunc(env, model, contextMask, callback, data))
 		throw MIPException(MIPEx::General, "Unable to set callback function!");
 	return *this;
 }
 
-
 size_t MIP::getNumNonZeros() {
-	size_t nnz{static_cast<size_t>(CPXgetnumnz(env, model))};
+	size_t nnz{ static_cast<size_t>(CPXgetnumnz(env, model)) };
 	if (!nnz)
 		throw MIPException(MIPEx::General, "Unable to get the number of nonzero elements!");
 	return nnz;
@@ -102,7 +99,7 @@ MIP& MIP::addMIPStart(const std::vector<double>& MIPStart, bool CPLEXCheck) {
 	int start_index = 0;
 	int effort_level = (CPLEXCheck) ? CPX_MIPSTART_CHECKFEAS : CPX_MIPSTART_NOCHECK;
 
-	std::vector<int> indices(MIPStart.size(),0);
+	std::vector<int> indices(MIPStart.size(), 0);
 	std::iota(indices.begin(), indices.end(), 0);
 
 	if (int error{ CPXaddmipstarts(env, model, 1, MIPStart.size(), &start_index, indices.data(), MIPStart.data(), &effort_level, NULL) })
@@ -132,7 +129,7 @@ MIP& MIP::setObjFunction(const std::vector<double>& newObj) {
 	if (newObj.size() != numCols)
 		throw MIPException(MIPEx::InputSizeError, "Wrong new obj_function size");
 
-	int* indices{ (int*) malloc(numCols * sizeof(int)) };
+	int* indices{ (int*)malloc(numCols * sizeof(int)) };
 	for (size_t i{ 0 }; i < numCols; i++)
 		indices[i] = i;
 	if (CPXchgobj(env, model, numCols, indices, newObj.data()))
@@ -145,7 +142,7 @@ std::vector<double> MIP::getSol() {
 	int		numCols{ getNumCols() };
 	double* xStar{ (double*)calloc(numCols, sizeof(double)) };
 	if (int error{ CPXgetx(env, model, xStar, 0, numCols - 1) })
-		throw MIPException(MIPEx::General, "Unable to obtain the solution! " + std::to_string(error)+" State: "+std::to_string(CPXgetstat(env, model)));
+		throw MIPException(MIPEx::General, "Unable to obtain the solution! " + std::to_string(error) + " State: " + std::to_string(CPXgetstat(env, model)));
 	std::vector<double> sol(xStar, xStar + numCols);
 	free(xStar);
 	return sol;
@@ -250,13 +247,12 @@ VarBounds MIP::getVarBounds(const int index) {
 	return VarBounds{ .lowerBound = lb, .upperBound = ub };
 }
 
-
 MIP& MIP::setVarValue(const int index, const double val) {
 	if (index < 0 || index > getNumCols() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarValue()!");
 
 	char bound{ BOTH_BOUNDS };
-	if(CPXchgbds(env, model, 1, &index, &bound, &val))
+	if (CPXchgbds(env, model, 1, &index, &bound, &val))
 		throw MIPException(MIPEx::General, "Unable to set the value to var " + std::to_string(val));
 	return *this;
 }
@@ -276,11 +272,11 @@ bool MIP::checkFeasibility(const std::vector<double>& sol) {
 	if (sol.size() != getNumCols())
 		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
 
-	//CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_Integrality, MIP_INT_TOL);
-	//CPXsetdblparam(env, CPXPARAM_Simplex_Tolerances_Feasibility, MIP_SIMPLEX_FEAS_TOL);
-	
+	// CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_Integrality, MIP_INT_TOL);
+	// CPXsetdblparam(env, CPXPARAM_Simplex_Tolerances_Feasibility, MIP_SIMPLEX_FEAS_TOL);
+
 	setVarsValues(sol);
-	int status{solve()};
+	int status{ solve() };
 	return (status == CPXMIP_OPTIMAL_TOL || status == CPXMIP_OPTIMAL);
 }
 
@@ -288,5 +284,3 @@ MIP::~MIP() noexcept {
 	CPXfreeprob(env, &model);
 	CPXcloseCPLEX(&env);
 }
-
-

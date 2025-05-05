@@ -9,9 +9,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks.  
 - Enforced FMIP resolution in the ACS workflow prior to transitioning to the OMIP phase.
 
-## InitSol [0.0.4] - 2025-04-24
+## InitSol [0.0.5] - 2025-05-05
+### Added  
+- Enabled CPLEX callback functionality to share candidate solutions between FMIP and OMIP phases ([MTContext.cpp](code/source/MTContext.cpp)).  
+
+
+## InitSol [0.0.4] - 2025-04-24 [YANKED]
 ### Changed 
-- Modified ` MTContext::parallelInitSolMerge`, a method to set the initial solution based on relaxed solutions and common values merging([MTContext.cpp](code/source/MTContext.cpp)).  
+- Modified ` MTContext::parallelInitSolMerge`, a method to set the initial solution based on relaxed solutions and common values mergin ([MTContext.cpp](code/source/MTContext.cpp)).  
 
 
 ## InitSol [0.0.3] - 2025-04-19  

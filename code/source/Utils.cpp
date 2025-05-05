@@ -2,7 +2,6 @@
 
 using namespace Utils;
 
-
 Random::Random(unsigned long long newSeed) : seed{ newSeed } {
 	rng.seed(newSeed);
 }
@@ -30,7 +29,6 @@ double Random::Double(double min, double max) {
 	std::uniform_real_distribution get{ min, max };
 	return get(rng);
 }
-
 
 void Logger::print(LogLevel typeMsg, const char* format, ...) {
 	const char* msgClr;
@@ -62,30 +60,30 @@ void Logger::print(LogLevel typeMsg, const char* format, ...) {
 			msgPref = "";
 			break;
 	}
-	
+
 	/// FIXED: Bug #5860f1916463f69833a7cb9170845d492fabee8f –- Segmentation fault caused by overlapping printf calls.
-    flockfile(stdout);
-    
-    #if LOG
-    printf("%s|%8.2f|", msgPref, Clock::timeElapsed());
-    #else
-    printf("%s\033[1m\033[4m%s%s%s|%8.2f|", msgClr, msgPref, ANSI_COLOR_RESET, msgClr, Clock::timeElapsed());
-    #endif
-    
-    va_list args;
-    va_start(args, format);
-    vfprintf(stdout, format, args);
-    va_end(args);
-    
-    #if LOG
-    printf("\n");
-    #else
-    printf("%s\n", ANSI_COLOR_RESET);
-    #endif
-    
-    fflush(stdout);
-    
-    funlockfile(stdout);
+	flockfile(stdout);
+
+#if LOG
+	printf("%s|%8.2f|", msgPref, Clock::timeElapsed());
+#else
+	printf("%s\033[1m\033[4m%s%s%s|%8.2f|", msgClr, msgPref, ANSI_COLOR_RESET, msgClr, Clock::timeElapsed());
+#endif
+
+	va_list args;
+	va_start(args, format);
+	vfprintf(stdout, format, args);
+	va_end(args);
+
+#if LOG
+	printf("\n");
+#else
+	printf("%s\n", ANSI_COLOR_RESET);
+#endif
+
+	fflush(stdout);
+
+	funlockfile(stdout);
 }
 
 double Clock::getTime() {
@@ -101,7 +99,6 @@ double Clock::timeRemaining(const double timeLimit) {
 	return timeLimit - timeElapsed();
 }
 
-
 constexpr const char* HELP_ACS = "Usage: ./ACS <PARS>\
         \n '-h  / --help'\t\t\t\t Show help message\
         \n '-f  / --filename <string>'\t\t Input file\
@@ -112,14 +109,12 @@ constexpr const char* HELP_ACS = "Usage: ./ACS <PARS>\
 		\n '-nSMIPs/ --numsubMIPs <u long>'\t Number of subMIP in the parallel phase\
 		\n '-ag/ --algorithm <u long>'\t\t Type of algorithm for the initial vector (tbd value<->algo)";
 
-
 constexpr const char* HELP_CPLEXRUN = "Usage: ./CPLEXRun <PARS>\
         \n '-h  / --help'\t\t\t\t Show help message\
         \n '-f  / --filename <string>'\t\t Input file\
         \n '-tl / --timelimit <double>'\t\t Max execution time";
 
-
-CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = "", .timeLimit = 0.0, .theta = 0.0, .rho = 0.0, .numsubMIPs = 0, .seed = 0, .algo = 0} {
+CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = "", .timeLimit = 0.0, .theta = 0.0, .rho = 0.0, .numsubMIPs = 0, .seed = 0, .algo = 0 } {
 	if (argc > 0 && argv != nullptr) {
 
 		constexpr std::array<std::pair<const char*, std::string Args::*>, 2> stringArgs{ {
@@ -131,7 +126,7 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 			{ "-nSMIPs", &Args::numsubMIPs },
 			{ "--numsubMIPs", &Args::numsubMIPs },
 			{ "-ag", &Args::algo },
-			{ "--algorithm", &Args::algo},
+			{ "--algorithm", &Args::algo },
 		} };
 
 		constexpr std::array<std::pair<const char*, double Args::*>, 6> doubleArgs{ { { "-tl", &Args::timeLimit },
@@ -182,11 +177,11 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 			if (args.fileName.empty() || !args.timeLimit)
 				throw ArgsParserException(HELP_CPLEXRUN);
 		} else {
-			if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.numsubMIPs || args.algo<0)
+			if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.numsubMIPs || args.algo < 0)
 				throw ArgsParserException(HELP_ACS);
 		}
 
-		printf("%s\t%s -- %s\n", argv[0] + 2,ACS_VERSION,LAST_UPDATE);
+		printf("%s\t%s -- %s\n", argv[0] + 2, ACS_VERSION, LAST_UPDATE);
 		std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 		printf("Date:\t%s", std::ctime(&time));
 
@@ -205,7 +200,7 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
                             \n\t - Rho : \t\t%f\
 							\n\t - Seed : \t\t%d\
 							\n\t - Num sub-MIP : \t%d",
-					   		args.algo,args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs);
+					   args.algo, args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs);
 		}
 
 #endif
