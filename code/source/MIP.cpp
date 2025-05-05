@@ -63,6 +63,12 @@ MIP& MIP::setNumSols(const int numSols) {
 	return *this;
 }
 
+MIP& MIP::setCallbackFunction(CPXLONG contextMask, CPXCALLBACKFUNC* callback, void* data){
+	if(CPXcallbacksetfunc(env,model,contextMask,callback,data))
+		throw MIPException(MIPEx::General, "Unable to set callback function!");
+	return *this;
+}
+
 
 size_t MIP::getNumNonZeros() {
 	size_t nnz{static_cast<size_t>(CPXgetnumnz(env, model))};

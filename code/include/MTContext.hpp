@@ -34,9 +34,9 @@ using namespace FixPolicy;
 
 /**
  * @class MTContext
- * @brief The MTContext class provides a context for managing multiple threads 
+ * @brief The MTContext class provides a context for managing multiple threads
  *        to optimize solutions using the FMIP and OMIP methods in parallel.
- * 
+ *
  * This class is designed to handle optimization tasks with multiple threads,
  * sharing a common solution state and ensuring synchronization when updating
  * the best solution found during the optimization process.
@@ -168,6 +168,7 @@ private:
 	std::vector<std::thread> threads;          ///< Threads used for parallel optimization.
 	std::vector<Random> rndGens;               ///< Random number generators for each thread.
 	Solution bestACSIncumbent;                 ///< Best ACS incumbent solution found.
+     Solution incumbentAmongMIPs;
 	std::mutex MTContextMTX;                   ///< Mutex for synchronizing solution updates.
      std::atomic_size_t A_RhoChanges;           ///< Size_t value used to manage the DynamicFixPolicy
 

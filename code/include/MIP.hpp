@@ -27,6 +27,7 @@ using namespace Utils;
 /** CPELX Execution Constants */
 #define CPLEX_CORE 1
 #define NUM_SOL_STOP 1
+#define ACS_CB_CONTEXTMASK CPX_CALLBACKCONTEXT_LOCAL_PROGRESS | CPX_CALLBACKCONTEXT_CANDIDATE
 
 #define MIP_DUAL_PRIM_GAP_TOL 1e-4      //Default value for CPX_PARAM_EPAGAP (see IBM ILOG CPLEX doc)
 #define MIP_GAP_TOL 1e-6                //Default value for CPX_PARAM_EPGAP (see IBM ILOG CPLEX doc)
@@ -147,6 +148,15 @@ public:
      * @return Reference to the current MIP object
      */
 	MIP& setNumSols(const int numSols);
+
+     /**
+     * @brief Sets the callback function whenever some CPLEX contexts trigger it
+     * @param contextMask Context in which the callback is triggered (as CPXLONG)
+     * @param callback Reference to the function to be invoked
+     * @param data Reference to the data used from the callback function
+     * @return Reference to the current MIP object
+     */
+	MIP& setCallbackFunction(CPXLONG contextMask, CPXCALLBACKFUNC* callback, void* data);
 
 	/**
      * @brief Get the number of non-zero elements in the problem

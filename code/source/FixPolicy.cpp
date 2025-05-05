@@ -228,7 +228,6 @@ void FixPolicy::dynamicAdjustRho(const char* phase, const int solveCode, const s
 }
 
 
-
 //Values to count the number of decrements/increments of Rho parameter in 1 iteration
 static size_t  numDecRho=0;
 static size_t  numIncRho=0;
