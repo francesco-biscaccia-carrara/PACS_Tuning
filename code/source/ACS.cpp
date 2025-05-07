@@ -2,8 +2,8 @@
  * ACS Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.5
- * @since 05/05/2025
+ * @version v1.1.0 - InitSol v0.0.6
+ * @since 05/07/2025
  */
 
 #include "../include/FMIP.hpp"
@@ -24,22 +24,22 @@ int main(int argc, char* argv[]) {
 
 		switch (CLIArgs.algo) {
 			case 0:
-				FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, mainRnd);
+				PRINT_WARN("CLIArgs.theta = 1.0"); //ACS_Th-1_geomean
+				FixPolicy::startSolTheta(startSol, CLIArgs.fileName, 1, mainRnd);
 				break;
 
-			case 1:
-				PRINT_WARN("CLIArgs.theta = 1.0");
-				FixPolicy::startSolTheta(startSol, CLIArgs.fileName, 1, mainRnd); // Random fixing of all vars
-				break;
-
-			case 2:
+			case 1: //ACS_DetBounds_geomean
 				FixPolicy::startSolMin(startSol, CLIArgs.fileName, mainRnd);
 				break;
 
-			case 3:
-				PRINT_WARN("Callbacks enabled!");
+			case 2: //ACS_DetBoundsCB_geomean
+				PRINT_WARN("Callbacks enabled!"); 
 				FixPolicy::startSolMin(startSol, CLIArgs.fileName, mainRnd);
 				break;
+
+			case 3: //ACS_MultiRENS_geomean
+				MTEnv.parallelInitSolMerge(CLIArgs.fileName, startSol, mainRnd);
+			break;
 
 			default:
 				PRINT_ERR("Something goes wrong! Alg value: %d", CLIArgs.algo);
@@ -52,9 +52,10 @@ int main(int argc, char* argv[]) {
 #endif
 		MTEnv.broadcastSol(tmpSol);
 		MTEnv.setIncumbentAmongMIPsSize(FMIP(CLIArgs.fileName).getNumCols());
+		// MTEnv.setBestACSIncumbentSize(FMIP(CLIArgs.fileName).getNumCols());
 
 		while (Clock::timeElapsed() < CLIArgs.timeLimit) {
-			if (MTEnv.getBestACSIncumbent().slackSum > EPSILON) {
+			if (abs(MTEnv.getBestACSIncumbent().slackSum) > EPSILON) {
 
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
 #if ACS_VERBOSE >= VERBOSE

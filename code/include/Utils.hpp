@@ -3,8 +3,8 @@
  * @brief Utility header file providing various helper classes and macros for the project.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.5
- * @since 05/05/2025
+ * @version v1.1.0 - InitSol v0.0.6
+ * @since 05/07/2025
  */
 
 #ifndef UTILS_H
@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include <string.h>
 #include <sys/time.h>
@@ -32,9 +33,9 @@
 #pragma region UTILS_DEFINTION
 
 /** Current version of the code */
-#define ACS_VERSION "v1.1.0 - InitSol v0.0.5"
+#define ACS_VERSION "v1.1.0 - InitSol v0.0.6"
 /** Last update date */
-#define LAST_UPDATE "05/05/2025"
+#define LAST_UPDATE "05/07/2025"
 
 /** Verbosity level constants */
 #define NO_VER -1

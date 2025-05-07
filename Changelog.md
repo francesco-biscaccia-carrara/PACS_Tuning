@@ -9,6 +9,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks.  
 - Enforced FMIP resolution in the ACS workflow prior to transitioning to the OMIP phase.
 
+## InitSol [0.0.6] - 2025-05-07  
+### Added  
+- Enabled parallel execution of multiple RENS (Relaxation Enforced Neighborhood Search) instances to generate the initial vector in `MTContext::parallelInitSolMerge` ([MTContext.cpp](code/source/MTContext.cpp)). 
+- Added methods to set lower and upper bounds for specific variables ([MIP.cpp](code/source/MIP.cpp)).  
+
+### Changed  
+- Unified CPLEX callback logic into a single consolidated function ([MTContext.cpp](code/source/MTContext.cpp)).  
+
+
 ## InitSol [0.0.5] - 2025-05-05
 ### Added  
 - Enabled CPLEX callback functionality to share candidate solutions between FMIP and OMIP phases ([MTContext.cpp](code/source/MTContext.cpp)).  

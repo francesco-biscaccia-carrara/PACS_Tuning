@@ -29,13 +29,16 @@ int RlxFMIP::solve(const double timeLimit, const double detTimeLimit) {
 	return CPXgetstat(env, model);
 }
 
-int RlxFMIP::solveRelaxation(const double timeLimit) {
+int RlxFMIP::solveRelaxation(const double timeLimit, const double detTimeLimit) {
 
 	if (timeLimit < EPSILON)
 		throw MIPException(MIPEx::WrongTimeLimit, "Time-limit too short!\t" + std::to_string(timeLimit));
 
 	if (timeLimit < CPX_INFBOUND) [[likely]]
 		CPXsetdblparam(env, CPX_PARAM_TILIM, timeLimit);
+
+	if (detTimeLimit < CPX_INFBOUND) [[likely]]
+		CPXsetdblparam(env, CPX_PARAM_DETTILIM, detTimeLimit);
 
 	changeProbType(CPXPROB_MILP); // Necessary to get vars type
 

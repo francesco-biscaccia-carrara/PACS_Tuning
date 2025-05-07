@@ -4,7 +4,7 @@
 
 std::mutex callbackMTX;
 
-int updatePoolFMIP(CPXCALLBACKCONTEXTptr context, void* inc) {
+int updatePoolsubMIP(CPXCALLBACKCONTEXTptr context, void* inc) {
 	Solution* incSol = (Solution*)inc;
 
 	std::vector<double> candidateFound(incSol->sol.size(), CPX_INFBOUND);
@@ -15,89 +15,61 @@ int updatePoolFMIP(CPXCALLBACKCONTEXTptr context, void* inc) {
 	}
 
 	std::lock_guard<std::mutex> lock(callbackMTX);
-	if (incSol->slackSum > value) {
-		incSol->sol = candidateFound;
-		incSol->slackSum = value;
-
+	if(abs(incSol->slackSum) > EPSILON){
+		if (incSol->slackSum > value) {
+			incSol->sol = candidateFound;
+			incSol->slackSum = value;
+	
 #if ACS_VERBOSE >= VERBOSE
-		PRINT_INFO("MT Context: [FMIP] - Candidate sol shared to pool! FMIP-Cost: %10.4f", incSol->slackSum);
+			PRINT_INFO("MT Context: [FMIP] - Candidate sol shared to pool! FMIP-Cost: %10.4f", incSol->slackSum);
 #endif
+		}
+	}else{
+		if (incSol->oMIPCost > value) {
+			incSol->sol = candidateFound;
+			incSol->oMIPCost = value;
+	
+	#if ACS_VERBOSE >= VERBOSE
+			PRINT_INFO("MT Context: [OMIP] - Candidate sol shared to pool! OMIP-Cost: %10.4f", incSol->oMIPCost);
+	#endif
+		}
+
 	}
+	
 	return 0;
 }
 
-int updatePoolOMIP(CPXCALLBACKCONTEXTptr context, void* inc) {
-	Solution* incSol = (Solution*)inc;
-
-	std::vector<double> candidateFound(incSol->sol.size(), CPX_INFBOUND);
-	double				value = 0.0;
-	if (CPXcallbackgetcandidatepoint(context, candidateFound.data(), 0, incSol->sol.size() - 1, &value)) {
-		PRINT_ERR("No candidate sol found!");
-		return 0;
-	}
-
-	std::lock_guard<std::mutex> lock(callbackMTX);
-	if (incSol->oMIPCost > value) {
-		incSol->sol = candidateFound;
-		incSol->oMIPCost = value;
-
-#if ACS_VERBOSE >= VERBOSE
-		PRINT_INFO("MT Context: [OMIP] - Candidate sol shared to pool! OMIP-Cost: %10.4f", incSol->oMIPCost);
-#endif
-	}
-	return 0;
-}
-
-int updateLocalSolFMIP(CPXCALLBACKCONTEXTptr context, void* inc) {
+int updateLocalSolsubMIP(CPXCALLBACKCONTEXTptr context, void* inc) {
 	Solution* incSol = (Solution*)inc;
 
 	int				 cnt = incSol->sol.size();
 	std::vector<int> indices(cnt, 0);
 	std::iota(indices.begin(), indices.end(), 0);
 
-	if (int status = CPXcallbackpostheursoln(context, cnt, indices.data(), incSol->sol.data(), incSol->slackSum, CPXCALLBACKSOLUTION_NOCHECK)) {
-		PRINT_ERR("[FMIP] - Unable to set the heuristic - SCode: %d", status);
-		return 0;
+	if(abs(incSol->slackSum) > EPSILON){
+		if (int status = CPXcallbackpostheursoln(context, cnt, indices.data(), incSol->sol.data(), incSol->slackSum, CPXCALLBACKSOLUTION_NOCHECK)) {
+			PRINT_ERR("[FMIP] - Unable to set the heuristic - Code: %d", status);
+			return 0;
+		}
+	}else{
+		if (int status = CPXcallbackpostheursoln(context, cnt, indices.data(), incSol->sol.data(), incSol->oMIPCost, CPXCALLBACKSOLUTION_NOCHECK)) {
+			PRINT_ERR("[OMIP] - Unable to set the heuristic - Code: %d", status);
+			return 0;
+		}
 	}
-
+	
 	return 0;
 }
 
-int updateLocalSolOMIP(CPXCALLBACKCONTEXTptr context, void* inc) {
-	Solution* incSol = (Solution*)inc;
 
-	int				 cnt = incSol->sol.size();
-	std::vector<int> indices(cnt, 0);
-	std::iota(indices.begin(), indices.end(), 0);
-
-	if (int status = CPXcallbackpostheursoln(context, cnt, indices.data(), incSol->sol.data(), incSol->oMIPCost, CPXCALLBACKSOLUTION_NOCHECK)) {
-		PRINT_ERR("[OMIP] - Unable to set the heuristic - SCode: %d", status);
-		return 0;
-	}
-
-	return 0;
-}
-
-int CPXPUBLIC updateFMIPHandler(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* inc) {
+int CPXPUBLIC updateIncMIPHandler(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* inc) {
 	switch (contextid) {
 		case CPX_CALLBACKCONTEXT_CANDIDATE:
-			return updatePoolFMIP(context, inc);
+			return updatePoolsubMIP(context, inc);
 		case CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS:
-			return updateLocalSolFMIP(context, inc);
+			return updateLocalSolsubMIP(context, inc);
 		default:
 			PRINT_ERR("Contextid unknownn in updateFMIPHandler!");
-			return 1;
-	}
-}
-
-int CPXPUBLIC updateOMIPHandler(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void* inc) {
-	switch (contextid) {
-		case CPX_CALLBACKCONTEXT_CANDIDATE:
-			return updatePoolOMIP(context, inc);
-		case CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS:
-			return updateLocalSolOMIP(context, inc);
-		default:
-			PRINT_ERR("Contextid unknownn in updateOMIPHandler!");
 			return 1;
 	}
 }
@@ -207,11 +179,30 @@ MTContext& MTContext::parallelInitSolMerge(std::string fileName, std::vector<dou
 	size_t numVarsToFix{ static_cast<size_t>(MIP.getMIPNumVars()) };
 	sol.resize(numVarsToFix, CPX_INFBOUND);
 
-	std::vector<VarBounds> varRanges(numVarsToFix);
-	for (size_t i{ 0 }; i < numVarsToFix; i++)
-		varRanges[i] = MIP.getVarBounds(i);
+	for (size_t i{ 0 }; i < numVarsToFix; i++){
+		double minLB = CPX_INFBOUND;
+		double maxUB = -CPX_INFBOUND;
+		for (size_t j{ 0 }; j < numMIPs; j++) {
+			if(tmpSolutions[j].sol[i] > maxUB)
+				maxUB = tmpSolutions[j].sol[i];
+			
+			if(tmpSolutions[j].sol[i] < minLB)
+				minLB = tmpSolutions[j].sol[i];
+		}
 
-	FixPolicy::fixMergeOnStartSol(numMIPs, sols, varRanges, rnd, sol);
+		MIP.setVarLowerBound(i, std::floor(minLB));
+		MIP.setVarUpperBound(i, std::ceil(maxUB));
+	}
+
+	MIP.setNumCores(CPLEX_CORE).setNumSols(1);
+	int error{ MIP.solve(CPX_INFBOUND, DET_TL(MIP.getNumNonZeros())) };
+	if(MIP::isINForUNBD(error)){
+		PRINT_WARN("MTContext: No Init Feasible sol found, generating a random one");
+		FixPolicy::startSolTheta(sol, fileName, 1.0, rnd);
+	} else {
+		PRINT_INFO("MTContext: Feasible Init sol by multiple RENS");
+		sol = MIP.getSol();
+	}
 	return *this;
 }
 
@@ -228,8 +219,8 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 		fMIP.addMIPStart(bestACSIncumbent.sol);
 	}
 	fMIP.setNumCores(CPLEX_CORE);
-	if (CLIArgs.algo == 3)
-		fMIP.setCallbackFunction(ACS_CB_CONTEXTMASK, updateFMIPHandler, &incumbentAmongMIPs);
+	if (CLIArgs.algo == 2)
+		fMIP.setCallbackFunction(ACS_CB_CONTEXTMASK, updateIncMIPHandler, &incumbentAmongMIPs);
 
 	FixPolicy::randomRhoFixMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
 
@@ -258,6 +249,8 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	FixPolicy::dynamicAdjustRhoMT(thID, "FMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
 }
 
+#pragma region MTContextPrivateSec
+
 void MTContext::OMIPInstanceJob(const size_t thID, const double slackSumUB, Args& CLIArgs) {
 
 	OMIP oMIP{ CLIArgs.fileName };
@@ -266,8 +259,8 @@ void MTContext::OMIPInstanceJob(const size_t thID, const double slackSumUB, Args
 	}
 	oMIP.setNumCores(CPLEX_CORE);
 	oMIP.updateBudgetConstr(slackSumUB);
-	if (CLIArgs.algo == 3)
-		oMIP.setCallbackFunction(ACS_CB_CONTEXTMASK, updateOMIPHandler, &incumbentAmongMIPs);
+	if (CLIArgs.algo == 2)
+		oMIP.setCallbackFunction(ACS_CB_CONTEXTMASK, updateIncMIPHandler, &incumbentAmongMIPs);
 
 	FixPolicy::randomRhoFixMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
 
@@ -297,43 +290,16 @@ void MTContext::OMIPInstanceJob(const size_t thID, const double slackSumUB, Args
 	FixPolicy::dynamicAdjustRhoMT(thID, "OMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
 }
 
-void MTContext::initSolMergeJob(const size_t thID, std::string fileName /*const std::vector<VarBounds>& vBounds, const std::vector<double>& obj*/) {
+void MTContext::initSolMergeJob(const size_t thID, std::string fileName) {
 
 	RlxFMIP rlxFMIP{ fileName };
 	size_t	numVars = static_cast<size_t>(rlxFMIP.getMIPNumVars());
 	rlxFMIP.setNumCores(CPLEX_CORE).setNumSols(1);
 
-	int error{ rlxFMIP.solveRelaxation() };
+	int error{ rlxFMIP.solveRelaxation(CPX_INFBOUND, DET_TL(rlxFMIP.getNumNonZeros()))};
 	tmpSolutions[thID].sol = rlxFMIP.getSol();
 #if ACS_VERBOSE >= VERBOSE
 	PRINT_INFO("Proc: %3d [Start_point] - MTContext::initSolMergeJob - New RLX sol found", thID);
 #endif
-
-	// 	std::vector<std::vector<double>> draftSols(numMIPs);
-
-	// 	size_t lenSol = static_cast<size_t>(vBounds.size());
-	// 	tmpSolutions[thID].sol.resize(lenSol, CPX_INFBOUND);
-	// 	for (size_t i{ 0 }; i < numMIPs; i++)
-	// 		draftSols[i].resize(lenSol, CPX_INFBOUND);
-
-	// 	double min_obj = CPX_INFBOUND;
-	// 	for (size_t i{ 0 }; i < numMIPs; i++) {
-	// 		for(size_t j { 0 }; j < lenSol;j++){
-	// 			auto [lb, ub] = vBounds[j];
-
-	// 			double clampedLower = std::max(-MAX_UB, lb);
-	// 			double clampedUpper = std::min(MAX_UB, ub);
-	// 			draftSols[i][j] = rndGens[thID].Int(clampedLower, clampedUpper);
-	// 		}
-
-	// 		double objCost = std::inner_product(draftSols[i].begin(), draftSols[i].end(), obj.begin(), 0.0);
-	// 		if (objCost < min_obj) {
-	// 			std::lock_guard<std::mutex> lock(MTContextMTX);
-	// #if ACS_VERBOSE >= VERBOSE
-	// 			PRINT_INFO("Proc: %3d [Start_point] - MTContext::initSolMergeJob - New MIN sol \t %10.2f",thID,objCost);
-	// #endif
-	// 			min_obj = objCost;
-	// 			tmpSolutions[thID].sol = draftSols[i];
-	// 		}
-	// 	}
 }
+#pragma endregion

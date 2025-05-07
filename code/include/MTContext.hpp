@@ -12,8 +12,8 @@
  * and it provides mechanisms to broadcast solutions across threads and handle solution updates with thread safety.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.5
- * @since 05/05/2025
+ * @version v1.1.0 - InitSol v0.0.6
+ * @since 05/07/2025
  */
 
 #ifndef MT_CTX_H
@@ -113,6 +113,14 @@ public:
 	 * @param newSize The new size of the incumbent.
 	 */
 	inline void setIncumbentAmongMIPsSize(size_t newSize) { incumbentAmongMIPs.sol.resize(newSize, 0.0); }
+
+
+	/**
+	 * @brief Resize the incumbent used in ACS.
+	 *
+	 * @param newSize The new size of the incumbent.
+	 */
+	inline void setBestACSIncumbentSize(size_t newSize) { bestACSIncumbent.sol.resize(newSize, 0.0); }
 
 	/**
 	 * @brief Gets the temporary solutions stored for optimization.

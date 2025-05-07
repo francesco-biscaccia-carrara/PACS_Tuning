@@ -8,8 +8,8 @@
  *
  * @note Requires CPLEX library and Utils.hpp
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.5
- * @since 05/05/2025
+ * @version v1.1.0 - InitSol v0.0.6
+ * @since 05/07/2025
  */
 
 #ifndef MIP_SOL_H
@@ -303,6 +303,22 @@ public:
 	 * @return Reference to the current MIP object
 	 */
 	MIP& setVarValue(const int index, const double val);
+
+	/**
+	 * @brief Set the lower-bound of a specific variable
+	 * @param index Variable index
+	 * @param newLB Variable lower-bound
+	 * @return Reference to the current MIP object
+	 */
+	MIP& setVarLowerBound(const int index, const double newLB);
+
+	/**
+	 * @brief Set the upper-bound of a specific variable
+	 * @param index Variable index
+	 * @param newUB Variable upper-bound
+	 * @return Reference to the current MIP object
+	 */
+	MIP& setVarUpperBound(const int index, const double newUB);
 
 	/**
 	 * @brief Set values for multiple variables

@@ -1,6 +1,9 @@
 #include "../include/MIP.hpp"
 
 #define BOTH_BOUNDS 'B'
+#define LW_BOUND 'L'
+#define UP_BOUND 'U'
+
 using MIPEx = MIPException::ExceptionType;
 
 MIP::MIP(const std::string fileName) {
@@ -254,6 +257,27 @@ MIP& MIP::setVarValue(const int index, const double val) {
 	char bound{ BOTH_BOUNDS };
 	if (CPXchgbds(env, model, 1, &index, &bound, &val))
 		throw MIPException(MIPEx::General, "Unable to set the value to var " + std::to_string(val));
+	return *this;
+}
+
+
+MIP& MIP::setVarLowerBound(const int index, const double newLB){
+	if (index < 0 || index > getNumCols() - 1)
+		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarValue()!");
+	
+	char bound{ LW_BOUND };
+	if (CPXchgbds(env, model, 1, &index, &bound, &newLB))
+		throw MIPException(MIPEx::General, "Unable to set the lower bound of the var  " + std::to_string(newLB));
+	return *this;
+}
+
+MIP& MIP::setVarUpperBound(const int index, const double newUB){
+	if (index < 0 || index > getNumCols() - 1)
+		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarValue()!");
+	
+	char bound{ UP_BOUND };
+	if (CPXchgbds(env, model, 1, &index, &bound, &newUB))
+		throw MIPException(MIPEx::General, "Unable to set the upper bound of the var " + std::to_string(newUB));
 	return *this;
 }
 

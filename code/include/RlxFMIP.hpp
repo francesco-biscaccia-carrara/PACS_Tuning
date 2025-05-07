@@ -9,8 +9,8 @@
  * to restore original problem formulations.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.5
- * @since 05/05/2025
+ * @version v1.1.0 - InitSol v0.0.6
+ * @since 05/07/2025
  */
 
 #ifndef RlxFMIP_H
@@ -104,7 +104,7 @@ public:
 	 * @param timeLimit Maximum wall clock time for the solution process (default: CPX_INFBOUND).
 	 * @return Status code indicating the result of the relaxation solution process.
 	 */
-	int solveRelaxation(const double timeLimit = CPX_INFBOUND);
+	int solveRelaxation(const double timeLimit = CPX_INFBOUND, const double detTimeLimit = CPX_INFBOUND);
 
 	/**
 	 * @brief Get the type of a variable
