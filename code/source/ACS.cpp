@@ -52,7 +52,6 @@ int main(int argc, char* argv[]) {
 #endif
 		MTEnv.broadcastSol(tmpSol);
 		MTEnv.setIncumbentAmongMIPsSize(FMIP(CLIArgs.fileName).getNumCols());
-		// MTEnv.setBestACSIncumbentSize(FMIP(CLIArgs.fileName).getNumCols());
 
 		while (Clock::timeElapsed() < CLIArgs.timeLimit) {
 			if (abs(MTEnv.getBestACSIncumbent().slackSum) > EPSILON) {
