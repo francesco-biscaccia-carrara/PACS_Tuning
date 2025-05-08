@@ -9,8 +9,8 @@ if ("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
 project(ACS)
-set(CODE_VERSION "v1.1.0 - InitSol v0.0.6")
-set(LAST_UPDATE "05/07/2025")
+set(CODE_VERSION "v1.1.0 - InitSol v0.0.7")
+set(LAST_UPDATE "08/07/2025")
 
 # setting flags for optimization and debug builds
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
@@ -72,6 +72,13 @@ endif()
 
 include_directories(include)
 include_directories(${CPLEX_INCLUDE})
+
+include(FetchContent)
+FetchContent_Declare(json
+    GIT_REPOSITORY https://github.com/nlohmann/json
+    GIT_TAG v3.12.0
+)
+FetchContent_MakeAvailable(json)
 
 add_library(
     Utils
@@ -147,6 +154,7 @@ add_executable(
 # Linking
 target_link_libraries(
     ACS
+    nlohmann_json::nlohmann_json
     MIP
     FMIP
     OMIP
@@ -164,6 +172,7 @@ target_link_libraries(
 
 target_link_libraries(
     CPLEXRun
+    nlohmann_json::nlohmann_json
     MIP
     Utils
     #pthread

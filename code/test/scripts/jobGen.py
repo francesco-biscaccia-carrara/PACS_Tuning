@@ -1,49 +1,60 @@
-import sys,os
+import sys,os, pandas as pd, json
 
 sys.dont_write_bytecode = True
+ 
+filename = "jsonTMP.json"
+rhos = (0,1,2,3)
+seeds = (38472910, 56473829, 27384910, 91827364, 83746592)
 
-import pandas as pd
-
-def main():
-    input_csv = "fHard_instances.csv"
-    print(f"Input file: {input_csv}")
-    if (
-            input(
-                f"Insert y if the file is correct: "
-            )
-            != "y"
-    ): exit(1)
+def main(filename):
+    input_csv = "data/fHard_instances.csv"
 
     df = pd.read_csv(input_csv)
 
-    instances = df["Instance"];
+    instances = df["Instance"]
+    objs = df["Objective"]
     
-    # jobs
     jobs_folder = "../jobs"
     jobs_outputs = "../jobs_output"
-
     exec_dir = "../../build"
 
+    print(f"Input file: {input_csv}")
     print(f"Jobs folder: {jobs_folder}")
     print(f"Jobs output: {jobs_outputs}")
     print(f"ACS Executable: {exec_dir}/ACS")
     print(f"CPLEX Executable: {exec_dir}/CPLEXRun")
 
-    if input("Insert y if it's all correct: ") != "y":
-            exit(1)
+    if input("Is this info correct [y/n]? ") != "y":
+        exit(0)
+
+    if input(f"Are you sure to clean up jobs folder ({len(os.listdir(jobs_folder))} jobs) [y/n]? ") == "y":
+        os.system(f"rm {jobs_folder}/*")
+    
+    if len(os.listdir(jobs_folder)) == 0:
+        print("Folder 'jobs' cleaned up!")
 
     os.makedirs(jobs_folder, exist_ok=True)
     os.makedirs(jobs_outputs, exist_ok=True)
     
+    if input("Do you want to generate the jobs [y/n]? ") != "y":
+        exit(0)
+    
     count =0
+    indexObj= 0
+    jsonInst ={}
     for instance in instances:
+        jsonInst.update({instance:{}})
+        
         for exe in  ["CPLEXRun","ACS"]:
             if exe == "ACS":
-                for rho in [0,1,2,3]:
-                    for seed in [10493847, 83274910, 70938475, 98312048, 19283746]:
+                for rho in rhos:
+                    jsonInst[instance].update({"_obj": objs[indexObj], rho: {}})
+                    for seed in seeds:
+                        jsonInst[instance][rho].update({seed: None})
                         job_name =f"{instance}_{exe}_{rho}_{seed}"
                         job = f"{jobs_folder}/{job_name}"
                         job_content = f"""#!/bin/bash
+                        
 #SBATCH --job-name={job_name}
 #SBATCH --partition=arrow
 #SBATCH --ntasks=1
@@ -79,6 +90,9 @@ sudo cpupower frequency-set -g powersave > /dev/null
                             f.write(job_content)
                         count+=1
             else: 
+                jsonInst[instance]={
+                        'CPLEX': None
+                }
                 job = f"{jobs_folder}/{instance}_{exe}"
                 job_content = f"""#!/bin/bash
 #SBATCH --job-name={instance}_{exe}
@@ -116,9 +130,16 @@ sudo cpupower frequency-set -g powersave > /dev/null
                 with open(job, "w") as f:
                     f.write(job_content)
                 count+=1
+        indexObj+=1
+    
     print(f"Generated {count} files")
 
 
+    with open(filename, 'w', encoding='utf-8') as f:
+         json.dump(jsonInst, f, ensure_ascii=False, indent=4)
+    print(f"Generated {filename} JSON file")
+ 
+
 
 if __name__ == "__main__":
-    main()
+    main(filename)

@@ -2,15 +2,21 @@
  * ACS Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.6
- * @since 05/07/2025
+ * @version v1.1.0 - InitSol v0.0.7
+ * @since 08/07/2025
  */
+
+#include <iostream>
+#include <fstream>
+#include <nlohmann/json.hpp>
 
 #include "../include/FMIP.hpp"
 #include "../include/FixPolicy.hpp"
 #include "../include/MTContext.hpp"
 #include "../include/MergePolicy.hpp"
 #include "../include/OMIP.hpp"
+
+#define JSON_FILE "../test/scripts/jsonTMP.json"
 
 int main(int argc, char* argv[]) {
 	try {
@@ -155,25 +161,35 @@ int main(int argc, char* argv[]) {
 		}
 
 		Solution incumbent = MTEnv.getBestACSIncumbent();
+#if LOG >= 1
+		std::ifstream iFile(JSON_FILE);
+		nlohmann::json j;
+		iFile >> j;
+		iFile.close();
+#endif
 		if (incumbent.sol.empty() || incumbent.slackSum > EPSILON) {
+#if LOG >= 1
+			j[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)] = "NO SOL";
+#endif
 			PRINT_ERR("NO FEASIBLE SOLUTION FIND");
 		} else {
 			MIP og(CLIArgs.fileName);
 			incumbent.sol.resize(og.getNumCols());
-
-			// bool feas = og.checkFeasibility(incumbent.sol);
-			// if(feas)
+			//TODO: Check feas of solution
+#if LOG >= 1
+			j[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)]  = incumbent.oMIPCost;		
+#endif
 			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
-			// else
-			// 	PRINT_ERR("ERROR ON COMPUTATION");
 		}
-
+#if LOG >=1
+		std::ofstream oFile(JSON_FILE);
+		oFile << j.dump(4);
+		oFile.close();
+		PRINT_INFO("JSON: Execution result saved on %s file", JSON_FILE);
+#endif
 	} catch (const std::runtime_error& ex) {
 		PRINT_ERR(ex.what());
 		return EXIT_FAILURE;
 	}
-#if LOG >= 1
-	printf("[ACK] - ACS terminates correctly, no corrupted execution.\n");
-#endif
 	return EXIT_SUCCESS;
 }
