@@ -1,8 +1,11 @@
-import os, sys, json, pandas as pd
+import os, sys, json, pandas as pd,datetime
 
 sys.dont_write_bytecode = True
 
-filename = "TMP_DATA_PR.json"
+date = datetime.datetime.now()
+
+filename =  "{m}_{d}_{y}.json".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y"))
+perfProf =  "{m}_{d}_{y}.svg".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y"))
 outputfile = "out.csv"
 
 def main(filename):
@@ -41,7 +44,8 @@ def main(filename):
     if input("Do you want to perfprof the data [y/n]? ") != "y":
         exit(0)
     
-    os.system(f"python3 data/perfprof.py -D ',' -X 'MIP Gap'  -S 2 {outputfile} RENAME_DATE.svg")
+    os.system(f"python3 data/perfprof.py -D ',' -X 'MIP Gap'  -S 2 {outputfile} {perfProf}")
+    os.system(f"rm {outputfile}")
 
 if __name__ == "__main__":
     main(filename)

@@ -1,8 +1,10 @@
-import sys,os, pandas as pd, json
+import sys,os, pandas as pd, json, datetime
+
+date = datetime.datetime.now()
 
 sys.dont_write_bytecode = True
- 
-filename = "jsonTMP.json"
+
+filename = "{m}_{d}_{y}-raw.json".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y"))
 rhos = (0,1,2,3)
 seeds = (38472910, 56473829, 27384910, 91827364, 83746592)
 
