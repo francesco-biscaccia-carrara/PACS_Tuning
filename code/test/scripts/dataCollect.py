@@ -1,11 +1,7 @@
-import sys, pandas as pd, numpy as np, json, datetime
+import sys, os, numpy as np, json
+from dotenv import load_dotenv
 
 sys.dont_write_bytecode = True
-
-date = datetime.datetime.now()
-
-filename = "{m}_{d}_{y}-raw.json".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y"))
-outputfile = "{m}_{d}_{y}.json".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y"))
 
 def MIPgap(opt,inc_val):
     if inc_val == None : return None
@@ -21,7 +17,12 @@ def geo_mean(iterable):
     a = np.array(iterable)
     return a.prod()**(1.0/len(a))
 
-def main(filename):
+def main():
+
+    load_dotenv("../../.env")
+    filename = os.environ.get('ACS_JSON_FILENAME')
+    outputfile = os.environ.get('ACS_JSOUT_FILENAME')
+
     with open(filename, 'r') as file:
         JSdata = json.load(file)
     
@@ -53,4 +54,4 @@ def main(filename):
     print(f"Generated {outputfile} JSON file")
     
 if __name__ == "__main__":
-    main(filename)
+    main()

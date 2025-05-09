@@ -1,14 +1,37 @@
-import sys,os, pandas as pd, json, datetime
-
-date = datetime.datetime.now()
+import sys, pandas as pd, json, datetime, os
+from dotenv import load_dotenv
 
 sys.dont_write_bytecode = True
 
-filename = "{m}_{d}_{y}-raw.json".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y"))
-rhos = (0,1,2,3)
-seeds = (38472910, 56473829, 27384910, 91827364, 83746592)
+def generate_env_file(env_vars, file_path="../../.env"):
+    """
+    Generate a .env file with the specified environment variables
+    
+    Args:
+        env_vars (dict): Dictionary of environment variables to write
+        file_path (str): Path to the .env file
+    """
+    with open(file_path, "w") as f:
+        for key, value in env_vars.items():
+            f.write(f"{key}={value}\n")
+    
+    print(f"Environment file created at {file_path}")
 
-def main(filename):
+
+def main():
+
+    date = datetime.datetime.now()
+
+    envVars = {
+        "ACS_JSON_FILENAME": "{m}_{d}_{y}-raw.json".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y")),
+        "ACS_JSOUT_FILENAME": "{m}_{d}_{y}.json".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y")),
+        "ACS_PP":  "{m}_{d}_{y}.svg".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y"))
+    }
+    generate_env_file(env_vars=envVars)
+    print("--------------------------")
+
+    load_dotenv("../../.env")
+    filename = os.environ.get('ACS_JSON_FILENAME')
     input_csv = "data/fHard_instances.csv"
 
     df = pd.read_csv(input_csv)
@@ -28,12 +51,14 @@ def main(filename):
 
     if input("Is this info correct [y/n]? ") != "y":
         exit(0)
+    print("--------------------------")
 
     if input(f"Are you sure to clean up jobs folder ({len(os.listdir(jobs_folder))} jobs) [y/n]? ") == "y":
         os.system(f"rm {jobs_folder}/*")
-    
+
     if len(os.listdir(jobs_folder)) == 0:
         print("Folder 'jobs' cleaned up!")
+    print("--------------------------")
 
     os.makedirs(jobs_folder, exist_ok=True)
     os.makedirs(jobs_outputs, exist_ok=True)
@@ -41,6 +66,8 @@ def main(filename):
     if input("Do you want to generate the jobs [y/n]? ") != "y":
         exit(0)
     
+    rhos = (0,1,2,3)
+    seeds = (38472910, 56473829, 27384910, 91827364, 83746592)
     count =0
     indexObj= 0
     jsonInst ={}
@@ -140,8 +167,9 @@ sudo cpupower frequency-set -g powersave > /dev/null
     with open(filename, 'w', encoding='utf-8') as f:
          json.dump(jsonInst, f, ensure_ascii=False, indent=4)
     print(f"Generated {filename} JSON file")
+    print("--------------------------")
  
 
 
 if __name__ == "__main__":
-    main(filename)
+    main()

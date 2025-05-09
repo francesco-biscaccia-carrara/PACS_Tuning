@@ -10,7 +10,7 @@ endif()
 
 project(ACS)
 set(CODE_VERSION "v1.1.0 - InitSol v0.0.7")
-set(LAST_UPDATE "08/07/2025")
+set(LAST_UPDATE "05/09/2025")
 
 # setting flags for optimization and debug builds
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
@@ -18,7 +18,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-Og -ggdb")
 
 # setting the default verbose/warn/intchecks (edited with the -D flag)
 set(VERBOSE "0" CACHE STRING "Verbose setting set from command line")
-set(LOG "0" CACHE STRING "Flag to enable log on file")
+set(TEST "0" CACHE STRING "Flag to enable log on file")
 #set(WARN "0" CACHE STRING "Flag to enable warning messages")
 #set(INTCHECK "0" CACHE STRING "Flag to enable integrity checks")
 # Detect machine and set CPLEX paths accordingly
@@ -187,7 +187,7 @@ add_definitions(-DACS_HOME_DIR="${HOME_DIR}"
                 -DACS_VERBOSE=${VERBOSE} 
                 -DACS_WARN=${WARN} 
                 -DACS_INTCHECK=${INTCHECK} 
-                -DLOG=${LOG} 
+                -DACS_TEST=${TEST} 
                 -DCODE_VERSION=${CODE_VERSION}) #ACS for us
 
 
@@ -202,7 +202,7 @@ add_custom_target(opt
 
 add_custom_target(debug
     COMMAND echo "Code version: ${CODE_VERSION} - Last update: ${LAST_UPDATE}"
-    COMMAND echo "Flags used: ${CMAKE_CXX_FLAGS_DEBUG} -VERBOSE=${VERBOSE} -LOG=${LOG}"
+    COMMAND echo "Flags used: ${CMAKE_CXX_FLAGS_DEBUG} -VERBOSE=${VERBOSE} -TEST=${TEST}"
     COMMAND ${CMAKE_COMMAND} -D CMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ACS
     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target CPLEXRun

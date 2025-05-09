@@ -1,4 +1,5 @@
 /local
+
 /.clang-format
 /.DS_Store
 /.vscode
@@ -9,6 +10,7 @@
 /code/test/env
 /code/test/job*
 /code/Doxyfile
+/code/.env
 
 #Thesis stuff
 /thesis/*.aux

@@ -1,14 +1,13 @@
-import os, sys, json, pandas as pd,datetime
+import os, sys, json, pandas as pd
+from dotenv import load_dotenv
 
 sys.dont_write_bytecode = True
 
-date = datetime.datetime.now()
-
-filename =  "{m}_{d}_{y}.json".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y"))
-perfProf =  "{m}_{d}_{y}.svg".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y"))
-outputfile = "out.csv"
-
-def main(filename):
+def main():
+    load_dotenv("../../.env")
+    filename = os.environ.get('ACS_JSOUT_FILENAME')
+    perfProf = os.environ.get('ACS_PP')
+    outputfile = "out.csv"
 
     with open(filename, 'r') as file:
         JSdata = json.load(file)
@@ -48,4 +47,4 @@ def main(filename):
     os.system(f"rm {outputfile}")
 
 if __name__ == "__main__":
-    main(filename)
+    main()

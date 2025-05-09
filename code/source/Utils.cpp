@@ -2,6 +2,20 @@
 
 using namespace Utils;
 
+std::string Utils::getJSONFilename(const std::string& envFilePath) {
+    std::ifstream file(envFilePath);
+    if (!file.is_open()) {
+        throw std::runtime_error("Failed to open .env file: " + envFilePath);
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        if (line.find("ACS_JSON_FILENAME=") == 0) return line.substr(std::string("ACS_JSON_FILENAME=").length());
+    }
+
+	throw std::runtime_error("ACS_JSON_FILENAME not found in .env file");
+}
+
 Random::Random(unsigned long long newSeed) : seed{ newSeed } {
 	rng.seed(newSeed);
 }
@@ -64,7 +78,7 @@ void Logger::print(LogLevel typeMsg, const char* format, ...) {
 	/// FIXED: Bug #5860f1916463f69833a7cb9170845d492fabee8f –- Segmentation fault caused by overlapping printf calls.
 	flockfile(stdout);
 
-#if LOG
+#if ACS_TEST
 	printf("%s|%8.2f|", msgPref, Clock::timeElapsed());
 #else
 	printf("%s\033[1m\033[4m%s%s%s|%8.2f|", msgClr, msgPref, ANSI_COLOR_RESET, msgClr, Clock::timeElapsed());
@@ -75,7 +89,7 @@ void Logger::print(LogLevel typeMsg, const char* format, ...) {
 	vfprintf(stdout, format, args);
 	va_end(args);
 
-#if LOG
+#if ACS_TEST
 	printf("\n");
 #else
 	printf("%s\n", ANSI_COLOR_RESET);

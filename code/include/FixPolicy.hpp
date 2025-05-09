@@ -5,7 +5,7 @@
  *
  * @author Francesco Biscaccia Carrara
  * @version v1.1.0 - InitSol v0.0.7
- * @since 08/07/2025
+ * @since 05/09/2025
  */
 
 #ifndef FIX_POL_H

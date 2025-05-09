@@ -4,7 +4,7 @@
  *
  * @author Francesco Biscaccia Carrara
  * @version v1.1.0 - InitSol v0.0.7
- * @since 08/07/2025
+ * @since 05/09/2025
  */
 
 #ifndef UTILS_H
@@ -26,6 +26,8 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <iostream>
+#include <fstream>
 
 #include <string.h>
 #include <sys/time.h>
@@ -35,7 +37,7 @@
 /** Current version of the code */
 #define ACS_VERSION "v1.1.0 - InitSol v0.0.7"
 /** Last update date */
-#define LAST_UPDATE "08/07/2025"
+#define LAST_UPDATE "05/09/2025"
 
 /** Verbosity level constants */
 #define NO_VER -1
@@ -93,6 +95,14 @@ namespace Utils {
 		unsigned long long seed;	   ///< Random number generator see
 		unsigned long	   algo;	   ///< Flag to set the type of algorithm (0,1,2,3,4)
 	};
+
+	/**
+	 * @brief Extracts the corresponding JSON filename from an environment file path.
+	 *
+	 * @param envFilePath The full path to the environment file.
+	 * @return A string representing the JSON filename derived from the input path.
+	 */
+	std::string getJSONFilename(const std::string& envFilePath);
 
 	/**
 	 * Provides random number generation functionality.

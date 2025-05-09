@@ -9,7 +9,7 @@
  * @note Requires CPLEX library and Utils.hpp
  * @author Francesco Biscaccia Carrara
  * @version v1.1.0 - InitSol v0.0.7
- * @since 08/07/2025
+ * @since 05/09/2025
  */
 
 #ifndef MIP_SOL_H
@@ -29,10 +29,9 @@ using namespace Utils;
 #define NUM_SOL_STOP 1
 #define ACS_CB_CONTEXTMASK CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS | CPX_CALLBACKCONTEXT_CANDIDATE
 
+// FIXME: can they be removed?
 #define MIP_DUAL_PRIM_GAP_TOL 1e-4 // Default value for CPX_PARAM_EPAGAP (see IBM ILOG CPLEX doc)
 #define MIP_GAP_TOL 1e-6		   // Default value for CPX_PARAM_EPGAP (see IBM ILOG CPLEX doc)
-
-// FIXME: can they be removed?
 #define MIP_INT_TOL 1e-3
 #define MIP_SIMPLEX_FEAS_TOL 1e-3
 
