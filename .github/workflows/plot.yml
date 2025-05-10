@@ -5,6 +5,9 @@ on:
     branches:
       - InitSol
       - main
+      
+permissions:
+  contents: write  
 
 jobs:
   generate-files:
