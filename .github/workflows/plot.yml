@@ -48,9 +48,6 @@ jobs:
             python dataCollect.py True
             python pp.py True
             rm ../../.ACSenv
-
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
       
       - name: Commit and push generated files
         if: steps.check_files.outputs.file_exists == 'true'
