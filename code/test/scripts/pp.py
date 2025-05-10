@@ -20,24 +20,18 @@ def main(pipeline):
             else:
                 tmpDict[inst].update({algo:JSdata[inst][algo]})
 
-    #TODO: CHECK BELOW
 
-    # Convert the nested dictionary to a list of dictionaries
     rows = []
-    algos = 0
     for name, values in tmpDict.items():
         row = {'TMP': name}  # First column is the name
         row.update(values)    # Add all the values (CPLEX, 0, 1, 2, 3)
-        algos = len(values)
         rows.append(row)
 
-    # Create DataFrame
     df = pd.DataFrame(rows)
 
-    # Reorder columns to ensure 'Name' is first, followed by 'CPLEX', then numeric columns
     columns = ['TMP', 'CPLEX'] + sorted([col for col in df.columns if col not in ['TMP', 'CPLEX']], key=int)
     df = df[columns]
-    df = df.rename(columns={"TMP": str(algos)})
+    df = df.rename(columns={"TMP": str(len(columns)-1)})
     df.to_csv(outputfile, index=False)
 
     if not pipeline:
@@ -48,4 +42,6 @@ def main(pipeline):
     os.system(f"rm {outputfile}")
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    if len(sys.argv) == 1:
+        main(False)
+    else: main(sys.argv[1])

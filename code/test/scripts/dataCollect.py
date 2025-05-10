@@ -1,5 +1,5 @@
 import sys, os, numpy as np, json
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 
 sys.dont_write_bytecode = True
 
@@ -55,4 +55,6 @@ def main(pipeline):
     print(f"Generated {outputfile} JSON file")
     
 if __name__ == "__main__":
-    main(sys.argv[1])
+    if len(sys.argv) == 1:
+        main(False)
+    else: main(sys.argv[1])

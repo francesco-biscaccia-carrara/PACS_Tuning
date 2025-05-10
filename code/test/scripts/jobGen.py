@@ -27,7 +27,7 @@ def main():
     generate_env_file(env_vars=envVars)
     print("--------------------------")
 
-    load_dotenv("../../.env")
+    load_dotenv("../../.ACSenv")
     filename = os.environ.get('ACS_JSON_FILENAME')
     input_csv = "data/fHard_instances.csv"
 
