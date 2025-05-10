@@ -8,8 +8,8 @@
  *
  * @note Requires CPLEX library and Utils.hpp
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.7
- * @since 05/09/2025
+ * @version v1.1.0 - InitSol v0.0.8
+ * @since 05/10/2025
  */
 
 #ifndef MIP_SOL_H
@@ -226,21 +226,21 @@ public:
 	 * @return Number of variables
 	 */
 	[[nodiscard]]
-	virtual int getMIPNumVars() noexcept { return CPXgetnumcols(env, model); }
+	virtual size_t getMIPNumVars();
 
 	/**
 	 * @brief Get the number of columns (variables)
 	 * @return Number of columns
 	 */
 	[[nodiscard]]
-	inline int getNumCols() noexcept { return CPXgetnumcols(env, model); }
+	size_t getNumCols();
 
 	/**
 	 * @brief Get the number of rows (constraints)
 	 * @return Number of rows
 	 */
 	[[nodiscard]]
-	inline int getNumRows() noexcept { return CPXgetnumrows(env, model); }
+	size_t getNumRows();
 
 	/**
 	 * @brief Add a new column (variable) to the problem

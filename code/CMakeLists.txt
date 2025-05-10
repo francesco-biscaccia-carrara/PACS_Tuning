@@ -9,12 +9,22 @@ if ("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
 project(ACS)
-set(CODE_VERSION "v1.1.0 - InitSol v0.0.7")
-set(LAST_UPDATE "05/09/2025")
+set(CODE_VERSION "v1.1.0 - InitSol v0.0.8")
+set(LAST_UPDATE "05/10/2025")
 
 # setting flags for optimization and debug builds
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "-Og -ggdb")
+
+option (ENABLE_WARNINGS "Enable compiler warnings" OFF)
+option (TREAT_WARNINGS_AS_ERRORS "Treat warnings as errors" OFF)
+
+if (ENABLE_WARNINGS)
+    add_compile_options (-Wall -Wextra -pedantic)
+    if (TREAT_WARNINGS_AS_ERRORS)
+        add_compile_options (-Werror)
+    endif()
+endif()
 
 # setting the default verbose/warn/intchecks (edited with the -D flag)
 set(VERBOSE "0" CACHE STRING "Verbose setting set from command line")

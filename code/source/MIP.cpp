@@ -71,10 +71,10 @@ MIP& MIP::setCallbackFunction(CPXLONG contextMask, CPXCALLBACKFUNC* callback, vo
 }
 
 size_t MIP::getNumNonZeros() {
-	size_t nnz{ static_cast<size_t>(CPXgetnumnz(env, model)) };
+	int nnz {(CPXgetnumnz(env, model)) };
 	if (!nnz)
 		throw MIPException(MIPEx::General, "Unable to get the number of nonzero elements!");
-	return nnz;
+	return  static_cast<size_t>(nnz);
 }
 
 int MIP::solve(const double timeLimit, const double detTimeLimit) {
@@ -95,7 +95,7 @@ int MIP::solve(const double timeLimit, const double detTimeLimit) {
 }
 
 MIP& MIP::addMIPStart(const std::vector<double>& MIPStart, bool CPLEXCheck) {
-	int numCols{ getNumCols() };
+	size_t numCols{ getNumCols() };
 	if (MIPStart.size() != numCols)
 		throw MIPException(MIPEx::InputSizeError, "Wrong MIP start length");
 
@@ -118,7 +118,7 @@ double MIP::getObjValue() {
 }
 
 std::vector<double> MIP::getObjFunction() {
-	int		numCols{ getNumCols() };
+	size_t		numCols{ getNumCols() };
 	double* objFun{ (double*)calloc(numCols, sizeof(double)) };
 	if (CPXgetobj(env, model, objFun, 0, numCols - 1))
 		throw MIPException(MIPEx::General, "Unable to get obj_function coefficients!");
@@ -128,7 +128,7 @@ std::vector<double> MIP::getObjFunction() {
 }
 
 MIP& MIP::setObjFunction(const std::vector<double>& newObj) {
-	int numCols{ getNumCols() };
+	size_t numCols{ getNumCols() };
 	if (newObj.size() != numCols)
 		throw MIPException(MIPEx::InputSizeError, "Wrong new obj_function size");
 
@@ -142,7 +142,7 @@ MIP& MIP::setObjFunction(const std::vector<double>& newObj) {
 }
 
 std::vector<double> MIP::getSol() {
-	int		numCols{ getNumCols() };
+	size_t		numCols{ getNumCols() };
 	double* xStar{ (double*)calloc(numCols, sizeof(double)) };
 	if (int error{ CPXgetx(env, model, xStar, 0, numCols - 1) })
 		throw MIPException(MIPEx::General, "Unable to obtain the solution! " + std::to_string(error) + " State: " + std::to_string(CPXgetstat(env, model)));
@@ -151,36 +151,57 @@ std::vector<double> MIP::getSol() {
 	return sol;
 }
 
-MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef, const double lb, const double ub, const std::string name) {
-	int numRow{ getNumRows() };
-
-	if (newCol.size() != numRow)
-		throw MIPException(MIPEx::InputSizeError, "Wrong new column size");
-
-	char** cname{ (char**)calloc(1, sizeof(char*)) };
-	cname[0] = strdup(name.c_str());
-
-	int*	indices{ (int*)malloc(numRow * sizeof(int)) };
-	double* values{ (double*)malloc(numRow * sizeof(double)) };
-	int		start = 0, nnz = 0;
-	for (size_t i = 0; i < numRow; i++) {
-		if (newCol[i] != 0) {
-			indices[nnz] = i;
-			values[nnz] = newCol[i];
-			nnz++;
-		}
-	}
-
-	if (CPXaddcols(env, model, 1, nnz, &objCoef, &start, indices, values, &lb, &ub, &cname[0]))
-		throw MIPException(MIPEx::General, "No column added!");
-	free(cname);
-	free(indices);
-	free(values);
-	return *this;
+size_t MIP::getMIPNumVars() {
+	int numCols{ CPXgetnumcols(env, model) };
+	if(!numCols)
+		throw MIPException(MIPEx::General, "Unable to get the number of MIP vars of the model!");
+	return static_cast<size_t>(numCols);
 }
 
+size_t MIP::getNumCols() {
+	int numCols{ CPXgetnumcols(env, model) };
+	if(!numCols)
+		throw MIPException(MIPEx::General, "Unable to get the number of cols of the model!");
+	return static_cast<size_t>(numCols);
+}
+
+size_t MIP::getNumRows() {
+	int numRows{ CPXgetnumrows(env, model) };
+	if(!numRows)
+		throw MIPException(MIPEx::General, "Unable to get the number of rows of the model!");
+	return static_cast<size_t>(numRows);
+}
+
+MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef, const double lb, const double ub, const std::string name) {
+		size_t numRow{ getNumRows() };
+
+		if (newCol.size() != numRow)
+			throw MIPException(MIPEx::InputSizeError, "Wrong new column size");
+
+		char** cname{ (char**)calloc(1, sizeof(char*)) };
+		cname[0] = strdup(name.c_str());
+
+		int*	indices{ (int*)malloc(numRow * sizeof(int)) };
+		double* values{ (double*)malloc(numRow * sizeof(double)) };
+		int		start = 0, nnz = 0;
+		for (size_t i = 0; i < numRow; i++) {
+			if (newCol[i] != 0) {
+				indices[nnz] = i;
+				values[nnz] = newCol[i];
+				nnz++;
+			}
+		}
+
+		if (CPXaddcols(env, model, 1, nnz, &objCoef, &start, indices, values, &lb, &ub, &cname[0]))
+			throw MIPException(MIPEx::General, "No column added!");
+		free(cname);
+		free(indices);
+		free(values);
+		return *this;
+	}
+
 MIP& MIP::addCol(const size_t index, const double value, const double objCoef, const double lb, const double ub, const std::string name) {
-	if (index < 0 || index > getNumRows() - 1)
+	if (index < 0 || static_cast<size_t>(index) > getNumRows() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index addCol()!");
 
 	char** cname{ (char**)calloc(1, sizeof(char*)) };
@@ -197,7 +218,7 @@ MIP& MIP::addCol(const size_t index, const double value, const double objCoef, c
 }
 
 MIP& MIP::addRow(const std::vector<double>& newRow, const char sense, const double rhs) {
-	int numCols{ getNumCols() };
+	size_t numCols{ getNumCols() };
 
 	if (newRow.size() != numCols)
 		throw MIPException(MIPEx::InputSizeError, "Wrong new row size");
@@ -221,7 +242,7 @@ MIP& MIP::addRow(const std::vector<double>& newRow, const char sense, const doub
 }
 
 MIP& MIP::removeRow(const int index) {
-	if (index < 0 || index > getNumRows() - 1)
+	if (index < 0 || static_cast<size_t>(index) > getNumRows() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index removeRow()!");
 
 	if (CPXdelrows(env, model, index, index))
@@ -230,7 +251,7 @@ MIP& MIP::removeRow(const int index) {
 }
 
 MIP& MIP::removeCol(const int index) {
-	if (index < 0 || index > getNumCols() - 1)
+	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index removeCol()!");
 
 	if (CPXdelcols(env, model, index, index))
@@ -239,7 +260,7 @@ MIP& MIP::removeCol(const int index) {
 }
 
 VarBounds MIP::getVarBounds(const int index) {
-	if (index < 0 || index > getNumCols() - 1)
+	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index getVarBounds()!");
 	double lb = CPX_INFBOUND, ub = CPX_INFBOUND;
 	if (CPXgetlb(env, model, &lb, index, index))
@@ -251,7 +272,7 @@ VarBounds MIP::getVarBounds(const int index) {
 }
 
 MIP& MIP::setVarValue(const int index, const double val) {
-	if (index < 0 || index > getNumCols() - 1)
+	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarValue()!");
 
 	char bound{ BOTH_BOUNDS };
@@ -260,9 +281,8 @@ MIP& MIP::setVarValue(const int index, const double val) {
 	return *this;
 }
 
-
 MIP& MIP::setVarLowerBound(const int index, const double newLB){
-	if (index < 0 || index > getNumCols() - 1)
+	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarValue()!");
 	
 	char bound{ LW_BOUND };
@@ -272,7 +292,7 @@ MIP& MIP::setVarLowerBound(const int index, const double newLB){
 }
 
 MIP& MIP::setVarUpperBound(const int index, const double newUB){
-	if (index < 0 || index > getNumCols() - 1)
+	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarValue()!");
 	
 	char bound{ UP_BOUND };
@@ -282,7 +302,7 @@ MIP& MIP::setVarUpperBound(const int index, const double newUB){
 }
 
 MIP& MIP::setVarsValues(const std::vector<double>& values) {
-	int numCols{ getNumCols() };
+	size_t numCols { getNumCols() };
 
 	if (values.size() != numCols)
 		throw MIPException(MIPEx::InputSizeError, "Wrong new values_array size!");
@@ -293,6 +313,7 @@ MIP& MIP::setVarsValues(const std::vector<double>& values) {
 }
 
 bool MIP::checkFeasibility(const std::vector<double>& sol) {
+	//FIXME: Rewrite your own checkFeas method
 	if (sol.size() != getNumCols())
 		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
 

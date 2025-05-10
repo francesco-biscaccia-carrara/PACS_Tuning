@@ -176,7 +176,7 @@ MTContext& MTContext::parallelInitSolMerge(std::string fileName, std::vector<dou
 	std::transform(tmpSolutions.begin(), tmpSolutions.end(), std::back_inserter(sols), [](const Solution& s) { return s.sol; });
 
 	MIP	   MIP{ fileName };
-	size_t numVarsToFix{ static_cast<size_t>(MIP.getMIPNumVars()) };
+	size_t numVarsToFix{ MIP.getMIPNumVars()};
 	sol.resize(numVarsToFix, CPX_INFBOUND);
 
 	for (size_t i{ 0 }; i < numVarsToFix; i++){
@@ -293,10 +293,9 @@ void MTContext::OMIPInstanceJob(const size_t thID, const double slackSumUB, Args
 void MTContext::initSolMergeJob(const size_t thID, std::string fileName) {
 
 	RlxFMIP rlxFMIP{ fileName };
-	size_t	numVars = static_cast<size_t>(rlxFMIP.getMIPNumVars());
 	rlxFMIP.setNumCores(CPLEX_CORE).setNumSols(1);
 
-	int error{ rlxFMIP.solveRelaxation(CPX_INFBOUND, DET_TL(rlxFMIP.getNumNonZeros()))};
+	rlxFMIP.solveRelaxation(CPX_INFBOUND, DET_TL(rlxFMIP.getNumNonZeros()));
 	tmpSolutions[thID].sol = rlxFMIP.getSol();
 #if ACS_VERBOSE >= VERBOSE
 	PRINT_INFO("Proc: %3d [Start_point] - MTContext::initSolMergeJob - New RLX sol found", thID);

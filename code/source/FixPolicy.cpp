@@ -11,7 +11,7 @@ void FixPolicy::startSolTheta(std::vector<double>& sol, std::string fileName, do
 		throw FixPolicyException(FPEx::InputSizeError, "Theta par. must be within (0,1)!");
 
 	RlxFMIP relaxedFMIP{ fileName };
-	int		numVarsToFix{ relaxedFMIP.getMIPNumVars() };
+	size_t		numVarsToFix{relaxedFMIP.getMIPNumVars()};
 	sol.resize(numVarsToFix, CPX_INFBOUND);
 
 	std::vector<size_t> varRangesIndices(numVarsToFix);
@@ -71,7 +71,7 @@ void FixPolicy::startSolTheta(std::vector<double>& sol, std::string fileName, do
 void FixPolicy::startSolMin(std::vector<double>& sol, std::string fileName, Random& rnd) {
 
 	MIP	   MIP{ fileName };
-	size_t numVarsToFix{ static_cast<size_t>(MIP.getMIPNumVars()) };
+	size_t numVarsToFix{ MIP.getMIPNumVars()};
 	sol.resize(numVarsToFix, CPX_INFBOUND);
 
 	std::vector<VarBounds> varRanges(numVarsToFix);
@@ -175,7 +175,7 @@ void FixPolicy::randomRhoFixMT(const size_t threadID, const char* type, MIP& mod
 	if (rho < EPSILON || rho >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Rho par. must be within (0,1)!");
 
-	size_t		 xLen{ static_cast<size_t>(model.getMIPNumVars()) };
+	size_t		 xLen{ model.getMIPNumVars()};
 	const size_t numFixedVars = static_cast<size_t>(rho * xLen);
 	const size_t start = rnd.Int(0, xLen - 1);
 

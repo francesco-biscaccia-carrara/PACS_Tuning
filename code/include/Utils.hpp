@@ -3,8 +3,8 @@
  * @brief Utility header file providing various helper classes and macros for the project.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.7
- * @since 05/09/2025
+ * @version v1.1.0 - InitSol v0.0.8
+ * @since 05/10/2025
  */
 
 #ifndef UTILS_H
@@ -35,9 +35,9 @@
 #pragma region UTILS_DEFINTION
 
 /** Current version of the code */
-#define ACS_VERSION "v1.1.0 - InitSol v0.0.7"
+#define ACS_VERSION "v1.1.0 - InitSol v0.0.8"
 /** Last update date */
-#define LAST_UPDATE "05/09/2025"
+#define LAST_UPDATE "05/10/2025"
 
 /** Verbosity level constants */
 #define NO_VER -1
@@ -65,6 +65,7 @@
  */
 #define DET_TL(nnz) std::max(MIN_DET_TL, std::min((double)(nnz / SCALE), MAX_DET_TL))
 
+//FIXME: find a way to surpress error
 /** Macro for printing error messages */
 #define PRINT_ERR(format, ...) Logger::print(Logger::LogLevel::ERROR, format, ##__VA_ARGS__)
 /** Macro for printing warning messages */

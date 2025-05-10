@@ -56,7 +56,7 @@ int RlxFMIP::solveRelaxation(const double timeLimit, const double detTimeLimit) 
 }
 
 char RlxFMIP::getVarType(const int index) {
-	if (index < 0 || index > getNumCols() - 1)
+	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index getVarType()!");
 
 	char type;
@@ -66,7 +66,7 @@ char RlxFMIP::getVarType(const int index) {
 }
 
 RlxFMIP& RlxFMIP::changeVarType(const int index, const char type) {
-	if (index < 0 || index > getNumCols() - 1)
+	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index changeVarType()!");
 
 	if (CPXchgctype(env, model, 1, &index, &type))

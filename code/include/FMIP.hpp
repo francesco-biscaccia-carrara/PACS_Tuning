@@ -7,8 +7,8 @@
  * It inherits core functionality from the base MIP class while adding FMIP-specific features.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.7
- * @since 05/09/2025
+ * @version v1.1.0 - InitSol v0.0.8
+ * @since 05/10/2025
  */
 
 #ifndef FMIP_H
@@ -90,7 +90,7 @@ public:
 	 * @override Virtual method from MIP base class
 	 */
 	[[nodiscard]]
-	int getMIPNumVars() noexcept override { return MIPNumVars; };
+	size_t getMIPNumVars() noexcept override { return MIPNumVars; };
 
 private:
 	/**
@@ -107,7 +107,7 @@ private:
 	 * This member variable stores the total count of variables in the
 	 * Mixed Integer Programming problem.
 	 */
-	int MIPNumVars;
+	size_t MIPNumVars;
 };
 
 #endif

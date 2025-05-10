@@ -10,7 +10,7 @@ void MergePolicy::recombine(MIP& model, const std::vector<Solution>& x, const ch
 	size_t numCommVars{ 0 };
 #endif
 
-	size_t xLen{ static_cast<size_t>(model.getMIPNumVars()) };
+	size_t xLen{ model.getMIPNumVars()};
 
 	for (size_t i{ 0 }; i < xLen; i++) {
 		if (abs(x[0].sol[i] - x[1].sol[i]) >= EPSILON)

@@ -58,8 +58,8 @@ void OMIP::setup() {
 
 void OMIP::addBudgetConstr(double rhs) {
 	std::vector<double> budConstr(getNumCols(), 0);
-	int					start{ getNumCols() - 2 * getNumRows() };
-	for (size_t i{ static_cast<size_t>(start) }; i < getNumCols(); i++)
+	size_t					start{ getNumCols() - 2 * getNumRows() };
+	for (size_t i{start}; i < getNumCols(); i++)
 		budConstr[i] = 1;
 	addRow(budConstr, OMIP_BUD_CONST_SENSE, rhs);
 }
