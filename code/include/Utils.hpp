@@ -65,17 +65,16 @@
  */
 #define DET_TL(nnz) std::max(MIN_DET_TL, std::min((double)(nnz / SCALE), MAX_DET_TL))
 
-//FIXME: find a way to surpress error
 /** Macro for printing error messages */
-#define PRINT_ERR(format, ...) Logger::print(Logger::LogLevel::ERROR, format, ##__VA_ARGS__)
+#define PRINT_ERR(...) Logger::print(Logger::LogLevel::ERROR, __VA_ARGS__)
 /** Macro for printing warning messages */
-#define PRINT_WARN(format, ...) Logger::print(Logger::LogLevel::WARN, format, ##__VA_ARGS__)
+#define PRINT_WARN(...) Logger::print(Logger::LogLevel::WARN, __VA_ARGS__)
 /** Macro for printing informational messages */
-#define PRINT_INFO(format, ...) Logger::print(Logger::LogLevel::INFO, format, ##__VA_ARGS__)
+#define PRINT_INFO(...) Logger::print(Logger::LogLevel::INFO, __VA_ARGS__)
 /** Macro for printing standard output messages */
-#define PRINT_OUT(format, ...) Logger::print(Logger::LogLevel::OUT, format, ##__VA_ARGS__)
+#define PRINT_OUT(...) Logger::print(Logger::LogLevel::OUT,  __VA_ARGS__)
 /** Macro for printing best result messages */
-#define PRINT_BEST(format, ...) Logger::print(Logger::LogLevel::BEST, format, ##__VA_ARGS__)
+#define PRINT_BEST(...) Logger::print(Logger::LogLevel::BEST, __VA_ARGS__)
 
 #pragma endregion
 
