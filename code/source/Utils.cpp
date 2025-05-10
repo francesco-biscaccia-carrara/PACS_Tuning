@@ -5,7 +5,7 @@ using namespace Utils;
 std::string Utils::getJSONFilename(const std::string& envFilePath) {
     std::ifstream file(envFilePath);
     if (!file.is_open()) {
-        throw std::runtime_error("Failed to open .env file: " + envFilePath);
+        throw std::runtime_error("Failed to open .ACSenv file: " + envFilePath);
     }
 
     std::string line;
@@ -13,7 +13,7 @@ std::string Utils::getJSONFilename(const std::string& envFilePath) {
         if (line.find("ACS_JSON_FILENAME=") == 0) return line.substr(std::string("ACS_JSON_FILENAME=").length());
     }
 
-	throw std::runtime_error("ACS_JSON_FILENAME not found in .env file");
+	throw std::runtime_error("ACS_JSON_FILENAME not found in .ACSenv file");
 }
 
 Random::Random(unsigned long long newSeed) : seed{ newSeed } {

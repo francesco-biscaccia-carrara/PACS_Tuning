@@ -17,9 +17,9 @@ def geo_mean(iterable):
     a = np.array(iterable)
     return a.prod()**(1.0/len(a))
 
-def main():
+def main(pipeline):
 
-    load_dotenv("../../.env")
+    load_dotenv("../../.ACSenv")
     filename = os.environ.get('ACS_JSON_FILENAME')
     outputfile = os.environ.get('ACS_JSOUT_FILENAME')
 
@@ -46,12 +46,13 @@ def main():
                     
                 JSdata[inst][algo] = geo_mean(values)
     
-    if input("Do you want to update the JSON file [y/n]? ") != "y":
-        exit(0)
+    if not pipeline :
+        if input(f"Do you want to collect and save the result on {outputfile} file [y/n]? ") != "y":
+            exit(0)
     
     with open(outputfile, 'w', encoding='utf-8') as f:
         json.dump(JSdata, f, ensure_ascii=False, indent=4)
     print(f"Generated {outputfile} JSON file")
     
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1])

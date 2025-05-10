@@ -3,8 +3,8 @@ from dotenv import load_dotenv
 
 sys.dont_write_bytecode = True
 
-def main():
-    load_dotenv("../../.env")
+def main(pipeline):
+    load_dotenv("../../.ACSenv")
     filename = os.environ.get('ACS_JSOUT_FILENAME')
     perfProf = os.environ.get('ACS_PP')
     outputfile = "out.csv"
@@ -40,11 +40,12 @@ def main():
     df = df.rename(columns={"TMP": str(algos)})
     df.to_csv(outputfile, index=False)
 
-    if input("Do you want to perfprof the data [y/n]? ") != "y":
-        exit(0)
+    if not pipeline:
+        if input("Do you want to perfprof the data [y/n]? ") != "y":
+            exit(0)
     
-    os.system(f"python3 data/perfprof.py -D ',' -X 'MIP Gap'  -S 2 {outputfile} {perfProf}")
+    os.system(f"python3 data/perfprof.py -D ',' -X 'MIP Gap'  -S 2 {outputfile} {perfProf} > /dev/null")
     os.system(f"rm {outputfile}")
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1])

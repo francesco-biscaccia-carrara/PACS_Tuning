@@ -3,14 +3,7 @@ from dotenv import load_dotenv
 
 sys.dont_write_bytecode = True
 
-def generate_env_file(env_vars, file_path="../../.env"):
-    """
-    Generate a .env file with the specified environment variables
-    
-    Args:
-        env_vars (dict): Dictionary of environment variables to write
-        file_path (str): Path to the .env file
-    """
+def generate_env_file(env_vars, file_path="../../.ACSenv"):
     with open(file_path, "w") as f:
         for key, value in env_vars.items():
             f.write(f"{key}={value}\n")
@@ -19,14 +12,18 @@ def generate_env_file(env_vars, file_path="../../.env"):
 
 
 def main():
-
     date = datetime.datetime.now()
 
+    dataFolder = "data/"
+    newData = dataFolder+"{m}_{d}_{y}".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y"))
+    os.makedirs(newData, exist_ok=True)
+    
     envVars = {
-        "ACS_JSON_FILENAME": "{m}_{d}_{y}-raw.json".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y")),
-        "ACS_JSOUT_FILENAME": "{m}_{d}_{y}.json".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y")),
-        "ACS_PP":  "{m}_{d}_{y}.svg".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y"))
+        "ACS_JSON_FILENAME": newData+"/{m}_{d}_{y}-raw.json".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y")),
+        "ACS_JSOUT_FILENAME": newData+"/{m}_{d}_{y}.json".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y")),
+        "ACS_PP": newData+"/{m}_{d}_{y}.svg".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y"))
     }
+    print("--------------------------")
     generate_env_file(env_vars=envVars)
     print("--------------------------")
 

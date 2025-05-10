@@ -16,7 +16,7 @@
 #include "../include/MergePolicy.hpp"
 #include "../include/OMIP.hpp"
 
-#define ENV_FILE "../.env"
+#define ENV_FILE "../.ACSenv"
 #define PATH_TO_JS "../test/scripts/"
 
 int main(int argc, char* argv[]) {

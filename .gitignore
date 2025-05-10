@@ -10,7 +10,6 @@
 /code/test/env
 /code/test/job*
 /code/Doxyfile
-/code/.env
 
 #Thesis stuff
 /thesis/*.aux

@@ -1,0 +1,59 @@
+name: Generate Files on Push
+
+on:
+  push:
+    branches:
+      - InitSol
+      - main
+
+jobs:
+  generate-files:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Check for required files
+        id: check_files
+        run: |
+          if [ ! -f "code/.ACSenv" ]; then
+            echo "Required file not found. Stopping workflow."
+            echo "file_exists=false" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            echo "Required file found. Continuing workflow."
+            echo "file_exists=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Set up Python
+        if: steps.check_files.outputs.file_exists == 'true'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        if: steps.check_files.outputs.file_exists == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas dotenv
+      
+      - name: Run scripts
+        if: steps.check_files.outputs.file_exists == 'true'
+        run: |
+            cd code/test/scripts
+            python dataCollect.py True
+            python pp.py True
+            rm ../../.ACSenv
+
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+      
+      - name: Commit and push generated files
+        if: steps.check_files.outputs.file_exists == 'true'
+        run: |
+            git config --local user.email "francesco.biscacciacarrara@studenti.unipd.it"
+            git config --local user.name "Francesco Biscaccia"
+            git add .
+            git commit -m "TEST RESULT" || echo "No changes to commit"
+            git push

@@ -12,7 +12,7 @@
 
 #include "../include/MIP.hpp"
 
-#define ENV_FILE "../.env"
+#define ENV_FILE "../.ACSenv"
 #define PATH_TO_JS "../test/scripts/"
 
 #define CPLEX_RUN true

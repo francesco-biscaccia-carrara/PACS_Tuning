@@ -9,9 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks.  
 - Enforced FMIP resolution in the ACS workflow prior to transitioning to the OMIP phase.
 
-## [0.0.7] - 2025-05-08  
+## [0.0.7] - 2025-05-10  
 ### Changed  
-- Performance testing involves the use of a JSON file for result tracking.  
+- Automated plot generation using GitHub Workflows ([plot.yml](.github/workflows/plot.yml)).  
+- Performance testing now uses a JSON file for result tracking.  
+
 
 ## InitSol [0.0.6] - 2025-05-07  
 ### Added  
