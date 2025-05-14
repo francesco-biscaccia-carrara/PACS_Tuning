@@ -4,7 +4,7 @@
  *
  * @author Francesco Biscaccia Carrara
  * @version v1.1.0 - InitSol v0.0.8
- * @since 05/10/2025
+ * @since 05/14/2025
  */
 
 #ifndef UTILS_H
@@ -32,12 +32,14 @@
 #include <string.h>
 #include <sys/time.h>
 
+#include "ACSException.hpp"
+
 #pragma region UTILS_DEFINTION
 
 /** Current version of the code */
 #define ACS_VERSION "v1.1.0 - InitSol v0.0.8"
 /** Last update date */
-#define LAST_UPDATE "05/10/2025"
+#define LAST_UPDATE "05/14/2025"
 
 /** Verbosity level constants */
 #define NO_VER -1
@@ -222,15 +224,9 @@ namespace Utils {
 	/**
 	 * Custom exception for command-line argument parsing errors.
 	 */
-	class ArgsParserException : public std::runtime_error {
-
-	public:
-		/**
-		 * Constructs an ArgsParserException with a specific error message.
-		 *
-		 * @param message Detailed error message
-		 */
-		explicit ArgsParserException(const std::string& message) : std::runtime_error("ArgsParserException: " + message){};
+	class ArgsParserException : public ACSException{
+		public :
+			ArgsParserException(ExceptionType type,const std::string& message) : ACSException(type, message, "ArgsParser") {}
 	};
 
 	/**
@@ -256,7 +252,7 @@ namespace Utils {
 		CLIParser(const CLIParser&) = delete;
 		CLIParser& operator=(const CLIParser&) = delete;
 
-		// Prevent movin
+		// Prevent moving
 		CLIParser(const CLIParser&&) = delete;
 		CLIParser& operator=(const CLIParser&&) = delete;
 

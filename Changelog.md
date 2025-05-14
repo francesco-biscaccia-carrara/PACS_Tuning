@@ -9,9 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks.  
 - Enforced FMIP resolution in the ACS workflow prior to transitioning to the OMIP phase.
 
-## [0.0.8] - 2025-05-10  
+
+## [0.0.8] - 2025-05-14  
 ### Changed  
-- Suppressed all compiler warnings labeled as "WARNING" using pedantic flags and stricter suppression methods. 
+- Centralized exception handling by unifying all exceptions into a single `ACSException` class ([ACSException.hpp](code/include/ACSException.hpp)).  
+- Suppressed all compiler warnings labeled as "WARNING" using ped
+
 
 ## [0.0.7] - 2025-05-10  
 ### Changed  

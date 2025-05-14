@@ -9,7 +9,7 @@
  * @note Requires CPLEX library and Utils.hpp
  * @author Francesco Biscaccia Carrara
  * @version v1.1.0 - InitSol v0.0.8
- * @since 05/10/2025
+ * @since 05/14/2025
  */
 
 #ifndef MIP_SOL_H
@@ -54,61 +54,18 @@ struct Solution {
 	double				oMIPCost; ///< Objective cost of the MIP solution
 };
 
+
 /**
  * @class MIPException
  * @brief Custom exception class for MIP-related errors
  *
  * Provides detailed exception types for various MIP processing scenarios
  */
-class MIPException : public std::runtime_error {
-
-public:
-	/**
-	 * @enum ExceptionType
-	 * @brief Enumeration of possible MIP-related exception types
-	 */
-	enum class ExceptionType {
-		General,
-		ModelCreation,
-		OutOfBound,
-		MIPOptimizationError,
-		LPOptimizationError,
-		WrongTimeLimit,
-		FileNotFound,
-		InputSizeError,
-		_count // Helper for array size
-	};
-
-	/**
-	 * @brief Constructs a MIPException with a specific type and message
-	 * @param type The type of exception
-	 * @param message Detailed error message
-	 */
-	explicit MIPException(ExceptionType type, const std::string& message) : std::runtime_error(formatMessage(type, message)){};
-
-private:
-	/// Static array of exception type names
-	static constexpr std::array<const char*, static_cast<size_t>(ExceptionType::_count)> typeNames = {
-		"_general-ex_",
-		"ModelCreation",
-		"OutOfBounds",
-		"MIPOptimizationError",
-		"LPOptimizationError",
-		"WrongTimeLimit",
-		"FileNotFound",
-		"InputSizeError"
-	};
-
-	/**
-	 * @brief Formats the exception message with type and details
-	 * @param type The type of exception
-	 * @param message Detailed error message
-	 * @return Formatted error message string
-	 */
-	static std::string formatMessage(ExceptionType type, const std::string& message) {
-		return "MIPException: [" + std::string(typeNames[static_cast<size_t>(type)]) + "] - " + std::string(message);
-	}
+class MIPException : public ACSException{
+	public :
+		MIPException(ExceptionType type, const std::string& message) : ACSException(type, message, "MIP") {}
 };
+
 
 /**
  * @class MIP

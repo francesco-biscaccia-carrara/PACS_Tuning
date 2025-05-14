@@ -5,7 +5,7 @@
  *
  * @author Francesco Biscaccia Carrara
  * @version v1.1.0 - InitSol v0.0.8
- * @since 05/10/2025
+ * @since 05/14/2025
  */
 
 #ifndef FIX_POL_H
@@ -14,6 +14,7 @@
 #include <atomic>
 
 #include "RlxFMIP.hpp"
+#include "ACSException.hpp"
 using namespace Utils;
 
 #pragma region DYN_ADJUST_RHO_DEF
@@ -39,44 +40,9 @@ namespace FixPolicy {
 	 * @class FixPolicyException
 	 * @brief Exception class for handling FixPolicy-related errors.
 	 */
-	class FixPolicyException : public std::runtime_error {
-
-	public:
-		/**
-		 * @enum ExceptionType
-		 * @brief Enumerates different types of exceptions that can occur within FixPolicy.
-		 */
-		enum class ExceptionType {
-			General,
-			InputSizeError,
-			_count // Helper for array size
-		};
-
-		/**
-		 * @brief Constructs a FixPolicyException with a specific type and message.
-		 * @param type The type of exception.
-		 * @param message A descriptive error message.
-		 */
-		explicit FixPolicyException(ExceptionType type, const std::string& message) : std::runtime_error(formatMessage(type, message)){};
-
-	private:
-		/**
-		 * @brief Mapping of exception types to their string representations.
-		 */
-		static constexpr std::array<const char*, static_cast<size_t>(ExceptionType::_count)> typeNames = {
-			"_general-ex_",
-			"InputSizeError"
-		};
-
-		/**
-		 * @brief Formats the exception message.
-		 * @param type The type of exception.
-		 * @param message The error message.
-		 * @return A formatted string containing the exception details.
-		 */
-		static std::string formatMessage(ExceptionType type, const std::string& message) {
-			return "FixPolicyException: [" + std::string(typeNames[static_cast<size_t>(type)]) + "] - " + std::string(message);
-		}
+	class FixPolicyException : public ACSException{
+		public :
+			FixPolicyException(ExceptionType type,const std::string& message) : ACSException(type, message, "FixPolicy") {}
 	};
 
 	/**

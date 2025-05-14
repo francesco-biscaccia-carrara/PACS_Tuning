@@ -89,7 +89,7 @@ int MIP::solve(const double timeLimit, const double detTimeLimit) {
 		CPXsetdblparam(env, CPX_PARAM_DETTILIM, detTimeLimit);
 
 	if (int error{ CPXmipopt(env, model) })
-		throw MIPException(MIPEx::MIPOptimizationError, "CPLEX cannot solve this problem!\t" + std::to_string(error));
+		throw MIPException(MIPEx::MIP_OptimizationError, "CPLEX cannot solve this problem!\t" + std::to_string(error));
 
 	return CPXgetstat(env, model);
 }

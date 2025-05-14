@@ -6,13 +6,14 @@
  *
  * @author Francesco Biscaccia Carrara
  * @version v1.1.0 - InitSol v0.0.8
- * @since 05/10/2025
+ * @since 05/14/2025
  */
 
 #ifndef MER_POL_H
 #define MER_POL_H
 
 #include "MIP.hpp"
+#include "ACSException.hpp"
 
 using namespace Utils;
 
@@ -22,44 +23,9 @@ namespace MergePolicy {
 	 * @class MergePolicyException
 	 * @brief Exception class for handling MergePolicy-related errors.
 	 */
-	class MergePolicyException : public std::runtime_error {
-
-	public:
-		/**
-		 * @enum ExceptionType
-		 * @brief Enumerates different types of exceptions that can occur within MergePolicy.
-		 */
-		enum class ExceptionType {
-			General,
-			InputSizeError,
-			_count // Helper for array size
-		};
-
-		/**
-		 * @brief Constructs a MergePolicyException with a specific type and message.
-		 * @param type The type of exception.
-		 * @param message A descriptive error message.
-		 */
-		explicit MergePolicyException(ExceptionType type, const std::string& message) : std::runtime_error(formatMessage(type, message)){};
-
-	private:
-		/**
-		 * @brief Mapping of exception types to their string representations.
-		 */
-		static constexpr std::array<const char*, static_cast<size_t>(ExceptionType::_count)> typeNames = {
-			"_general-ex_",
-			"InputSizeError"
-		};
-
-		/**
-		 * @brief Formats the exception message.
-		 * @param type The type of exception.
-		 * @param message The error message.
-		 * @return A formatted string containing the exception details.
-		 */
-		static std::string formatMessage(ExceptionType type, const std::string& message) {
-			return "MergePolicyException: [" + std::string(typeNames[static_cast<size_t>(type)]) + "] - " + std::string(message);
-		}
+	class MergePolicyException : public ACSException{
+		public :
+			MergePolicyException(ExceptionType type,const std::string& message) : ACSException(type, message, "MergePolicy") {}
 	};
 
 	/**

@@ -24,7 +24,7 @@ int RlxFMIP::solve(const double timeLimit, const double detTimeLimit) {
 	changeProbType(CPXPROB_MILP);
 
 	if (int error{ CPXmipopt(env, model) })
-		throw MIPException(MIPEx::MIPOptimizationError, "CPLEX cannot solve this problem!\t" + std::to_string(error));
+		throw MIPException(MIPEx::MIP_OptimizationError, "CPLEX cannot solve this problem!\t" + std::to_string(error));
 
 	return CPXgetstat(env, model);
 }
@@ -50,7 +50,7 @@ int RlxFMIP::solveRelaxation(const double timeLimit, const double detTimeLimit) 
 	changeProbType(CPXPROB_LP);
 
 	if (int error{ CPXlpopt(env, model) })
-		throw MIPException(MIPEx::LPOptimizationError, "CPLEX cannot solve the relaxed problem!\t" + std::to_string(error));
+		throw MIPException(MIPEx::LP_OptimizationError, "CPLEX cannot solve the relaxed problem!\t" + std::to_string(error));
 
 	return CPXgetstat(env, model);
 }
@@ -70,11 +70,11 @@ RlxFMIP& RlxFMIP::changeVarType(const int index, const char type) {
 		throw MIPException(MIPEx::OutOfBound, "Wrong index changeVarType()!");
 
 	if (CPXchgctype(env, model, 1, &index, &type))
-		throw MIPException(MIPEx::General, "Type of var" + std::to_string(index) + "not changed!");
+		throw MIPException(MIPEx::SetFunction, "Type of var" + std::to_string(index) + "not changed!");
 	return *this;
 }
 
 void RlxFMIP::changeProbType(const int type) {
 	if (CPXchgprobtype(env, model, type))
-		throw MIPException(MIPEx::General, "Problem type not changed!");
+		throw MIPException(MIPEx::SetFunction, "Problem type not changed!");
 }

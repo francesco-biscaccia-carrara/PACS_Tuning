@@ -1,19 +1,21 @@
 #include "../include/Utils.hpp"
 
 using namespace Utils;
+using ExType = ACSException::ExceptionType;
 
 std::string Utils::getJSONFilename(const std::string& envFilePath) {
     std::ifstream file(envFilePath);
     if (!file.is_open()) {
-        throw std::runtime_error("Failed to open .ACSenv file: " + envFilePath);
+        throw ACSException(ExType::FileNotOpened,"Failed to open .ACSenv file: " + envFilePath,"JSHandler");
     }
 
     std::string line;
     while (std::getline(file, line)) {
-        if (line.find("ACS_JSON_FILENAME=") == 0) return line.substr(std::string("ACS_JSON_FILENAME=").length());
+        if (line.find("ACS_JSON_FILENAME=") == 0) 
+			return line.substr(std::string("ACS_JSON_FILENAME=").length());
     }
 
-	throw std::runtime_error("ACS_JSON_FILENAME not found in .ACSenv file");
+	throw ACSException(ExType::NoJSFileNameEnv,"ACS_JSON_FILENAME not found in " + envFilePath +" file","JSHandler");
 }
 
 Random::Random(unsigned long long newSeed) : seed{ newSeed } {
@@ -45,32 +47,46 @@ double Random::Double(double min, double max) {
 }
 
 void Logger::print(LogLevel typeMsg, const char* format, ...) {
+#if !ACS_TEST
 	const char* msgClr;
+#endif
 	const char* msgPref;
 
 	switch (typeMsg) {
 		case LogLevel::ERROR:
+#if !ACS_TEST
 			msgClr = ANSI_COLOR_RED;
+#endif
 			msgPref = "[  ERR  ]";
 			break;
 		case LogLevel::WARN:
+#if !ACS_TEST
 			msgClr = ANSI_COLOR_YELLOW;
+#endif
 			msgPref = "[  WAR  ]";
 			break;
 		case LogLevel::INFO:
+#if !ACS_TEST
 			msgClr = ANSI_COLOR_BLUE;
+#endif
 			msgPref = "[  DEB  ]";
 			break;
 		case LogLevel::OUT:
+#if !ACS_TEST
 			msgClr = ANSI_COLOR_RESET;
+#endif
 			msgPref = "[  OUT  ]";
 			break;
 		case LogLevel::BEST:
+#if !ACS_TEST
 			msgClr = ANSI_COLOR_GREEN;
+#endif
 			msgPref = "[  OUT* ]";
 			break;
 		default:
+#if !ACS_TEST
 			msgClr = ANSI_COLOR_RESET;
+#endif
 			msgPref = "";
 			break;
 	}
@@ -188,11 +204,15 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 		}
 
 		if (CPLEXRun) {
-			if (args.fileName.empty() || !args.timeLimit)
-				throw ArgsParserException(HELP_CPLEXRUN);
+			if (args.fileName.empty() || !args.timeLimit){
+				printf("%s\n", HELP_CPLEXRUN);
+				throw ArgsParserException(ExType::WrongArgsValue,"Wrong values passed as CLI args");
+			}	
 		} else {
-			if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.numsubMIPs || args.algo < 0)
-				throw ArgsParserException(HELP_ACS);
+			if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.numsubMIPs || args.algo < 0){
+				printf("%s\n", HELP_ACS);
+				throw ArgsParserException(ExType::WrongArgsValue,"Wrong values passed as CLI args");
+			}
 		}
 
 		printf("%s\t%s -- %s\n", argv[0] + 2, ACS_VERSION, LAST_UPDATE);
@@ -220,9 +240,10 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 #endif
 	} else {
 		if (CPLEXRun) {
-			throw ArgsParserException(HELP_CPLEXRUN);
+			printf("%s\n", HELP_CPLEXRUN);
 		} else {
-			throw ArgsParserException(HELP_ACS);
+			printf("%s\n", HELP_ACS);
 		}
+		throw ArgsParserException(ExType::InputSizeError, "No input are passed to CLIParser::CLIParser()");
 	}
 }

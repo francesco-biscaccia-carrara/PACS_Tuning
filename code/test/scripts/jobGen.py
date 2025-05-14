@@ -1,5 +1,5 @@
 import sys, pandas as pd, json, datetime, os
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 
 sys.dont_write_bytecode = True
 

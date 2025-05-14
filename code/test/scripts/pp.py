@@ -1,5 +1,5 @@
 import os, sys, json, pandas as pd
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 
 sys.dont_write_bytecode = True
 
@@ -32,6 +32,7 @@ def main(pipeline):
     columns = ['TMP', 'CPLEX'] + sorted([col for col in df.columns if col not in ['TMP', 'CPLEX']], key=int)
     df = df[columns]
     df = df.rename(columns={"TMP": str(len(columns)-1)})
+    
     df.to_csv(outputfile, index=False)
 
     if not pipeline:

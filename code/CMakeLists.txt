@@ -10,7 +10,7 @@ endif()
 
 project(ACS)
 set(CODE_VERSION "v1.1.0 - InitSol v0.0.8")
-set(LAST_UPDATE "05/10/2025")
+set(LAST_UPDATE "05/14/2025")
 
 # setting flags for optimization and debug builds
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
@@ -107,6 +107,7 @@ add_library(
     source/FMIP.cpp
     include/FMIP.hpp
 )
+
 add_library(
     RlxFMIP
     source/RlxFMIP.cpp
