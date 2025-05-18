@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 			CPLEXSol.oMIPCost = ogMIP.getObjValue();
 			CPLEXSol.slackSum = 0.0;
 #if ACS_TEST
-		jsData[CLIArgs.fileName]["CPLEX"]= {std::to_string(CPLEXSol.oMIPCost), std::to_string(retTime) };
+		jsData[CLIArgs.fileName]["CPLEX"]= {CPLEXSol.oMIPCost, retTime };
 #endif
 			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", CPLEXSol.oMIPCost, CPLEXSol.slackSum);
 		}
