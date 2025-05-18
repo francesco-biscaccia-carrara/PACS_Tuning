@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 #endif
 		if (MIP::isINForUNBD(solveCode)) {
 #if ACS_TEST
-		jsData[CLIArgs.fileName]["CPLEX"]= { "NO SOL", std::to_string(retTime) };
+		jsData[CLIArgs.fileName]["CPLEX"]= { "NO SOL", retTime };
 #endif
 			PRINT_ERR("NO FEASIBLE SOLUTION FIND");
 		} else {
