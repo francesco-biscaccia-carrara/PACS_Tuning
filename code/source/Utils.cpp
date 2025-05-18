@@ -3,21 +3,6 @@
 using namespace Utils;
 using ExType = ACSException::ExceptionType;
 
-std::string Utils::getJSONFilename(const std::string& envFilePath) {
-    std::ifstream file(envFilePath);
-    if (!file.is_open()) {
-        throw ACSException(ExType::FileNotOpened,"Failed to open .ACSenv file: " + envFilePath,"JSHandler");
-    }
-
-    std::string line;
-    while (std::getline(file, line)) {
-        if (line.find("ACS_JSON_FILENAME=") == 0) 
-			return line.substr(std::string("ACS_JSON_FILENAME=").length());
-    }
-
-	throw ACSException(ExType::NoJSFileNameEnv,"ACS_JSON_FILENAME not found in " + envFilePath +" file","JSHandler");
-}
-
 Random::Random(unsigned long long newSeed) : seed{ newSeed } {
 	rng.seed(newSeed);
 }
@@ -92,8 +77,8 @@ void Logger::print(LogLevel typeMsg, const char* format, ...) {
 	}
 
 	/// FIXED: Bug #5860f1916463f69833a7cb9170845d492fabee8f –- Segmentation fault caused by overlapping printf calls.
-	flockfile(stdout);
-
+	
+flockfile(stdout);
 #if ACS_TEST
 	printf("%s|%8.2f|", msgPref, Clock::timeElapsed());
 #else

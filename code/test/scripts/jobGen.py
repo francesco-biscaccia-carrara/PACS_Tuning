@@ -54,7 +54,7 @@ def main():
         os.system(f"rm {jobs_folder}/*")
 
     if len(os.listdir(jobs_folder)) == 0:
-        print("Folder 'jobs' cleaned up!")
+        print(f"Folder `{jobs_folder}` cleaned up!")
     print("--------------------------")
 
     os.makedirs(jobs_folder, exist_ok=True)
@@ -63,7 +63,7 @@ def main():
     if input("Do you want to generate the jobs [y/n]? ") != "y":
         exit(0)
     
-    rhos = (0,1,2,3)
+    rhos = (0,1,2,3,4)
     seeds = (38472910, 56473829, 27384910, 91827364, 83746592)
     count =0
     indexObj= 0
@@ -76,7 +76,7 @@ def main():
                 for rho in rhos:
                     jsonInst[instance].update({"_obj": objs[indexObj], rho: {}})
                     for seed in seeds:
-                        jsonInst[instance][rho].update({seed: None})
+                        jsonInst[instance][rho].update({seed: [None,None]})
                         job_name =f"{instance}_{exe}_{rho}_{seed}"
                         job = f"{jobs_folder}/{job_name}"
                         job_content = f"""#!/bin/bash
@@ -117,7 +117,7 @@ sudo cpupower frequency-set -g powersave > /dev/null
                         count+=1
             else: 
                 jsonInst[instance]={
-                        'CPLEX': None
+                        'CPLEX': [None,None]
                 }
                 job = f"{jobs_folder}/{instance}_{exe}"
                 job_content = f"""#!/bin/bash
@@ -160,10 +160,13 @@ sudo cpupower frequency-set -g powersave > /dev/null
     
     print(f"Generated {count} files")
 
+    tmpFolder = "tmp"
+    os.makedirs(tmpFolder, exist_ok=True)
+    print(f"Generated `{tmpFolder}` folder")
 
     with open(filename, 'w', encoding='utf-8') as f:
          json.dump(jsonInst, f, ensure_ascii=False, indent=4)
-    print(f"Generated {filename} JSON file")
+    print(f"Generated `{filename}` JSON file")
     print("--------------------------")
  
 

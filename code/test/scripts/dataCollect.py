@@ -13,9 +13,9 @@ def MIPgap(opt,inc_val):
     else:
         return abs(opt - inc_val) / max(abs(opt), abs(inc_val))
 
-def geo_mean(iterable):
+def mean(iterable):
     a = np.array(iterable)
-    return a.prod()**(1.0/len(a))
+    return a.mean()
 
 def main(pipeline):
 
@@ -23,6 +23,7 @@ def main(pipeline):
     filename = os.environ.get('ACS_JSON_FILENAME')
     outputfile = os.environ.get('ACS_JSOUT_FILENAME')
 
+   #FIXME : update the plotting 
     with open(filename, 'r') as file:
         JSdata = json.load(file)
     
@@ -33,18 +34,20 @@ def main(pipeline):
 
             #Compare with optimal
             if algo == "CPLEX":
-                    CPLEXVal = JSdata[inst]["CPLEX"]
+                    CPLEXVal = JSdata[inst]["CPLEX"][0]
                     if MIPgap(obj,CPLEXVal) != None:
-                        JSdata[inst]["CPLEX"] = MIPgap(obj,CPLEXVal)
+                        JSdata[inst]["CPLEX"][0] = MIPgap(obj,CPLEXVal)
             else:
                 values = []
+                times = []
                 for seed in JSdata[inst][algo]:
-                    ACSVal = JSdata[inst][algo][seed]
+                    ACSVal = JSdata[inst][algo][seed][0]
+                    times.append( JSdata[inst][algo][seed][1])
                     if MIPgap(obj,ACSVal) != None:
-                        JSdata[inst][algo][seed] = MIPgap(obj,ACSVal)
-                        values.append(JSdata[inst][algo][seed])
+                        JSdata[inst][algo][seed][0]= MIPgap(obj,ACSVal)
+                        values.append(JSdata[inst][algo][seed][0])
                     
-                JSdata[inst][algo] = geo_mean(values)
+                JSdata[inst][algo]= [mean(values),mean(times)]
     
     if not pipeline :
         if input(f"Do you want to collect and save the result on {outputfile} file [y/n]? ") != "y":

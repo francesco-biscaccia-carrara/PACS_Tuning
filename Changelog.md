@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks.  
 - Enforced FMIP resolution in the ACS workflow prior to transitioning to the OMIP phase.
 
+## [0.0.9] - 2025-05-18  
+### Changed  
+- Removed all usage of CPLEX callbacks.  
+- Refined the result collector mechanism for improved accuracy and maintainability.  
+
 
 ## [0.0.8] - 2025-05-14  
 ### Changed  

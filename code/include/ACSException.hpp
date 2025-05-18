@@ -3,8 +3,8 @@
  * @brief Exception class for handling ACS-related errors
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.8
- * @since 05/14/2025
+ * @version v1.1.0 - InitSol v0.0.9
+ * @since 05/18/2025
  */
 
 #ifndef ACS_EXC_H
@@ -30,8 +30,6 @@ public:
 		MIP_OptimizationError,
 		LP_OptimizationError,
 		WrongTimeLimit,
-        FileNotOpened,
-        NoJSFileNameEnv,
 		FileNotFound,
 		InputSizeError,
         WrongArgsValue,
@@ -57,8 +55,6 @@ private:
 		"MIP_OptimizationError",
 		"LP_OptimizationError",
 		"WrongTimeLimit",
-        "FileNotOpened",
-        "NoJSFileNameEnv",
 		"FileNotFound",
 		"InputSizeError",
         "WrongArgsValue",

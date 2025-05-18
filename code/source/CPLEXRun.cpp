@@ -2,8 +2,8 @@
  * CPLEX Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.8
- * @since 05/14/2025
+ * @version v1.1.0 - InitSol v0.0.9
+ * @since 05/18/2025
  */
 
 #include <iostream>
@@ -12,8 +12,7 @@
 
 #include "../include/MIP.hpp"
 
-#define ENV_FILE "../.ACSenv"
-#define PATH_TO_JS "../test/scripts/"
+#define PATH_TO_TMP "../test/scripts/tmp/"
 
 #define CPLEX_RUN true
 #define NUM_CORE 4
@@ -29,15 +28,13 @@ int main(int argc, char* argv[]) {
 		Solution CPLEXSol = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
 
 		int solveCode{ ogMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit)) };
+		double	 retTime = Clock::timeElapsed();
 #if ACS_TEST
-		std::ifstream iFile(PATH_TO_JS+getJSONFilename(ENV_FILE));
-		nlohmann::json j;
-		iFile >> j;
-		iFile.close();
+		nlohmann::json jsData;
 #endif
 		if (MIP::isINForUNBD(solveCode)) {
 #if ACS_TEST
-			j[CLIArgs.fileName]["CPLEX"] = "NO SOL";
+		jsData[CLIArgs.fileName]["CPLEX"]= { "NO SOL", std::to_string(retTime) };
 #endif
 			PRINT_ERR("NO FEASIBLE SOLUTION FIND");
 		} else {
@@ -45,15 +42,17 @@ int main(int argc, char* argv[]) {
 			CPLEXSol.oMIPCost = ogMIP.getObjValue();
 			CPLEXSol.slackSum = 0.0;
 #if ACS_TEST
-			j[CLIArgs.fileName]["CPLEX"] = CPLEXSol.oMIPCost;
+		jsData[CLIArgs.fileName]["CPLEX"]= {std::to_string(CPLEXSol.oMIPCost), std::to_string(retTime) };
 #endif
 			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", CPLEXSol.oMIPCost, CPLEXSol.slackSum);
 		}
 #if ACS_TEST
-		std::ofstream oFile(PATH_TO_JS+getJSONFilename(ENV_FILE));
-		oFile << j.dump(4);
+		std::string	  JSfilename = CLIArgs.fileName + "_CPLEX_" + std::to_string(CLIArgs.algo) + "_" + std::to_string(CLIArgs.algo) + ".json";
+		std::ofstream oFile(PATH_TO_TMP + JSfilename);
+
+		oFile << jsData.dump(4);
 		oFile.close();
-		PRINT_INFO("JSON: Execution result saved on %s file", getJSONFilename(ENV_FILE).c_str());
+		PRINT_INFO("JSON: Execution result saved on %s%s file",PATH_TO_TMP,JSfilename.c_str());
 #endif
 	} catch (const std::runtime_error& ex) {
 		PRINT_ERR(ex.what());
