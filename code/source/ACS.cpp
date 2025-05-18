@@ -196,7 +196,7 @@ int main(int argc, char* argv[]) {
 #endif
 		}
 #if ACS_TEST
-		std::string	  JSfilename = CLIArgs.fileName + "_ACS_" + std::to_string(CLIArgs.algo) + "_" + std::to_string(CLIArgs.algo) + ".json";
+		std::string	  JSfilename = CLIArgs.fileName + "_ACS_" + std::to_string(CLIArgs.algo) + "_" + std::to_string(CLIArgs.seed) + ".json";
 		std::ofstream oFile(PATH_TO_TMP + JSfilename);
 
 		oFile << jsData.dump(4);
