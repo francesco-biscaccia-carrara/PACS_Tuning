@@ -3,6 +3,27 @@ from dotenv import load_dotenv # type: ignore
 
 sys.dont_write_bytecode = True
 
+
+def dataSanitizing(filename):
+    with open(filename, 'r') as file:
+        JSdata = json.load(file)
+
+        for inst in JSdata:
+            obj = JSdata[inst]["_obj"]
+            for algo in JSdata[inst]:
+                if algo == "_obj": continue
+                if algo == "CPLEX":
+                    CPLEXTime = JSdata[inst]["CPLEX"][1]
+                    JSdata[inst]["CPLEX"][1] = CPLEXTime if CPLEXTime<300 else 300
+                else:
+                    for seed in JSdata[inst][algo]:
+                        ACSTime = JSdata[inst][algo][seed][1]
+                        JSdata[inst][algo][seed][1] = ACSTime if ACSTime<300 else 300
+    
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(JSdata, f, ensure_ascii=False, indent=4)
+    print(f"Sanitized {filename} JSON file")
+
 def MIPgap(opt,inc_val):
     if inc_val == None : return None
 
@@ -25,29 +46,33 @@ def main(pipeline):
 
    #FIXME : update the plotting 
     with open(filename, 'r') as file:
-        JSdata = json.load(file)
-    
-    for inst in JSdata:
-        obj = JSdata[inst]["_obj"]
-        for algo in JSdata[inst]:
-            if algo == "_obj": continue
+            JSdata = json.load(file)
 
-            #Compare with optimal
-            if algo == "CPLEX":
-                    CPLEXVal = JSdata[inst]["CPLEX"][0]
-                    if MIPgap(obj,CPLEXVal) != None:
-                        JSdata[inst]["CPLEX"][0] = MIPgap(obj,CPLEXVal)
-            else:
-                values = []
-                times = []
-                for seed in JSdata[inst][algo]:
-                    ACSVal = JSdata[inst][algo][seed][0]
-                    times.append( JSdata[inst][algo][seed][1])
-                    if MIPgap(obj,ACSVal) != None:
-                        JSdata[inst][algo][seed][0]= MIPgap(obj,ACSVal)
-                        values.append(JSdata[inst][algo][seed][0])
-                    
-                JSdata[inst][algo]= [mean(values),mean(times)]
+            for inst in JSdata:
+                #obj = JSdata[inst]["_obj"]
+                for algo in JSdata[inst]:
+                    if algo == "_obj": continue
+                    if algo == "CPLEX": continue
+                    else:
+                        values = []
+                        times = []
+                        for seed in JSdata[inst][algo]:
+                            values.append(JSdata[inst][algo][seed][0])
+                            times.append(JSdata[inst][algo][seed][1])
+                        
+                        nosol=0
+                        for val in values:
+                            if val == "NO SOL":
+                                nosol+=1
+                        
+                        if nosol < len(values)/2:
+                            for val in values:
+                                if val =="NO SOL":
+                                    values.remove(val)
+
+                        avgVal = "NO SOL" if nosol >= len(values)/2 else mean(values)
+                        avgTime = mean(times)
+                        JSdata[inst][algo]=[avgVal,avgTime]
     
     if not pipeline :
         if input(f"Do you want to collect and save the result on {outputfile} file [y/n]? ") != "y":

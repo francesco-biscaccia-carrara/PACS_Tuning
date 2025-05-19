@@ -21,7 +21,9 @@ def main():
     envVars = {
         "ACS_JSON_FILENAME": newData+"/{m}_{d}_{y}-raw.json".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y")),
         "ACS_JSOUT_FILENAME": newData+"/{m}_{d}_{y}.json".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y")),
-        "ACS_PP": newData+"/{m}_{d}_{y}.svg".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y"))
+        "ACS_SUCCRATE_PP":newData+"/{m}_{d}_{y}-SuccRatePlot.svg".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y")),
+        "ACS_COMPTIME_PP":newData+"/{m}_{d}_{y}-CompTimePlot.svg".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y")),
+        "ACS_MIP_PP": newData+"/{m}_{d}_{y}-MIPGapPlot.svg".format(m=date.strftime("%m"),d=date.strftime("%d"),y=date.strftime("%Y"))
     }
     print("--------------------------")
     generate_env_file(env_vars=envVars)
