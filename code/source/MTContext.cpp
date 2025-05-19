@@ -265,7 +265,7 @@ void MTContext::OMIPInstanceJob(const size_t thID, const double slackSumUB, Args
 	// if (CLIArgs.algo == 2) FIXME: v0.0.9 - remove it
 	// 	oMIP.setCallbackFunction(ACS_CB_CONTEXTMASK, updateIncMIPHandler, &incumbentAmongMIPs);
 
-	//FixPolicy::randomRhoFixMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
+	FixPolicy::randomRhoFixMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
 
 	/// FIXED: Bug #e15760bcfd3dcca51cf9ea23f70072dd6cb2ac14 — Resolved MIPException::WrongTimeLimit triggered by a negligible time limit.
 	if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -290,7 +290,7 @@ void MTContext::OMIPInstanceJob(const size_t thID, const double slackSumUB, Args
 	PRINT_OUT("Proc: %3d - OptMIP Objective: %20.2f|%-10.2f", thID, tmpSolutions[thID].oMIPCost, tmpSolutions[thID].slackSum);
 	setBestACSIncumbent(tmpSolutions[thID]);
 
-	FixPolicy::dynamicAdjustRhoMT(thID, "OMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
+	//FixPolicy::dynamicAdjustRhoMT(thID, "OMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
 }
 
 // FIXME: v0.0.9 - remove it
