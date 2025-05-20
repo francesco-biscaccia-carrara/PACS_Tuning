@@ -65,7 +65,7 @@ def main():
     if input("Do you want to generate the jobs [y/n]? ") != "y":
         exit(0)
     
-    rhos = (0,1,2,3,4)
+    rhos = (0,1,2)
     seeds = (38472910, 56473829, 27384910, 91827364, 83746592)
     count =0
     indexObj= 0
