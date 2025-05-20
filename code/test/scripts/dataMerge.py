@@ -3,10 +3,6 @@ from dotenv import load_dotenv # type: ignore
 
 sys.dont_write_bytecode = True
 
-def mean(iterable):
-    a = np.array(iterable)
-    return a.mean()
-
 def main(pipeline):
 
     load_dotenv("../../.ACSenv")

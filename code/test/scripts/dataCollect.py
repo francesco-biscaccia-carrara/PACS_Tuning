@@ -24,16 +24,6 @@ def dataSanitizing(filename):
         json.dump(JSdata, f, ensure_ascii=False, indent=4)
     print(f"Sanitized {filename} JSON file")
 
-def MIPgap(opt,inc_val):
-    if inc_val == None : return None
-
-    if inc_val == "NO SOL" or opt*inc_val<0:
-        return 1
-    elif opt == inc_val : 
-        return 0
-    else:
-        return abs(opt - inc_val) / max(abs(opt), abs(inc_val))
-
 def mean(iterable):
     a = np.array(iterable)
     return a.mean()
@@ -43,6 +33,8 @@ def main(pipeline):
     load_dotenv("../../.ACSenv")
     filename = os.environ.get('ACS_JSON_FILENAME')
     outputfile = os.environ.get('ACS_JSOUT_FILENAME')
+
+    dataSanitizing(filename)
 
    #FIXME : update the plotting 
     with open(filename, 'r') as file:
@@ -59,19 +51,37 @@ def main(pipeline):
                         for seed in JSdata[inst][algo]:
                             values.append(JSdata[inst][algo][seed][0])
                             times.append(JSdata[inst][algo][seed][1])
-                        
+
+                        # Sanitizing
                         nosol=0
                         for val in values:
                             if val == "NO SOL":
                                 nosol+=1
-                        
-                        if nosol < len(values)/2:
-                            for val in values:
-                                if val =="NO SOL":
-                                    values.remove(val)
 
-                        avgVal = "NO SOL" if nosol >= len(values)/2 else mean(values)
-                        avgTime = mean(times)
+                        if nosol < len(values)/2:
+                            newVal = []
+                            for val in values:
+                                if val != "NO SOL":
+                                    newVal.append(val)
+                            avgVal = mean(newVal)
+                        else:
+                            avgVal = "NO SOL"
+                        
+
+                        nosoltl=0
+                        for time in times:
+                            if time >= 300:
+                                nosoltl+=1
+                        
+                        if nosoltl < len(times)/2:
+                            newTime = []
+                            for time in times:
+                                if time < 300:
+                                    newTime.append(time)
+                            avgTime = mean(newTime)
+                        else:
+                            avgTime = 300
+                        
                         JSdata[inst][algo]=[avgVal,avgTime]
     
     if not pipeline :
