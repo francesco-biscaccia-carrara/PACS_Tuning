@@ -48,9 +48,6 @@ jobs:
             python dataCollect.py True
             python succRatePlot.py True
             python MIPgapPlot.py True
-            cd tmp
-            rm *
-            cd ..
             rm ../../.ACSenv
       
       - name: Commit and push generated files
