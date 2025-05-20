@@ -6,11 +6,9 @@ sys.dont_write_bytecode = True
 #EDITABLE PARS
 algorithm_names={
          "CPLEX":"CPLEX",
-         "0":"ACS_Rho_0.1",
-         "1":"ACS_Rho_0.25",
-         "2":"ACS_Rho_0.5",
-         "3":"ACS_Rho_0.75",
-         "4":"ACS_Rho_0.9"
+         "0":"ACS_Dyn_0.25",
+         "1":"ACS_Rho_0.5",
+         "2":"ACS_Rho_0.75"
     }
 
 NUM_RANGES = 100

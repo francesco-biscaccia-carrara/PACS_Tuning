@@ -3,8 +3,8 @@
  * @brief Exception class for handling ACS-related errors
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.9
- * @since 05/18/2025
+ * @version v1.1.0 - InitSol v0.0.10
+ * @since 05/20/2025
  */
 
 #ifndef ACS_EXC_H

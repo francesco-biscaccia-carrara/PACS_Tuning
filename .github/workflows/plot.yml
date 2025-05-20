@@ -39,14 +39,18 @@ jobs:
         if: steps.check_files.outputs.file_exists == 'true'
         run: |
           python -m pip install --upgrade pip
-          pip install pandas dotenv matplotlib
+          pip install pandas dotenv matplotlib numpy
       
       - name: Run scripts
         if: steps.check_files.outputs.file_exists == 'true'
         run: |
             cd code/test/scripts
             python dataCollect.py True
-            python pp.py True
+            python succRatePlot.py True
+            python MIPgapPlot.py True
+            cd tmp
+            rm *
+            cd ..
             rm ../../.ACSenv
       
       - name: Commit and push generated files

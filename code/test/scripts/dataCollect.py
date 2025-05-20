@@ -36,7 +36,6 @@ def main(pipeline):
 
     dataSanitizing(filename)
 
-   #FIXME : update the plotting 
     with open(filename, 'r') as file:
             JSdata = json.load(file)
 

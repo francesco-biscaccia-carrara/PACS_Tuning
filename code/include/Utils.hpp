@@ -3,8 +3,8 @@
  * @brief Utility header file providing various helper classes and macros for the project.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.9
- * @since 05/18/2025
+ * @version v1.1.0 - InitSol v0.0.10
+ * @since 05/20/2025
  */
 
 #ifndef UTILS_H
@@ -37,9 +37,9 @@
 #pragma region UTILS_DEFINTION
 
 /** Current version of the code */
-#define ACS_VERSION "v1.1.0 - InitSol v0.0.9"
+#define ACS_VERSION "v1.1.0 - InitSol v0.0.10"
 /** Last update date */
-#define LAST_UPDATE "05/18/2025"
+#define LAST_UPDATE "05/20/2025"
 
 /** Verbosity level constants */
 #define NO_VER -1

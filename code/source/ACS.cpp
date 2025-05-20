@@ -2,8 +2,8 @@
  * ACS Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.9
- * @since 05/18/2025
+ * @version v1.1.0 - InitSol v0.0.10
+ * @since 05/20/2025
  */
 
 #include <iostream>
@@ -30,24 +30,16 @@ int main(int argc, char* argv[]) {
 
 		switch (CLIArgs.algo) {
 			case 0:
-				CLIArgs.rho = 0.1;
-				break;
-
-			case 1:
 				CLIArgs.rho = 0.25;
 				break;
 
-			case 2:
+			case 1:
 				CLIArgs.rho = 0.5;
 				break;
-			
-			case 3:
+
+			case 2:
 				CLIArgs.rho = 0.75;
 				break;
-
-			case 4:
-				CLIArgs.rho = 0.9;
-				break;	
 
 				// case 0: //STD
 				// 	FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, mainRnd);
@@ -66,14 +58,12 @@ int main(int argc, char* argv[]) {
 				PRINT_ERR("Something goes wrong! Alg value: %d", CLIArgs.algo);
 				break;
 		}
-		PRINT_WARN("CLIArgs.rho = %10.4f", CLIArgs.rho);
 		FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, mainRnd);
 		Solution tmpSol = { .sol = startSol, .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Starting vector found!");
 #endif
 		MTEnv.broadcastSol(tmpSol);
-		// MTEnv.setIncumbentAmongMIPsSize(FMIP(CLIArgs.fileName).getNumCols()); FIXME: v0.0.9 - remove it
 
 		while (Clock::timeElapsed() < CLIArgs.timeLimit) {
 			if (abs(MTEnv.getBestACSIncumbent().slackSum) > EPSILON) {
@@ -118,7 +108,7 @@ int main(int argc, char* argv[]) {
 				tmpSol.slackSum = MergeFMIP.getObjValue();
 				PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
 				MTEnv.setBestACSIncumbent(tmpSol);
-				//FixPolicy::dynamicAdjustRho("1_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
+				FixPolicy::dynamicAdjustRho("1_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
 
 				if (MTEnv.isFeasibleSolFound())
 					break;
@@ -169,7 +159,7 @@ int main(int argc, char* argv[]) {
 
 			PRINT_OUT("OptMIP Objective|SlackSum after merging: %12.2f|%-10.2f", MergeOMIP.getObjValue(), tmpSol.slackSum);
 			MTEnv.setBestACSIncumbent(tmpSol);
-			//FixPolicy::dynamicAdjustRho("2_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
+			FixPolicy::dynamicAdjustRho("2_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
 
 			if (MTEnv.isFeasibleSolFound())
 				break;

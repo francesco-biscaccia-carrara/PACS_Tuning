@@ -12,8 +12,8 @@
  * and it provides mechanisms to broadcast solutions across threads and handle solution updates with thread safety.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.9
- * @since 05/18/2025
+ * @version v1.1.0 - InitSol v0.0.10
+ * @since 05/20/2025
  */
 
 #ifndef MT_CTX_H
@@ -107,7 +107,7 @@ public:
 	 */
 	void setBestACSIncumbent(Solution& sol);
 
-	// inline void setIncumbentAmongMIPsSize(size_t newSize) { incumbentAmongMIPs.sol.resize(newSize, 0.0); } FIXME: v0.0.9 - remove it
+	// inline void setIncumbentAmongMIPsSize(size_t newSize) { incumbentAmongMIPs.sol.resize(newSize, 0.0); } FIXME: v0.0.10 - remove it
 
 	/**
 	 * @brief Resize the incumbent used in ACS.
@@ -156,8 +156,6 @@ public:
 	 */
 	MTContext& parallelOMIPOptimization(const double slackSumUB, Args& CLIArgs);
 
-	// MTContext& parallelInitSolMerge(std::string fileName, std::vector<double>& sol, Random& rnd); FIXME: v0.0.9 - remove it
-
 	/**
 	 * @brief Destructor for MTContext. Cleans up resources used by the context.
 	 */
@@ -169,7 +167,6 @@ private:
 	std::vector<std::thread> threads;		   ///< Threads used for parallel optimization.
 	std::vector<Random>		 rndGens;		   ///< Random number generators for each thread.
 	Solution				 bestACSIncumbent; ///< Best ACS incumbent solution found.
-	// Solution				 incumbentAmongMIPs; FIXME: v0.0.9 - remove it
 	std::mutex				 MTContextMTX; ///< Mutex for synchronizing solution updates.
 	std::atomic_size_t		 A_RhoChanges; ///< Size_t value used to manage the DynamicFixPolicy
 
@@ -202,9 +199,6 @@ private:
 	 * @param slackSumUB The slack upper bound used in the OMIP method.
 	 */
 	void OMIPInstanceJob(const size_t thID, const double slackSumUB, Args& CLIArgs);
-
-	
-	// void initSolMergeJob(const size_t thID, std::string fileName); FIXME: v0.0.9 - remove it
 };
 
 #endif
