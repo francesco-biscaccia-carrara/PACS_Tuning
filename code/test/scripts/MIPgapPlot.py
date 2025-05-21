@@ -1,16 +1,9 @@
-import sys, os, numpy as np, json, matplotlib.pyplot as plt #type: ignore
+import sys, os, numpy as np, json, matplotlib.pyplot as plt, math #type: ignore
 from dotenv import load_dotenv # type: ignore
 
 sys.dont_write_bytecode = True
 
 #EDITABLE PARS
-algorithm_names={
-         "CPLEX":"CPLEX",
-         "0":"ACS_Dyn_0.25",
-         "1":"ACS_Rho_0.5",
-         "2":"ACS_Rho_0.75"
-    }
-
 NUM_RANGES = 100
 
 def MIPgap(opt,inc_val):
@@ -24,17 +17,12 @@ def MIPgap(opt,inc_val):
         return abs(opt - inc_val) / max(abs(opt), abs(inc_val))
 
 def createDict(filename, dataDict, numRanges):
-    instances = 0
-    with open(filename, 'r') as file:
-            JSdata = json.load(file)
-            for inst in JSdata: instances+=1
-
     with open(filename, 'r') as file:
             JSdata = json.load(file)
             for inst in JSdata:
                 for algo in JSdata[inst]:
                     if algo == "_obj": continue
-                    dataDict.update({ algo : np.ones((instances, numRanges))})
+                    dataDict.update({ algo : np.zeros(numRanges+1)})
                 break;
 
 def main(pipeline):
@@ -42,8 +30,6 @@ def main(pipeline):
     load_dotenv("../../.ACSenv")
     filename = os.environ.get('ACS_JSOUT_FILENAME')
     outputfile = os.environ.get('ACS_MIP_PP')
-    TL = 300
-    DISCR_FACT = TL/NUM_RANGES
 
     instances = 0
 
@@ -59,41 +45,32 @@ def main(pipeline):
                 for algo in JSdata[inst]:
                     if algo == "_obj":continue
 
-                    if JSdata[inst][algo][0] == "NO SOL": continue
+                    if JSdata[inst][algo][0] == "NO SOL":
+                        succDict[algo][NUM_RANGES]+=1
                     else: 
-                        discTime = int(JSdata[inst][algo][1]/DISCR_FACT)
-                        succDict[algo][instances][discTime] = MIPgap(obj,JSdata[inst][algo][0])
+                        discrMIP = math.ceil(MIPgap(obj,JSdata[inst][algo][0])*NUM_RANGES)
+                        succDict[algo][discrMIP]+=1
     
 
     for algo in succDict:
-        for row in succDict[algo]:
-            retInd = 0
-            for i in range(0,len(row)):
-                if row[i] == 1 : continue
-                else: 
-                    retInd = i
-            for i in range(retInd,len(row)):
-                row[i]= row[retInd]          
-                
-        succDict[algo] = np.mean(succDict[algo],axis=0) #mean by col
-    
-    x_values = np.arange(DISCR_FACT,TL+DISCR_FACT,DISCR_FACT)
+         succDict[algo] = np.cumsum(succDict[algo])/instances
+
+    x_values = np.arange(0,NUM_RANGES+1,1)
 
     plt.figure(figsize=(12, 8))
     for algo, succ_array in succDict.items():
-        plt.plot(x_values, succ_array, label=algorithm_names[algo], linewidth=2)
+        plt.plot(x_values, succ_array, label=algo, linewidth=2)
 
-    plt.xlabel('Time Steps')
-    plt.ylabel('Average MIP Gap')
-    plt.title('ACS VS CPLEX MIP Gap')
+    plt.xlabel('MIG Gap (%)')
+    plt.ylabel('Success Rate')
+    plt.title('ACS VS CPLEX MIP Gap Success Rate')
     plt.grid(True, linestyle='--', alpha=0.5)
     plt.legend()
 
-    plt.xlim(DISCR_FACT, x_values[-1])
+    plt.xlim(1, x_values[-1])
 
     plt.tight_layout()
     
-
     if not pipeline :
         if input(f"Do you want to collect and save the succes-rate plot on {outputfile} file [y/n]? ") != "y":
             exit(0)

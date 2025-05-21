@@ -4,13 +4,6 @@ from dotenv import load_dotenv # type: ignore
 sys.dont_write_bytecode = True
 
 #EDITABLE PARS
-algorithm_names={
-         "CPLEX":"CPLEX",
-         "0":"ACS_Dyn_0.25",
-         "1":"ACS_Rho_0.5",
-         "2":"ACS_Rho_0.75"
-    }
-
 NUM_RANGES = 100
 
 def createDict(filename, dataDict, numRanges):
@@ -56,7 +49,7 @@ def main(pipeline):
 
     plt.figure(figsize=(12, 8))
     for algo, succ_array in succDict.items():
-        plt.plot(x_values, succ_array, label=algorithm_names[algo], linewidth=2)
+        plt.plot(x_values, succ_array, label=algo, linewidth=2)
 
     plt.xlabel('Time Steps')
     plt.ylabel('Success Rate')
