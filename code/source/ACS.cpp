@@ -2,8 +2,8 @@
  * ACS Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.10
- * @since 05/20/2025
+ * @version v1.1.0 - InitSol v0.0.11
+ * @since 05/22/2025
  */
 
 #include <iostream>
@@ -29,36 +29,26 @@ int main(int argc, char* argv[]) {
 		Random				mainRnd = Random(CLIArgs.seed);
 
 		switch (CLIArgs.algo) {
-			case 0:
-				CLIArgs.rho = 0.25;
-				break;
 
-			case 1:
-				CLIArgs.rho = 0.5;
-				break;
+				case 0: //STD
+					PRINT_WARN("CLIArgs.theta = 0.25");
+					FixPolicy::startSolTheta(startSol, CLIArgs.fileName, 0.25, mainRnd);
+					break;
 
-			case 2:
-				CLIArgs.rho = 0.75;
-				break;
+				case 1:
+					PRINT_WARN("CLIArgs.theta = 1.0"); //Th-1
+					FixPolicy::startSolTheta(startSol, CLIArgs.fileName, 1, mainRnd);
+					break;
 
-				// case 0: //STD
-				// 	FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, mainRnd);
-				// 	break;
-
-				// case 1:
-				// 	PRINT_WARN("CLIArgs.theta = 1.0"); //Th-1
-				// 	FixPolicy::startSolTheta(startSol, CLIArgs.fileName, 1, mainRnd);
-				// 	break;
-
-				// case 2: //DetBounds
-				// 	FixPolicy::startSolMin(startSol, CLIArgs.fileName, mainRnd);
-				// 	break;
+				case 2: //DetBounds
+					FixPolicy::startSolMin(startSol, CLIArgs.fileName, mainRnd);
+					break;
 
 			default:
 				PRINT_ERR("Something goes wrong! Alg value: %d", CLIArgs.algo);
 				break;
 		}
-		FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, mainRnd);
+
 		Solution tmpSol = { .sol = startSol, .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Starting vector found!");

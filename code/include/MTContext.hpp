@@ -12,8 +12,8 @@
  * and it provides mechanisms to broadcast solutions across threads and handle solution updates with thread safety.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.10
- * @since 05/20/2025
+ * @version v1.1.0 - InitSol v0.0.11
+ * @since 05/22/2025
  */
 
 #ifndef MT_CTX_H
@@ -107,7 +107,7 @@ public:
 	 */
 	void setBestACSIncumbent(Solution& sol);
 
-	// inline void setIncumbentAmongMIPsSize(size_t newSize) { incumbentAmongMIPs.sol.resize(newSize, 0.0); } FIXME: v0.0.10 - remove it
+	// inline void setIncumbentAmongMIPsSize(size_t newSize) { incumbentAmongMIPs.sol.resize(newSize, 0.0); } FIXME: v0.0.11 - remove it
 
 	/**
 	 * @brief Resize the incumbent used in ACS.
