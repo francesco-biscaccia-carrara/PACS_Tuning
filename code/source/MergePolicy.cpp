@@ -2,16 +2,16 @@
 
 using MPEx = MergePolicy::MergePolicyException::ExceptionType;
 
-void MergePolicy::recombine(MIP& model, const std::vector<Solution>& x, const char* phase){
+void MergePolicy::recombine(MIP& model, const std::vector<Solution>& x, const char* phase) {
 	if (x.empty())
 		throw MergePolicyException(MPEx::InputSizeError, "Empty vector passed to function");
 
-#if ACS_VERBOSE>=VERBOSE
-	size_t numCommVars{0}; 
+#if ACS_VERBOSE >= VERBOSE
+	size_t numCommVars{ 0 };
 #endif
 
-	size_t xLen{static_cast<size_t>(model.getMIPNumVars())};
-	
+	size_t xLen{ model.getMIPNumVars()};
+
 	for (size_t i{ 0 }; i < xLen; i++) {
 		if (abs(x[0].sol[i] - x[1].sol[i]) >= EPSILON)
 			continue;
@@ -23,17 +23,15 @@ void MergePolicy::recombine(MIP& model, const std::vector<Solution>& x, const ch
 				break;
 			}
 		}
-		if (commonValue){
-			model.setVarValue(i,x[0].sol[i]);
-#if ACS_VERBOSE>=VERBOSE
+		if (commonValue) {
+			model.setVarValue(i, x[0].sol[i]);
+#if ACS_VERBOSE >= VERBOSE
 			numCommVars++;
 #endif
 		}
-			
 	}
-	
+
 #if ACS_VERBOSE >= VERBOSE
 	PRINT_INFO("[%s] - MergePolicy::recombine - %zu common vars", phase, numCommVars);
 #endif
-
 }

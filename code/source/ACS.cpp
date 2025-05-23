@@ -1,16 +1,22 @@
 /**
  * ACS Execution file
- * 
+ *
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0
- * @since 04/08/2025
-*/
+ * @version v1.2.0
+ * @since 05/23/2025
+ */
+
+#include <iostream>
+#include <fstream>
+#include <nlohmann/json.hpp>
 
 #include "../include/FMIP.hpp"
 #include "../include/FixPolicy.hpp"
 #include "../include/MTContext.hpp"
 #include "../include/MergePolicy.hpp"
 #include "../include/OMIP.hpp"
+
+#define PATH_TO_TMP "../test/scripts/tmp/"
 
 int main(int argc, char* argv[]) {
 	try {
@@ -21,15 +27,16 @@ int main(int argc, char* argv[]) {
 
 		std::vector<double> startSol;
 		Random				mainRnd = Random(CLIArgs.seed);
-		FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, mainRnd);
-		Solution tmpSol = {.sol = startSol, .slackSum = CPX_INFBOUND,  .oMIPCost = CPX_INFBOUND};
-#if ACS_VERBOSE >= VERBOSE	
-		PRINT_INFO("Init FeasMIP solution found!");
+
+		FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
+		Solution tmpSol = { .sol = startSol, .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
+#if ACS_VERBOSE >= VERBOSE
+		PRINT_INFO("Starting vector found!");
 #endif
 		MTEnv.broadcastSol(tmpSol);
 
 		while (Clock::timeElapsed() < CLIArgs.timeLimit) {
-			if (MTEnv.getBestACSIncumbent().slackSum > EPSILON) {
+			if (abs(MTEnv.getBestACSIncumbent().slackSum) > EPSILON) {
 
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
 #if ACS_VERBOSE >= VERBOSE
@@ -37,9 +44,10 @@ int main(int argc, char* argv[]) {
 #endif
 					break;
 				}
-				//PARALLEL FMIP Phase
+				// PARALLEL FMIP Phase
 				MTEnv.parallelFMIPOptimization(CLIArgs);
-				if(MTEnv.isFeasibleSolFound()) break; 
+				if (MTEnv.isFeasibleSolFound())
+					break;
 
 				// 1° Recombination phase
 				FMIP MergeFMIP(CLIArgs.fileName);
@@ -60,9 +68,9 @@ int main(int argc, char* argv[]) {
 
 				int solveCode{ MergeFMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), DET_TL(MergeFMIP.getNumNonZeros())) };
 
-				if (MIP::isINForUNBD(solveCode)){
+				if (MIP::isINForUNBD(solveCode)) {
 #if ACS_VERBOSE >= VERBOSE
-			PRINT_INFO("MergeOMIP - Aborted: Infeasible with given TL");
+					PRINT_INFO("MergeOMIP - Aborted: Infeasible with given TL");
 #endif
 					continue;
 				}
@@ -70,9 +78,10 @@ int main(int argc, char* argv[]) {
 				tmpSol.slackSum = MergeFMIP.getObjValue();
 				PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
 				MTEnv.setBestACSIncumbent(tmpSol);
-				FixPolicy::dynamicAdjustRho("1_Phase",solveCode,CLIArgs.numsubMIPs,CLIArgs.rho,MTEnv.getRhoChanges());
-				
-				if(MTEnv.isFeasibleSolFound()) break; 
+				FixPolicy::dynamicAdjustRho("1_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
+
+				if (MTEnv.isFeasibleSolFound())
+					break;
 				MTEnv.broadcastSol(tmpSol);
 			}
 
@@ -83,9 +92,10 @@ int main(int argc, char* argv[]) {
 				break;
 			}
 
-			//PARALLEL OMIP Phase
+			// PARALLEL OMIP Phase
 			MTEnv.parallelOMIPOptimization(tmpSol.slackSum, CLIArgs);
-			if(MTEnv.isFeasibleSolFound()) break; 
+			if (MTEnv.isFeasibleSolFound())
+				break;
 
 			// 2° Recombination phase
 			OMIP MergeOMIP(CLIArgs.fileName);
@@ -104,46 +114,58 @@ int main(int argc, char* argv[]) {
 #endif
 				break;
 			}
-			int solveCode{ MergeOMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit),DET_TL(MergeOMIP.getNumNonZeros())) };
+			int solveCode{ MergeOMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), DET_TL(MergeOMIP.getNumNonZeros())) };
 
-			if (MIP::isINForUNBD(solveCode)){
+			if (MIP::isINForUNBD(solveCode)) {
 #if ACS_VERBOSE >= VERBOSE
-			PRINT_INFO("MergeOMIP - Aborted: Infeasible with given TL");
+				PRINT_INFO("MergeOMIP - Aborted: Infeasible with given TL");
 #endif
 				continue;
 			}
-			
+
 			tmpSol.sol = MergeOMIP.getSol();
 			tmpSol.slackSum = MergeOMIP.getSlackSum();
 			tmpSol.oMIPCost = MergeOMIP.getObjValue();
 
 			PRINT_OUT("OptMIP Objective|SlackSum after merging: %12.2f|%-10.2f", MergeOMIP.getObjValue(), tmpSol.slackSum);
 			MTEnv.setBestACSIncumbent(tmpSol);
-			FixPolicy::dynamicAdjustRho("2_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho,MTEnv.getRhoChanges());
+			FixPolicy::dynamicAdjustRho("2_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
 
-			if(MTEnv.isFeasibleSolFound()) break;
+			if (MTEnv.isFeasibleSolFound())
+				break;
 			MTEnv.broadcastSol(tmpSol);
 		}
 
-		
+		double	 retTime = Clock::timeElapsed();
 		Solution incumbent = MTEnv.getBestACSIncumbent();
+#if ACS_TEST
+		nlohmann::json jsData;
+#endif
 		if (incumbent.sol.empty() || incumbent.slackSum > EPSILON) {
 			PRINT_ERR("NO FEASIBLE SOLUTION FIND");
+#if ACS_TEST
+			jsData[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)] = { "NO SOL", retTime };
+#endif
 		} else {
-			MIP		 og(CLIArgs.fileName);
+			MIP og(CLIArgs.fileName);
 			incumbent.sol.resize(og.getNumCols());
-
-			bool feas = og.checkFeasibility(incumbent.sol);
-			if(feas)
-				PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
-			else
-				PRINT_ERR("ERROR ON COMPUTATION");
+			//TODO: Check feas of solution
+			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
+#if ACS_TEST
+		jsData[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)] = { incumbent.oMIPCost, retTime };
+#endif
 		}
+#if ACS_TEST
+		std::string	  JSfilename = CLIArgs.fileName + "_ACS_" + std::to_string(CLIArgs.algo) + "_" + std::to_string(CLIArgs.seed) + ".json";
+		std::ofstream oFile(PATH_TO_TMP + JSfilename);
 
+		oFile << jsData.dump(4);
+		oFile.close();
+		PRINT_INFO("JSON: Execution result saved on %s%s file",PATH_TO_TMP,JSfilename.c_str());
+#endif
 	} catch (const std::runtime_error& ex) {
 		PRINT_ERR(ex.what());
 		return EXIT_FAILURE;
 	}
-	
 	return EXIT_SUCCESS;
 }

@@ -46,11 +46,11 @@ double OMIP::getSlackSum() {
 
 void OMIP::setup() {
 	for (size_t i{ 0 }; i < getNumRows(); i++) {
-		addCol(i,1, OMIP_SLACK_OBJ_COEFF, 0, CPX_INFBOUND, "SP_" + std::to_string(i + 1));
+		addCol(i, 1, OMIP_SLACK_OBJ_COEFF, 0, CPX_INFBOUND, "SP_" + std::to_string(i + 1));
 	}
 
 	for (size_t i{ 0 }; i < getNumRows(); i++) {
-		addCol(i,-1, OMIP_SLACK_OBJ_COEFF, 0, CPX_INFBOUND, "SN_" + std::to_string(i + 1));
+		addCol(i, -1, OMIP_SLACK_OBJ_COEFF, 0, CPX_INFBOUND, "SN_" + std::to_string(i + 1));
 	}
 
 	addBudgetConstr(CPX_INFBOUND);
@@ -58,8 +58,8 @@ void OMIP::setup() {
 
 void OMIP::addBudgetConstr(double rhs) {
 	std::vector<double> budConstr(getNumCols(), 0);
-	int					start{ getNumCols() - 2 * getNumRows() };
-	for (size_t i{ static_cast<size_t>(start) }; i < getNumCols(); i++)
+	size_t					start{ getNumCols() - 2 * getNumRows() };
+	for (size_t i{start}; i < getNumCols(); i++)
 		budConstr[i] = 1;
 	addRow(budConstr, OMIP_BUD_CONST_SENSE, rhs);
 }

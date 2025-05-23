@@ -29,7 +29,6 @@ FMIP::FMIP(const MIP& otherMIP) : MIP(otherMIP) {
 #endif
 }
 
-
 void FMIP::setup() {
 	std::vector<double> obj(getNumCols(), FMIP_VAR_OBJ_COEFF);
 	setObjFunction(obj);

@@ -9,15 +9,26 @@ if ("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
 project(ACS)
-set(CODE_VERSION "v1.1.0")
+set(CODE_VERSION "v1.2.0")
+set(LAST_UPDATE "05/23/2025")
 
 # setting flags for optimization and debug builds
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "-Og -ggdb")
 
+option (ENABLE_WARNINGS "Enable compiler warnings" OFF)
+option (TREAT_WARNINGS_AS_ERRORS "Treat warnings as errors" OFF)
+
+if (ENABLE_WARNINGS)
+    add_compile_options (-Wall -Wextra -pedantic)
+    if (TREAT_WARNINGS_AS_ERRORS)
+        add_compile_options (-Werror)
+    endif()
+endif()
+
 # setting the default verbose/warn/intchecks (edited with the -D flag)
 set(VERBOSE "0" CACHE STRING "Verbose setting set from command line")
-set(LOG "0" CACHE STRING "Flag to enable log on file")
+set(TEST "0" CACHE STRING "Flag to enable log on file")
 #set(WARN "0" CACHE STRING "Flag to enable warning messages")
 #set(INTCHECK "0" CACHE STRING "Flag to enable integrity checks")
 # Detect machine and set CPLEX paths accordingly
@@ -72,6 +83,13 @@ endif()
 include_directories(include)
 include_directories(${CPLEX_INCLUDE})
 
+include(FetchContent)
+FetchContent_Declare(json
+    GIT_REPOSITORY https://github.com/nlohmann/json
+    GIT_TAG v3.12.0
+)
+FetchContent_MakeAvailable(json)
+
 add_library(
     Utils
     source/Utils.cpp
@@ -89,6 +107,7 @@ add_library(
     source/FMIP.cpp
     include/FMIP.hpp
 )
+
 add_library(
     RlxFMIP
     source/RlxFMIP.cpp
@@ -146,6 +165,7 @@ add_executable(
 # Linking
 target_link_libraries(
     ACS
+    nlohmann_json::nlohmann_json
     MIP
     FMIP
     OMIP
@@ -163,6 +183,7 @@ target_link_libraries(
 
 target_link_libraries(
     CPLEXRun
+    nlohmann_json::nlohmann_json
     MIP
     Utils
     #pthread
@@ -177,12 +198,13 @@ add_definitions(-DACS_HOME_DIR="${HOME_DIR}"
                 -DACS_VERBOSE=${VERBOSE} 
                 -DACS_WARN=${WARN} 
                 -DACS_INTCHECK=${INTCHECK} 
-                -DLOG=${LOG} 
+                -DACS_TEST=${TEST} 
                 -DCODE_VERSION=${CODE_VERSION}) #ACS for us
+
 
 # custom builds
 add_custom_target(opt
-    COMMAND echo "Code version: ${CODE_VERSION}"
+    COMMAND echo "Code version: ${CODE_VERSION} - Last update: ${LAST_UPDATE}"
     COMMAND echo "Flags used: ${CMAKE_CXX_FLAGS_RELEASE}"
     COMMAND ${CMAKE_COMMAND} -D CMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ACS
@@ -190,8 +212,8 @@ add_custom_target(opt
 )
 
 add_custom_target(debug
-    COMMAND echo "Code version: ${CODE_VERSION}"
-    COMMAND echo "Flags used: ${CMAKE_CXX_FLAGS_DEBUG} -VERBOSE=${VERBOSE} -LOG=${LOG}"
+    COMMAND echo "Code version: ${CODE_VERSION} - Last update: ${LAST_UPDATE}"
+    COMMAND echo "Flags used: ${CMAKE_CXX_FLAGS_DEBUG} -VERBOSE=${VERBOSE} -TEST=${TEST}"
     COMMAND ${CMAKE_COMMAND} -D CMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ACS
     COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target CPLEXRun

@@ -6,8 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 
 ### [Unreleased]  
-- Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks.  
-- Enforced FMIP resolution in the ACS workflow prior to transitioning to the OMIP phase.
+- Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks. 
+
+## [1.2.0] - 2025-05-23 
+### Added  
+- Introduced `FixPolicy::startSolMaxFeas`, a method to set the initial solution based on variable bounds and objective value ([FixPolicy.cpp](code/source/FixPolicy.cpp)).
+
+### Fixed
+- Suppressed all compiler warnings labeled as "WARNING" using pedantic flags and stricter suppression methods.  
+
+### Changed  
+- Centralized exception handling by unifying all exceptions into a single `ACSException` class ([ACSException.hpp](code/include/ACSException.hpp)).  
+- Automated plot generation using GitHub Workflows ([plot.yml](.github/workflows/plot.yml)).  
+- Updated performance testing to use a JSON file for result tracking.  
+- Redesigned output formatting for message types in `Utils::Logger::print` ([Utils.cpp](code/source/Utils.cpp)).  
+- Refactored timer handling logic in `Utils::Clock` for improved clarity and maintainability ([Utils.cpp](code/source/Utils.cpp)).  
+
 
 ## [1.1.0] - 2025-04-08
 ### Added
