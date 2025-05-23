@@ -125,6 +125,53 @@ void FixPolicy::startSolMaxFeas(std::vector<double>& sol, std::string fileName, 
 #endif
 }
 
+void FixPolicy::fixSlackUpperBoundMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol){
+	
+	size_t numMIPVars{ model.getMIPNumVars()};
+	size_t numVars{ model.getNumCols()};
+
+	if(sol.size() != numVars)
+		throw FixPolicyException(FPEx::InputSizeError, "Incosistent length: sol.size = "+std::to_string(sol.size())+", numVars = "+std::to_string(numVars));
+
+	size_t fixedToUBVars = 0;
+	for (size_t i{ numMIPVars }; i < numVars; i++) {
+
+		auto [lb, ub] = model.getVarBounds(i);
+		if ( ub - sol[i] > EPSILON){
+			model.setVarUpperBound(i, sol[i]);
+			fixedToUBVars++;
+		}
+	}
+
+#if ACS_VERBOSE >= VERBOSE
+	PRINT_INFO("Proc: %3d [%s] - FixPolicy::fixSlackUpperBoundMT - %4d vars UB updated",threadID,type,fixedToUBVars);
+#endif
+
+}
+
+void FixPolicy::fixSlackUpperBound(const char* phase, MIP& model, const std::vector<double>& sol) {
+
+	size_t numMIPVars{ model.getMIPNumVars()};
+	size_t numVars{ model.getNumCols()};
+
+	if(sol.size() != numVars)
+		throw FixPolicyException(FPEx::InputSizeError, "Incosistent length: sol.size = "+std::to_string(sol.size())+", numVars = "+std::to_string(numVars));
+
+	size_t fixedToUBVars = 0;
+	for (size_t i{ numMIPVars }; i < numVars; i++) {
+
+		auto [lb, ub] = model.getVarBounds(i);
+		if ( ub - sol[i] > EPSILON){
+			model.setVarUpperBound(i, sol[i]);
+			fixedToUBVars++;
+		}
+	}
+
+#if ACS_VERBOSE >= VERBOSE
+	PRINT_WARN("[%s] - FixPolicy::fixSlackUpperBound - Fixed UB of %10d vars",phase,fixedToUBVars);
+#endif
+}
+
 void FixPolicy::randomRhoFixMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol, double rho, Random& rnd) {
 	if (rho < EPSILON || rho >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Rho par. must be within (0,1)!");

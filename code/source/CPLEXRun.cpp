@@ -28,8 +28,9 @@ int main(int argc, char* argv[]) {
 		Solution CPLEXSol = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
 
 		int solveCode{ ogMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit)) };
-		double	 retTime = Clock::timeElapsed();
+		
 #if ACS_TEST
+		double	 retTime = Clock::timeElapsed();
 		nlohmann::json jsData;
 #endif
 		if (MIP::isINForUNBD(solveCode)) {

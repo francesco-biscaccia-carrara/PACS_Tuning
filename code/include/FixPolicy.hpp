@@ -62,6 +62,11 @@ namespace FixPolicy {
 	 */
 	void startSolMaxFeas(std::vector<double>& sol, std::string fileName, Random& rnd);
 
+
+	void fixSlackUpperBoundMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol);
+
+	void fixSlackUpperBound(const char* type, MIP& model, const std::vector<double>& sol);
+
 	/**
 	 * @brief Modifies the rho parameter in the given model based on a solution vector.
 	 * @param threadID ID of the thread executing this function.

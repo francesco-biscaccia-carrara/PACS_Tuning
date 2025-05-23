@@ -27,7 +27,6 @@ int main(int argc, char* argv[]) {
 
 		std::vector<double> startSol;
 		Random				mainRnd = Random(CLIArgs.seed);
-
 		FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
 		Solution tmpSol = { .sol = startSol, .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
 #if ACS_VERBOSE >= VERBOSE
@@ -55,8 +54,11 @@ int main(int argc, char* argv[]) {
 
 				MergePolicy::recombine(MergeFMIP, MTEnv.getTmpSolutions(), "1_Phase");
 
-				if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {
+				if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {	
 					MergeFMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
+
+					if (CLIArgs.algo == 1)
+						FixPolicy::fixSlackUpperBound("1_Phase", MergeFMIP, MTEnv.getBestACSIncumbent().sol);
 				}
 
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -105,6 +107,8 @@ int main(int argc, char* argv[]) {
 
 			if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {
 				MergeOMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
+				if (CLIArgs.algo == 1)
+					FixPolicy::fixSlackUpperBound("2_Phase", MergeOMIP, MTEnv.getBestACSIncumbent().sol);
 			}
 
 			MergeOMIP.updateBudgetConstr(tmpSol.slackSum);
@@ -136,9 +140,10 @@ int main(int argc, char* argv[]) {
 			MTEnv.broadcastSol(tmpSol);
 		}
 
-		double	 retTime = Clock::timeElapsed();
+		
 		Solution incumbent = MTEnv.getBestACSIncumbent();
 #if ACS_TEST
+		double	 retTime = Clock::timeElapsed();
 		nlohmann::json jsData;
 #endif
 		if (incumbent.sol.empty() || incumbent.slackSum > EPSILON) {

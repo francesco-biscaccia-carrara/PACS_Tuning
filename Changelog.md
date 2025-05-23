@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### [Unreleased]  
 - Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks. 
 
+
+## [1.2.1] - 2025-05-23  
+### Added  
+- Introduced `FixPolicy::fixSlackUpperBound`, a function that updates variable upper bounds prior to OMIP and FMIP optimization, based on the current ACS incumbent ([FixPolicy.cpp](code/source/FixPolicy.cpp)).
+
+
 ## [1.2.0] - 2025-05-23 
 ### Added  
 - Introduced `FixPolicy::startSolMaxFeas`, a method to set the initial solution based on variable bounds and objective value ([FixPolicy.cpp](code/source/FixPolicy.cpp)).
