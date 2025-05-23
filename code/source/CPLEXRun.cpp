@@ -2,7 +2,7 @@
  * CPLEX Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.0
+ * @version v1.2.1
  * @since 05/23/2025
  */
 

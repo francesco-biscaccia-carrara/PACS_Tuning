@@ -3,7 +3,7 @@
  * @brief Utility header file providing various helper classes and macros for the project.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.0
+ * @version v1.2.1
  * @since 05/23/2025
  */
 
@@ -37,7 +37,7 @@
 #pragma region UTILS_DEFINTION
 
 /** Current version of the code */
-#define ACS_VERSION "v1.2.0"
+#define ACS_VERSION "v1.2.1"
 /** Last update date */
 #define LAST_UPDATE "05/23/2025"
 
