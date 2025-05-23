@@ -6,67 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 
 ### [Unreleased]  
-- Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks.  
-- Enforced FMIP resolution in the ACS workflow prior to transitioning to the OMIP phase.
+- Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks. 
 
-## [0.0.9] - 2025-05-18  
-### Changed  
-- Removed all usage of CPLEX callbacks.  
-- Refined the result collector mechanism for improved accuracy and maintainability.  
+## [1.2.0] - 2025-05-23 
+### Added  
+- Introduced `FixPolicy::startSolMaxFeas`, a method to set the initial solution based on variable bounds and objective value ([FixPolicy.cpp](code/source/FixPolicy.cpp)).
 
+### Fixed
+- Suppressed all compiler warnings labeled as "WARNING" using pedantic flags and stricter suppression methods.  
 
-## [0.0.8] - 2025-05-14  
 ### Changed  
 - Centralized exception handling by unifying all exceptions into a single `ACSException` class ([ACSException.hpp](code/include/ACSException.hpp)).  
-- Suppressed all compiler warnings labeled as "WARNING" using ped
-
-
-## [0.0.7] - 2025-05-10  
-### Changed  
 - Automated plot generation using GitHub Workflows ([plot.yml](.github/workflows/plot.yml)).  
-- Performance testing now uses a JSON file for result tracking.  
-
-
-## InitSol [0.0.6] - 2025-05-07  
-### Added  
-- Enabled parallel execution of multiple RENS (Relaxation Enforced Neighborhood Search) instances to generate the initial vector in `MTContext::parallelInitSolMerge` ([MTContext.cpp](code/source/MTContext.cpp)). 
-- Added methods to set lower and upper bounds for specific variables ([MIP.cpp](code/source/MIP.cpp)).  
-
-### Changed  
-- Unified CPLEX callback logic into a single consolidated function ([MTContext.cpp](code/source/MTContext.cpp)).  
-
-
-## InitSol [0.0.5] - 2025-05-05
-### Added  
-- Enabled CPLEX callback functionality to share candidate solutions between FMIP and OMIP phases ([MTContext.cpp](code/source/MTContext.cpp)).  
-
-
-## InitSol [0.0.4] - 2025-04-24 [YANKED]
-### Changed 
-- Modified ` MTContext::parallelInitSolMerge`, a method to set the initial solution based on relaxed solutions and common values mergin ([MTContext.cpp](code/source/MTContext.cpp)).  
-
-
-## InitSol [0.0.3] - 2025-04-19  
-### Added  
-- Introduced `FixPolicy::startSolMin`, a method to set the initial solution based on variable bounds and objective value ([FixPolicy.cpp](code/source/FixPolicy.cpp)).  
-
-### Changed  
+- Updated performance testing to use a JSON file for result tracking.  
 - Redesigned output formatting for message types in `Utils::Logger::print` ([Utils.cpp](code/source/Utils.cpp)).  
 - Refactored timer handling logic in `Utils::Clock` for improved clarity and maintainability ([Utils.cpp](code/source/Utils.cpp)).  
-
-
-## InitSol[0.0.2] - 2025-04-16
-### Added
-- ACK signature at the end to execution to track unexpected execution behaviours both on ACS and CPLEX.
-
-### Changed
-- Updated recombination phase guided by the MIP objective funciton in function `MTContext::parallelInitSolMerge` ([MTContext.cpp](code/source/MTContext.cpp)).
-
-
-## InitSol[0.0.1] - 2025-04-08 [YANKED]
-### Added
-- Merge-recombination of random solutions
-- Tested against single random vector and standard fixing: no effective results
 
 
 ## [1.1.0] - 2025-04-08

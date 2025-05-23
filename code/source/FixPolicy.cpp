@@ -68,7 +68,7 @@ void FixPolicy::startSolTheta(std::vector<double>& sol, std::string fileName, do
 	}
 }
 
-void FixPolicy::startSolMin(std::vector<double>& sol, std::string fileName, Random& rnd) {
+void FixPolicy::startSolMaxFeas(std::vector<double>& sol, std::string fileName, Random& rnd) {
 
 	MIP	   MIP{ fileName };
 	size_t numVarsToFix{ MIP.getMIPNumVars()};
@@ -121,54 +121,8 @@ void FixPolicy::startSolMin(std::vector<double>& sol, std::string fileName, Rand
 		}
 	}
 #if ACS_VERBOSE >= VERBOSE
-	PRINT_INFO("FixPolicy::startSolMin - %zu zeros vars | %zu vars at LB | %zu vars at UB | %zu random vars", zeros, lbs, ubs, rnds);
+	PRINT_INFO("FixPolicy::startSolMaxFeas - %zu zeros vars | %zu vars at LB | %zu vars at UB | %zu random vars", zeros, lbs, ubs, rnds);
 #endif
-}
-
-void FixPolicy::fixMergeOnStartSol(const size_t numMIP, const std::vector<std::vector<double>>& sols, const std::vector<VarBounds>& vBounds, Random& rnd, std::vector<double>& finalSol) {
-	if (finalSol.size() != vBounds.size())
-		throw FixPolicyException(FPEx::InputSizeError, "Incosistency between sizes!");
-
-	if (sols.size() != numMIP)
-		throw FixPolicyException(FPEx::InputSizeError, "Wrong number of solutions!");
-
-#if ACS_VERBOSE >= VERBOSE
-	size_t commVars = 0;
-#endif
-
-	for (size_t i{ 0 }; i < finalSol.size(); i++) {
-		if (abs(sols[0][i] - sols[1][i]) >= EPSILON)
-			continue;
-
-		bool commonValue{ true };
-		for (size_t p{ 0 }; p < numMIP - 1; p++) {
-			if (abs(sols[p][i] - sols[p + 1][i]) >= EPSILON) {
-				commonValue = false;
-				break;
-			}
-		}
-		if (commonValue && isInteger(sols[0][i])) {
-			finalSol[i] = sols[0][i];
-#if ACS_VERBOSE >= VERBOSE
-			commVars++;
-#endif
-		}
-	}
-
-#if ACS_VERBOSE >= VERBOSE
-	PRINT_INFO("[Start_point] - FixPolicy::fixMergeOnStartSol - %zu common vars", commVars);
-#endif
-
-	// Random fix the non-common vars
-	for (size_t i{ 0 }; i < finalSol.size(); i++) {
-		if (finalSol[i] < CPX_INFBOUND)
-			continue;
-		auto [lb, ub] = vBounds[i];
-
-		double clampedLower = std::max(-MAX_UB, lb);
-		double clampedUpper = std::min(MAX_UB, ub);
-		finalSol[i] = rnd.Int(clampedLower, clampedUpper);
-	}
 }
 
 void FixPolicy::randomRhoFixMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol, double rho, Random& rnd) {

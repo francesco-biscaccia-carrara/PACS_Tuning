@@ -8,8 +8,8 @@
  *
  * @note Requires CPLEX library and Utils.hpp
  * @author Francesco Biscaccia Carrara
- * @version v1.1.0 - InitSol v0.0.11
- * @since 05/22/2025
+ * @version v1.2.0
+ * @since 05/23/2025
  */
 
 #ifndef MIP_SOL_H
