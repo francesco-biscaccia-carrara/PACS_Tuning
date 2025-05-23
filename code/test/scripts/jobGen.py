@@ -3,6 +3,10 @@ from dotenv import load_dotenv # type: ignore
 
 sys.dont_write_bytecode = True
 
+#EDITABLE PARS
+ALGOS = (0,1)
+SEEDS = (38472910, 56473829, 27384910, 91827364, 83746592)
+
 def generate_env_file(env_vars, file_path="../../.ACSenv"):
     with open(file_path, "w") as f:
         for key, value in env_vars.items():
@@ -64,8 +68,6 @@ def main():
     if input("Do you want to generate the jobs [y/n]? ") != "y":
         exit(0)
     
-    rhos = (0,1,2)
-    seeds = (38472910, 56473829, 27384910, 91827364, 83746592)
     count =0
     indexObj= 0
     jsonInst ={}
@@ -74,9 +76,9 @@ def main():
         
         for exe in  ["CPLEXRun","ACS"]:
             if exe == "ACS":
-                for rho in rhos:
+                for rho in ALGOS:
                     jsonInst[instance].update({"_obj": objs[indexObj], rho: {}})
-                    for seed in seeds:
+                    for seed in SEEDS:
                         jsonInst[instance][rho].update({seed: [None,None]})
                         job_name =f"{instance}_{exe}_{rho}_{seed}"
                         job = f"{jobs_folder}/{job_name}"
