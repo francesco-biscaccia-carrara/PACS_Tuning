@@ -168,7 +168,7 @@ void FixPolicy::fixSlackUpperBound(const char* phase, MIP& model, const std::vec
 	}
 
 #if ACS_VERBOSE >= VERBOSE
-	PRINT_WARN("[%s] - FixPolicy::fixSlackUpperBound - Fixed UB of %10d vars",phase,fixedToUBVars);
+	PRINT_INFO("[%s] - FixPolicy::fixSlackUpperBound - Fixed UB of %10d vars",phase,fixedToUBVars);
 #endif
 }
 

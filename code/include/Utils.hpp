@@ -4,7 +4,7 @@
  *
  * @author Francesco Biscaccia Carrara
  * @version v1.2.1
- * @since 05/23/2025
+ * @since 05/24/2025
  */
 
 #ifndef UTILS_H
@@ -39,7 +39,7 @@
 /** Current version of the code */
 #define ACS_VERSION "v1.2.1"
 /** Last update date */
-#define LAST_UPDATE "05/23/2025"
+#define LAST_UPDATE "05/24/2025"
 
 /** Verbosity level constants */
 #define NO_VER -1
