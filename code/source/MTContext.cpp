@@ -96,8 +96,7 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	FMIP fMIP{ CLIArgs.fileName };
 	if (bestACSIncumbent.slackSum < CPX_INFBOUND) {
 		fMIP.addMIPStart(bestACSIncumbent.sol);
-		if (CLIArgs.algo == 1)
-			FixPolicy::fixSlackUpperBoundMT(thID, "FMIP", fMIP, bestACSIncumbent.sol);
+		FixPolicy::fixSlackUpperBoundMT(thID, "FMIP", fMIP, bestACSIncumbent.sol);
 	}
 	fMIP.setNumCores(CPLEX_CORE);
 
@@ -135,11 +134,10 @@ void MTContext::OMIPInstanceJob(const size_t thID, const double slackSumUB, Args
 	OMIP oMIP{ CLIArgs.fileName };
 	if (bestACSIncumbent.slackSum < CPX_INFBOUND) {
 		oMIP.addMIPStart(bestACSIncumbent.sol);
-		if (CLIArgs.algo == 1)
-			FixPolicy::fixSlackUpperBoundMT(thID, "OMIP", oMIP, bestACSIncumbent.sol);
+		FixPolicy::fixSlackUpperBoundMT(thID, "OMIP", oMIP, bestACSIncumbent.sol);
 	}
 	oMIP.setNumCores(CPLEX_CORE);
-	oMIP.updateBudgetConstr(slackSumUB);
+	if (CLIArgs.algo == 1) oMIP.updateBudgetConstr(slackSumUB);
 
 	FixPolicy::randomRhoFixMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
 
