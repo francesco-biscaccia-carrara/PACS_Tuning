@@ -2,8 +2,8 @@
  * ACS Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.1
- * @since 05/24/2025
+ * @version v1.2.2
+ * @since 05/27/2025
  */
 
 #include <iostream>
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			// PARALLEL OMIP Phase
-			MTEnv.parallelOMIPOptimization(tmpSol.slackSum, CLIArgs);
+			MTEnv.parallelOMIPOptimization(CLIArgs);
 			if (MTEnv.isFeasibleSolFound())
 				break;
 
@@ -108,7 +108,6 @@ int main(int argc, char* argv[]) {
 				FixPolicy::fixSlackUpperBound("2_Phase", MergeOMIP, MTEnv.getBestACSIncumbent().sol);
 			}
 
-			if(CLIArgs.algo == 1) MergeOMIP.updateBudgetConstr(tmpSol.slackSum);
 			if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
 #if ACS_VERBOSE >= VERBOSE
 				PRINT_INFO("TIME_LIMIT REACHED");

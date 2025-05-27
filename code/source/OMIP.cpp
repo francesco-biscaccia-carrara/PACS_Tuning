@@ -53,7 +53,7 @@ void OMIP::setup() {
 		addCol(i, -1, OMIP_SLACK_OBJ_COEFF, 0, CPX_INFBOUND, "SN_" + std::to_string(i + 1));
 	}
 
-	addBudgetConstr(CPX_INFBOUND);
+	/// CHANGED: v1.2.2 addBudgetConstr(CPX_INFBOUND); -- Not necessary
 }
 
 void OMIP::addBudgetConstr(double rhs) {

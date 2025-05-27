@@ -73,11 +73,11 @@ MTContext& MTContext::parallelFMIPOptimization(Args& CLIArgs) {
 	return *this;
 }
 
-MTContext& MTContext::parallelOMIPOptimization(double slackSumUB, Args& CLIArgs) {
+MTContext& MTContext::parallelOMIPOptimization(Args& CLIArgs) {
 	waitAllJobs();
 
 	for (size_t i{ 0 }; i < CLIArgs.numsubMIPs; i++) {
-		threads.emplace_back(&MTContext::OMIPInstanceJob, this, i, slackSumUB, std::ref(CLIArgs));
+		threads.emplace_back(&MTContext::OMIPInstanceJob, this, i, std::ref(CLIArgs));
 	}
 
 	waitAllJobs();
@@ -129,7 +129,7 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 
 #pragma region MTContextPrivateSec
 
-void MTContext::OMIPInstanceJob(const size_t thID, const double slackSumUB, Args& CLIArgs) {
+void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 
 	OMIP oMIP{ CLIArgs.fileName };
 	if (bestACSIncumbent.slackSum < CPX_INFBOUND) {
@@ -137,7 +137,6 @@ void MTContext::OMIPInstanceJob(const size_t thID, const double slackSumUB, Args
 		FixPolicy::fixSlackUpperBoundMT(thID, "OMIP", oMIP, bestACSIncumbent.sol);
 	}
 	oMIP.setNumCores(CPLEX_CORE);
-	if (CLIArgs.algo == 1) oMIP.updateBudgetConstr(slackSumUB);
 
 	FixPolicy::randomRhoFixMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
 

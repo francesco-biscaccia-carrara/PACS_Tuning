@@ -9,8 +9,8 @@ if ("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
 project(ACS)
-set(CODE_VERSION "v1.2.1")
-set(LAST_UPDATE "05/24/2025")
+set(CODE_VERSION "v1.2.2")
+set(LAST_UPDATE "05/27/2025")
 
 # setting flags for optimization and debug builds
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")

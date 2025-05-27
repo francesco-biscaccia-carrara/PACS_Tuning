@@ -12,8 +12,8 @@
  * and it provides mechanisms to broadcast solutions across threads and handle solution updates with thread safety.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.1
- * @since 05/24/2025
+ * @version v1.2.2
+ * @since 05/27/2025
  */
 
 #ifndef MT_CTX_H
@@ -150,11 +150,10 @@ public:
 
 	/**
 	 * @brief Starts parallel optimization using the OMIP method.
-	 * @param slackSumUB The slack upper bound used in the OMIP method.
 	 * @param CLIArgs The command-line arguments for optimization.
 	 * @return Reference to the current MTContext object.
 	 */
-	MTContext& parallelOMIPOptimization(const double slackSumUB, Args& CLIArgs);
+	MTContext& parallelOMIPOptimization(Args& CLIArgs);
 
 	/**
 	 * @brief Destructor for MTContext. Cleans up resources used by the context.
@@ -196,9 +195,8 @@ private:
 	 *
 	 * @param thID The ID of the thread running the job.
 	 * @param CLIArgs The command-line arguments for the optimization process.
-	 * @param slackSumUB The slack upper bound used in the OMIP method.
 	 */
-	void OMIPInstanceJob(const size_t thID, const double slackSumUB, Args& CLIArgs);
+	void OMIPInstanceJob(const size_t thID, Args& CLIArgs);
 };
 
 #endif
