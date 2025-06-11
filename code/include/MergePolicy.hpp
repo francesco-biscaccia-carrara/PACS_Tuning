@@ -5,8 +5,8 @@
  *        and a function for recombining solutions.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.2
- * @since 05/27/2025
+ * @version v1.2.3
+ * @since 06/11/2025
  */
 
 #ifndef MER_POL_H

@@ -2,8 +2,8 @@
  * CPLEX Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.2
- * @since 05/27/2025
+ * @version v1.2.3
+ * @since 06/11/2025
  */
 
 #include <iostream>
@@ -42,8 +42,14 @@ int main(int argc, char* argv[]) {
 			CPLEXSol.sol = ogMIP.getSol();
 			CPLEXSol.oMIPCost = ogMIP.getObjValue();
 			CPLEXSol.slackSum = 0.0;
+
+			// FIXME: REMOVE IT. This is a tmp technique to evaluate my checkFeasSolution over the solution of CPLEX
+			if(!ogMIP.checkFeasibility(CPLEXSol.sol)){
+				PRINT_BEST("INFEAS FOR MY FUNCTON");
+				return EXIT_FAILURE;
+			}	
 #if ACS_TEST
-		jsData[CLIArgs.fileName]["CPLEX"]= {CPLEXSol.oMIPCost, retTime };
+			jsData[CLIArgs.fileName]["CPLEX"] = { CPLEXSol.oMIPCost, retTime };
 #endif
 			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", CPLEXSol.oMIPCost, CPLEXSol.slackSum);
 		}

@@ -307,16 +307,72 @@ MIP& MIP::setVarsValues(const std::vector<double>& values) {
 }
 
 bool MIP::checkFeasibility(const std::vector<double>& sol) {
-	//FIXME: Rewrite your own checkFeas method
 	if (sol.size() != getNumCols())
 		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
 
-	// CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_Integrality, MIP_INT_TOL);
-	// CPXsetdblparam(env, CPXPARAM_Simplex_Tolerances_Feasibility, MIP_SIMPLEX_FEAS_TOL);
+	// // CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_Integrality, MIP_INT_TOL);
+	// // CPXsetdblparam(env, CPXPARAM_Simplex_Tolerances_Feasibility, MIP_SIMPLEX_FEAS_TOL);
 
-	setVarsValues(sol);
-	int status{ solve() };
-	return (status == CPXMIP_OPTIMAL_TOL || status == CPXMIP_OPTIMAL);
+	// setVarsValues(sol);
+	// int status{ solve() };
+	// return (status == CPXMIP_OPTIMAL_TOL || status == CPXMIP_OPTIMAL);
+
+	size_t	numRows = getNumRows();
+	size_t	nzcnt = getNumNonZeros();
+
+	int* rmatbeg = (int* ) malloc(numRows * sizeof(int));
+    int* rmatind = (int* ) malloc(nzcnt * sizeof(int));
+    double* rmatval = (double* ) malloc(nzcnt * sizeof(double));
+	double* rhs = (double* )malloc(numRows * sizeof(double));
+	char* sense = (char* )malloc(numRows * sizeof(char));
+
+	if(CPXgetrhs(env, model, rhs, 0, numRows - 1))
+		throw MIPException(MIPEx::General, "Error on retriving the RHS values");
+	
+	if(CPXgetsense(env, model, sense, 0, numRows - 1))
+		throw MIPException(MIPEx::General, "Error on retriving the RHS values");
+	
+
+	int surplus, nnCPLEX; // Dummy values necessary for CPLXgetrows
+	if(CPXgetrows(env, model, &nnCPLEX, rmatbeg, rmatind, rmatval, nzcnt, &surplus, 0, numRows - 1))
+		throw MIPException(MIPEx::General, "Error on retriving the matrix rows");
+
+	for (size_t i {0}; i < numRows; i++) {
+        int start = rmatbeg[i];
+        int end = (i == numRows - 1) ? nzcnt : rmatbeg[i + 1];
+
+		double lhs = 0.0;
+		for (int j = start; j < end; j++)
+			lhs += sol[rmatind[j]] * rmatval[j];
+
+		switch (sense[i]) {
+			case 'L':
+				if(lhs > rhs[i] + EPSILON)
+					return false;
+				break;
+
+			case 'E':
+				if(std::abs(lhs - rhs[i]) > EPSILON)
+					return false;
+				break;
+
+			case 'G':
+				if(lhs < rhs[i] - EPSILON)
+					return false;
+				break;
+
+			default:
+				throw MIPException(MIPEx::General, "Unknown type of sense");
+				break;
+		}
+    }
+
+	free(rmatbeg);
+	free(rmatind);
+	free(rmatval);
+	free(rhs);
+	free(sense);
+	return true;
 }
 
 MIP::~MIP() noexcept {

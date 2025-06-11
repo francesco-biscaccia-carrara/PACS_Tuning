@@ -9,8 +9,8 @@
  * to restore original problem formulations.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.2
- * @since 05/27/2025
+ * @version v1.2.3
+ * @since 06/11/2025
  */
 
 #ifndef RlxFMIP_H

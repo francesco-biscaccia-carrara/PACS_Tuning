@@ -2,8 +2,8 @@
  * ACS Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.2
- * @since 05/27/2025
+ * @version v1.2.3
+ * @since 06/11/2025
  */
 
 #include <iostream>
@@ -150,7 +150,11 @@ int main(int argc, char* argv[]) {
 		} else {
 			MIP og(CLIArgs.fileName);
 			incumbent.sol.resize(og.getNumCols());
-			//TODO: Check feas of solution
+
+			if(!og.checkFeasibility(incumbent.sol)){
+				PRINT_BEST("INFEAS FOR MY FUNCTON");
+				return EXIT_FAILURE;
+			}	
 			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
 #if ACS_TEST
 		jsData[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)] = { incumbent.oMIPCost, retTime };
