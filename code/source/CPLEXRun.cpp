@@ -43,11 +43,12 @@ int main(int argc, char* argv[]) {
 			CPLEXSol.oMIPCost = ogMIP.getObjValue();
 			CPLEXSol.slackSum = 0.0;
 
-			// FIXME: REMOVE IT. This is a tmp technique to evaluate my checkFeasSolution over the solution of CPLEX
 			if(!ogMIP.checkFeasibility(CPLEXSol.sol)){
-				PRINT_BEST("INFEAS FOR MY FUNCTON");
-				return EXIT_FAILURE;
-			}	
+				throw ACSException(ACSException::ExceptionType::General, "MIP::checkFeasibility:\tFAILED","main");
+			}
+#if ACS_VERBOSE
+			PRINT_INFO("MIP::checkFeasibility:\tPASSED!");
+#endif
 #if ACS_TEST
 			jsData[CLIArgs.fileName]["CPLEX"] = { CPLEXSol.oMIPCost, retTime };
 #endif

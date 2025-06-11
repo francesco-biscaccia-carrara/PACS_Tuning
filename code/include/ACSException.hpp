@@ -57,7 +57,7 @@ private:
 		"WrongTimeLimit",
 		"FileNotFound",
 		"InputSizeError",
-        "WrongArgsValue",
+        "WrongArgsValue"
     };
 
 	/**

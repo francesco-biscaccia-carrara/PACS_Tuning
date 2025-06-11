@@ -152,9 +152,12 @@ int main(int argc, char* argv[]) {
 			incumbent.sol.resize(og.getNumCols());
 
 			if(!og.checkFeasibility(incumbent.sol)){
-				PRINT_BEST("INFEAS FOR MY FUNCTON");
-				return EXIT_FAILURE;
-			}	
+				throw ACSException(ACSException::ExceptionType::General, "MIP::checkFeasibility:\tFAILED","main");
+			}
+#if ACS_VERBOSE
+			PRINT_INFO("MIP::checkFeasibility:\tPASSED");
+#endif
+
 			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
 #if ACS_TEST
 		jsData[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)] = { incumbent.oMIPCost, retTime };
