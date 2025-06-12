@@ -158,8 +158,11 @@ int main(int argc, char* argv[]) {
 			PRINT_INFO("MIP::checkFeasibility:\tPASSED");
 #endif
 
+			if(!og.checkFeasibilityCPLEX(incumbent.sol)){
+				PRINT_WARN("MIP::checkFeasibilityCPLEX:\t FAILED");
+			}
+
 			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
-			std::cout << std::fixed << std::setprecision(100) << incumbent.slackSum << std::endl;
 #if ACS_TEST
 			jsData[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)] = { incumbent.oMIPCost, retTime };
 #endif

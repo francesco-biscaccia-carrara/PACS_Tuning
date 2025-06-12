@@ -375,6 +375,16 @@ bool MIP::checkFeasibility(const std::vector<double>& sol) {
 	return true;
 }
 
+
+bool MIP::checkFeasibilityCPLEX(const std::vector<double>& sol){
+	if (sol.size() != getNumCols())
+		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
+
+	setVarsValues(sol);
+	int status{ solve() };
+	return (status == CPXMIP_OPTIMAL_TOL || status == CPXMIP_OPTIMAL);
+}
+
 MIP::~MIP() noexcept {
 	CPXfreeprob(env, &model);
 	CPXcloseCPLEX(&env);

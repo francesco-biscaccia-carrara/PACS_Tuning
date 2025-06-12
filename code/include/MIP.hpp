@@ -291,6 +291,9 @@ public:
 	[[nodiscard]]
 	bool checkFeasibility(const std::vector<double>& sol);
 
+	[[nodiscard]]
+	bool checkFeasibilityCPLEX(const std::vector<double>& sol);
+
 // Debug-specific methods
 #if ACS_VERBOSE == DEBUG
 	/**
