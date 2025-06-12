@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
 		MTEnv.broadcastSol(tmpSol);
 
 		while (Clock::timeElapsed() < CLIArgs.timeLimit) {
-			if (abs(MTEnv.getBestACSIncumbent().slackSum) > EPSILON) {
+			if (std::abs(MTEnv.getBestACSIncumbent().slackSum) > EPSILON) {
 
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
 #if ACS_VERBOSE >= VERBOSE
@@ -159,8 +159,9 @@ int main(int argc, char* argv[]) {
 #endif
 
 			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
+			std::cout << std::fixed << std::setprecision(100) << incumbent.slackSum << std::endl;
 #if ACS_TEST
-		jsData[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)] = { incumbent.oMIPCost, retTime };
+			jsData[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)] = { incumbent.oMIPCost, retTime };
 #endif
 		}
 #if ACS_TEST

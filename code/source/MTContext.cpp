@@ -24,7 +24,7 @@ MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : numMIPs{
 void MTContext::setBestACSIncumbent(Solution& sol) {
 	std::lock_guard<std::mutex> lock(MTContextMTX);
 
-	if (((sol.oMIPCost < bestACSIncumbent.oMIPCost) && (abs(bestACSIncumbent.slackSum) - abs(sol.slackSum)) <= EPSILON) || abs(sol.slackSum) < abs(bestACSIncumbent.slackSum)) {
+	if (((sol.oMIPCost < bestACSIncumbent.oMIPCost) && (std::abs(bestACSIncumbent.slackSum) - std::abs(sol.slackSum)) <= EPSILON) || std::abs(sol.slackSum) < std::abs(bestACSIncumbent.slackSum)) {
 
 		bestACSIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = sol.oMIPCost };
 		A_RhoChanges = numMIPs;

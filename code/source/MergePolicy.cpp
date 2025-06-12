@@ -10,15 +10,15 @@ void MergePolicy::recombine(MIP& model, const std::vector<Solution>& x, const ch
 	size_t numCommVars{ 0 };
 #endif
 
-	size_t xLen{ model.getMIPNumVars()};
+	size_t xLen { model.getMIPNumVars()};
 
 	for (size_t i{ 0 }; i < xLen; i++) {
-		if (abs(x[0].sol[i] - x[1].sol[i]) >= EPSILON)
+		if (std::abs(x[0].sol[i] - x[1].sol[i]) >= EPSILON)
 			continue;
 
 		bool commonValue{ true };
 		for (size_t p{ 0 }; p < x.size() - 1; p++) {
-			if (abs(x[p].sol[i] - x[p + 1].sol[i]) >= EPSILON) {
+			if (std::abs(x[p].sol[i] - x[p + 1].sol[i]) >= EPSILON) {
 				commonValue = false;
 				break;
 			}
