@@ -158,7 +158,9 @@ int main(int argc, char* argv[]) {
 			PRINT_INFO("MIP::checkFeasibility:\tPASSED");
 #endif
 
-			if(!og.checkFeasibilityCPLEX(incumbent.sol)){
+			if(og.checkFeasibilityCPLEX(incumbent.sol)){
+				PRINT_WARN("MIP::checkFeasibilityCPLEX:\t PASSED");
+			}else{
 				PRINT_WARN("MIP::checkFeasibilityCPLEX:\t FAILED");
 			}
 
