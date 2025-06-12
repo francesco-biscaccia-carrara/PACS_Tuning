@@ -4,7 +4,7 @@ from dotenv import load_dotenv # type: ignore
 sys.dont_write_bytecode = True
 
 #EDITABLE PARS
-ALGOS = (0,1)
+ALGOS = (0)
 SEEDS = (38472910, 56473829, 27384910, 91827364, 83746592)
 
 def generate_env_file(env_vars, file_path="../../.ACSenv"):
