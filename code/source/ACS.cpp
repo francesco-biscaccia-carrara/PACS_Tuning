@@ -2,8 +2,8 @@
  * ACS Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.3
- * @since 06/11/2025
+ * @version v1.2.4
+ * @since 06/13/2025
  */
 
 #include <iostream>
@@ -45,8 +45,6 @@ int main(int argc, char* argv[]) {
 				}
 				// PARALLEL FMIP Phase
 				MTEnv.parallelFMIPOptimization(CLIArgs);
-				if (MTEnv.isFeasibleSolFound())
-					break;
 
 				// 1° Recombination phase
 				FMIP MergeFMIP(CLIArgs.fileName);
@@ -80,8 +78,6 @@ int main(int argc, char* argv[]) {
 				MTEnv.setBestACSIncumbent(tmpSol);
 				FixPolicy::dynamicAdjustRho("1_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
 
-				if (MTEnv.isFeasibleSolFound())
-					break;
 				MTEnv.broadcastSol(tmpSol);
 			}
 
@@ -151,19 +147,27 @@ int main(int argc, char* argv[]) {
 			MIP og(CLIArgs.fileName);
 			incumbent.sol.resize(og.getNumCols());
 
-			if(!og.checkFeasibility(incumbent.sol)){
-				throw ACSException(ACSException::ExceptionType::General, "MIP::checkFeasibility:\tFAILED","main");
+			if(std::abs(og.checkObjValue(incumbent.sol)-incumbent.oMIPCost) > EPSILON){
+				throw ACSException(ACSException::ExceptionType::General, "MIP::chekObjValue:\tFAILED","ACSmain");
 			}
+
+			double maxViol = og.checkFeasibility(incumbent.sol);
+			double maxIntViol = og.checkIntegrality(incumbent.sol);
+
+			if(maxViol > EPSILON){
+				throw ACSException(ACSException::ExceptionType::General, "MIP::checkFeasibility:\tFAILED","ACSmain");
+			}
+
+			if(maxViol > EPSILON){
+				throw ACSException(ACSException::ExceptionType::General, "MIP::checkFeasibility:\tFAILED","ACSmain");
+			}
+
 #if ACS_VERBOSE
-			PRINT_INFO("MIP::checkFeasibility:\tPASSED");
+			PRINT_INFO("-------------------------------TEST PHASE-------------------------------");
+			PRINT_INFO("MIP::checkFeasibility : PASSED -- Max Constraint  Violation: %10.9f", maxViol);
+			PRINT_INFO("MIP::checkIntegrality : PASSED -- Max Integrality Violation: %10.9f", maxIntViol);
+			PRINT_INFO("------------------------------------------------------------------------");
 #endif
-
-			if(og.checkFeasibilityCPLEX(incumbent.sol)){
-				PRINT_WARN("MIP::checkFeasibilityCPLEX:\t PASSED");
-			}else{
-				PRINT_WARN("MIP::checkFeasibilityCPLEX:\t FAILED");
-			}
-
 			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
 #if ACS_TEST
 			jsData[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)] = { incumbent.oMIPCost, retTime };

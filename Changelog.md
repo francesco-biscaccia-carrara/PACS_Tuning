@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.2.4] - 2025-06-13  
+### Added  
+- Implemented `MIP::checkIntegrality` and `MIP::checkObjValue` without relying on CPLEX, enabling lightweight validation ([MIP.cpp](code/source/MIP.cpp)).  
+
+### Fixed  
+- Resolved inconsistency between actual and saved objective values due to incorrect slack sum comparison in `MTContext::setBestACSIncumbent` ([MTContext.cpp](code/source/MTContext.cpp)).  
+
+
 ## [1.2.3] - 2025-06-11
 ### Addded  
 - Implemented `MIP::checkFeasibility` without relying on CPLEX, enabling lightweight feasibility checks ([MIP.cpp](code/source/MIP.cpp)).

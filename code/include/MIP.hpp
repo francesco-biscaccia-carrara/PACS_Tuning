@@ -8,8 +8,8 @@
  *
  * @note Requires CPLEX library and Utils.hpp
  * @author Francesco Biscaccia Carrara
- * @version v1.2.3
- * @since 06/11/2025
+ * @version v1.2.4
+ * @since 06/13/2025
  */
 
 #ifndef MIP_SOL_H
@@ -253,6 +253,18 @@ public:
 	VarBounds getVarBounds(const int index);
 
 	/**
+	 * @brief Get the type of a variable
+	 *
+	 * Retrieves the current type of the variable at the specified index.
+	 *
+	 * @param index Variable index
+	 * @return Variable type (e.g., continuous, integer)
+	 * @note The return value cannot be discarded (nodiscard attribute).
+	 */
+	[[nodiscard]]
+	char getVarType(const int index);
+
+	/**
 	 * @brief Set the value of a specific variable
 	 * @param index Variable index
 	 * @param val Variable value
@@ -289,10 +301,17 @@ public:
 	 * @return True if solution is feasible, false otherwise
 	 */
 	[[nodiscard]]
-	bool checkFeasibility(const std::vector<double>& sol);
+	double checkFeasibility(const std::vector<double>& sol);
+
+
+	[[nodiscard]]
+	double checkIntegrality(const std::vector<double>& sol);
 
 	[[nodiscard]]
 	bool checkFeasibilityCPLEX(const std::vector<double>& sol);
+
+	[[nodiscard]]
+	double checkObjValue(const std::vector<double>& sol);
 
 // Debug-specific methods
 #if ACS_VERBOSE == DEBUG

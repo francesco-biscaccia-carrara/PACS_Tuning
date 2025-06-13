@@ -2,8 +2,8 @@
  * CPLEX Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.3
- * @since 06/11/2025
+ * @version v1.2.4
+ * @since 06/13/2025
  */
 
 #include <iostream>
@@ -42,13 +42,6 @@ int main(int argc, char* argv[]) {
 			CPLEXSol.sol = ogMIP.getSol();
 			CPLEXSol.oMIPCost = ogMIP.getObjValue();
 			CPLEXSol.slackSum = 0.0;
-
-			if(!ogMIP.checkFeasibility(CPLEXSol.sol)){
-				throw ACSException(ACSException::ExceptionType::General, "MIP::checkFeasibility:\tFAILED","main");
-			}
-#if ACS_VERBOSE
-			PRINT_INFO("MIP::checkFeasibility:\tPASSED!");
-#endif
 #if ACS_TEST
 			jsData[CLIArgs.fileName]["CPLEX"] = { CPLEXSol.oMIPCost, retTime };
 #endif

@@ -3,6 +3,9 @@
 #define BOTH_BOUNDS 'B'
 #define LW_BOUND 'L'
 #define UP_BOUND 'U'
+#define LE 'L'
+#define EQ 'E'
+#define GE 'G'
 
 using MIPEx = MIPException::ExceptionType;
 
@@ -265,6 +268,16 @@ VarBounds MIP::getVarBounds(const int index) {
 	return VarBounds{ .lowerBound = lb, .upperBound = ub };
 }
 
+char MIP::getVarType(const int index) {
+	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
+		throw MIPException(MIPEx::OutOfBound, "Wrong index getVarType()!");
+
+	char type;
+	if (int error{ CPXgetctype(env, model, &type, index, index) })
+		throw MIPException(MIPEx::General, "Unable to get var " + std::to_string(index) + "type!\t" + std::to_string(error));
+	return type;
+}
+
 MIP& MIP::setVarValue(const int index, const double val) {
 	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarValue()!");
@@ -306,16 +319,9 @@ MIP& MIP::setVarsValues(const std::vector<double>& values) {
 	return *this;
 }
 
-bool MIP::checkFeasibility(const std::vector<double>& sol) {
+double MIP::checkFeasibility(const std::vector<double>& sol) {
 	if (sol.size() != getNumCols())
 		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
-
-	// // CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_Integrality, MIP_INT_TOL);
-	// // CPXsetdblparam(env, CPXPARAM_Simplex_Tolerances_Feasibility, MIP_SIMPLEX_FEAS_TOL);
-
-	// setVarsValues(sol);
-	// int status{ solve() };
-	// return (status == CPXMIP_OPTIMAL_TOL || status == CPXMIP_OPTIMAL);
 
 	size_t	numRows = getNumRows();
 	size_t	nzcnt = getNumNonZeros();
@@ -337,6 +343,8 @@ bool MIP::checkFeasibility(const std::vector<double>& sol) {
 	if(CPXgetrows(env, model, &nnCPLEX, rmatbeg, rmatind, rmatval, nzcnt, &surplus, 0, numRows - 1))
 		throw MIPException(MIPEx::General, "Error on retriving the matrix rows");
 
+	double maxViolation = -CPX_INFBOUND;
+
 	for (size_t i {0}; i < numRows; i++) {
         int start = rmatbeg[i];
         int end = (i == numRows - 1) ? nzcnt : rmatbeg[i + 1];
@@ -346,19 +354,19 @@ bool MIP::checkFeasibility(const std::vector<double>& sol) {
 			lhs += sol[rmatind[j]] * rmatval[j];
 
 		switch (sense[i]) {
-			case 'L':
-				if(lhs > rhs[i] + EPSILON)
-					return false;
+			case LE:
+				if(lhs > rhs[i] + maxViolation)
+					maxViolation = lhs - rhs[i];
 				break;
 
-			case 'E':
-				if(std::abs(lhs - rhs[i]) > EPSILON)
-					return false;
+			case EQ :
+				if(std::abs(lhs - rhs[i]) > maxViolation)
+					maxViolation = std::abs(lhs - rhs[i]);
 				break;
 
-			case 'G':
-				if(lhs < rhs[i] - EPSILON)
-					return false;
+			case GE:
+				if(lhs < rhs[i] - maxViolation)
+					maxViolation = rhs[i] - lhs;
 				break;
 
 			default:
@@ -372,17 +380,46 @@ bool MIP::checkFeasibility(const std::vector<double>& sol) {
 	free(rmatval);
 	free(rhs);
 	free(sense);
-	return true;
+	return maxViolation;
 }
 
+double MIP::checkIntegrality(const std::vector<double>& sol){
+	if (sol.size() != getNumCols())
+		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
+
+	double maxIntViolation = -CPX_INFBOUND;
+	for (size_t i{ 0 }; i < sol.size(); i++) {
+		char type = getVarType(i);
+		if (type == CPX_BINARY || type == CPX_INTEGER){
+			double roundVal = std::round(sol[i]);
+			if(roundVal > sol[i] + maxIntViolation)
+				maxIntViolation = roundVal - sol[i];
+			
+			if(roundVal < sol[i] - maxIntViolation)
+				maxIntViolation = sol[i] - maxIntViolation;
+		}
+	}
+	return maxIntViolation;
+}
 
 bool MIP::checkFeasibilityCPLEX(const std::vector<double>& sol){
 	if (sol.size() != getNumCols())
 		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
 
+	// CPXsetdblparam(env, CPXPARAM_MIP_Tolerances_Integrality, MIP_INT_TOL);
+	// CPXsetdblparam(env, CPXPARAM_Simplex_Tolerances_Feasibility, MIP_SIMPLEX_FEAS_TOL);
+
 	setVarsValues(sol);
 	int status{ solve() };
 	return (status == CPXMIP_OPTIMAL_TOL || status == CPXMIP_OPTIMAL);
+}
+
+double MIP::checkObjValue(const std::vector<double>& sol){
+	if (sol.size() != getNumCols())
+		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
+	
+	std::vector<double> objCoef = getObjFunction();
+	return std::inner_product(objCoef.begin(), objCoef.end(), sol.begin(), 0.0);
 }
 
 MIP::~MIP() noexcept {

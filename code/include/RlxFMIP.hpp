@@ -9,8 +9,8 @@
  * to restore original problem formulations.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.3
- * @since 06/11/2025
+ * @version v1.2.4
+ * @since 06/13/2025
  */
 
 #ifndef RlxFMIP_H
@@ -106,17 +106,6 @@ public:
 	 */
 	int solveRelaxation(const double timeLimit = CPX_INFBOUND, const double detTimeLimit = CPX_INFBOUND);
 
-	/**
-	 * @brief Get the type of a variable
-	 *
-	 * Retrieves the current type of the variable at the specified index.
-	 *
-	 * @param index Variable index
-	 * @return Variable type (e.g., continuous, integer)
-	 * @note The return value cannot be discarded (nodiscard attribute).
-	 */
-	[[nodiscard]]
-	char getVarType(const int index);
 
 	/**
 	 * @brief Change the type of a variable

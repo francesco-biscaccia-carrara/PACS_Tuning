@@ -194,7 +194,7 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = 
 				throw ArgsParserException(ExType::WrongArgsValue,"Wrong values passed as CLI args");
 			}	
 		} else {
-			if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.numsubMIPs || args.algo < 0){
+			if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.numsubMIPs){
 				printf("%s\n", HELP_ACS);
 				throw ArgsParserException(ExType::WrongArgsValue,"Wrong values passed as CLI args");
 			}
