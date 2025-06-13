@@ -74,10 +74,11 @@ int main(int argc, char* argv[]) {
 				}
 				tmpSol.sol = MergeFMIP.getSol();
 				tmpSol.slackSum = MergeFMIP.getObjValue();
+				tmpSol.oMIPCost = MergeFMIP.getOMIPCost(tmpSol.sol);
 				PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
 				MTEnv.setBestACSIncumbent(tmpSol);
-				FixPolicy::dynamicAdjustRho("1_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
 
+				FixPolicy::dynamicAdjustRho("1_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
 				MTEnv.broadcastSol(tmpSol);
 			}
 
@@ -148,7 +149,7 @@ int main(int argc, char* argv[]) {
 			incumbent.sol.resize(og.getNumCols());
 
 			if(std::abs(og.checkObjValue(incumbent.sol)-incumbent.oMIPCost) > EPSILON){
-				throw ACSException(ACSException::ExceptionType::General, "MIP::chekObjValue:\tFAILED","ACSmain");
+				throw ACSException(ACSException::ExceptionType::General, "MIP::chekObjValue:\tFAILED -- "+std::to_string(og.checkObjValue(incumbent.sol)-incumbent.oMIPCost),"ACSmain");
 			}
 
 			double maxViol = og.checkFeasibility(incumbent.sol);

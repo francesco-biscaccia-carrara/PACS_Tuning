@@ -5,6 +5,7 @@
 
 FMIP::FMIP(const std::string fileName) : MIP(fileName) {
 	MIPNumVars = getNumCols();
+	ogObjFun = getObjFunction();
 	setup();
 
 #if ACS_VERBOSE == DEBUG
@@ -14,6 +15,7 @@ FMIP::FMIP(const std::string fileName) : MIP(fileName) {
 
 FMIP::FMIP(const FMIP& otherFMIP) : MIP(otherFMIP) {
 	MIPNumVars = getNumCols();
+	ogObjFun = getObjFunction();
 
 #if ACS_VERBOSE == DEBUG
 	this->fileName += "_FMIP";
@@ -22,11 +24,16 @@ FMIP::FMIP(const FMIP& otherFMIP) : MIP(otherFMIP) {
 
 FMIP::FMIP(const MIP& otherMIP) : MIP(otherMIP) {
 	MIPNumVars = getNumCols();
+	ogObjFun = getObjFunction();
 	setup();
 
 #if ACS_VERBOSE == DEBUG
 	this->fileName += "_FMIP";
 #endif
+}
+
+double FMIP::getOMIPCost(const std::vector<double>& sol) {
+	return std::inner_product(ogObjFun.begin(), ogObjFun.end(), sol.begin(), 0.0);
 }
 
 void FMIP::setup() {

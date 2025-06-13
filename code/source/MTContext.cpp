@@ -24,8 +24,8 @@ MTContext::MTContext(size_t subMIPNum, unsigned long long intialSeed) : numMIPs{
 void MTContext::setBestACSIncumbent(Solution& sol) {
 	std::lock_guard<std::mutex> lock(MTContextMTX);
 
-	/// FIXED: Bug #9d6c973e040c2a8da57051d05e46d92c6e366c45 -- Inconsistency between actual and saved objective values due to incorrect slack sum comparison using '(std::abs(bestACSIncumbent.slackSum) - std::abs(sol.slackSum)) <= EPSILON)'
-	if ( ((sol.oMIPCost < bestACSIncumbent.oMIPCost) && (std::abs(sol.slackSum)) <= EPSILON) || std::abs(sol.slackSum) < std::abs(bestACSIncumbent.slackSum)) {		
+	/// FIXED: Bug #9d6c973e040c2a8da57051d05e46d92c6e366c45 -- Inconsistency between actual and saved objective values due to incorrect slack sum comparison
+	if ( (sol.slackSum < bestACSIncumbent.slackSum) || (std::abs(sol.slackSum) < EPSILON && sol.oMIPCost < bestACSIncumbent.oMIPCost) ) {		
 		bestACSIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = sol.oMIPCost };
 		A_RhoChanges = numMIPs;
 
@@ -120,7 +120,9 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 
 	tmpSolutions[thID].sol = fMIP.getSol();
 	tmpSolutions[thID].slackSum = fMIP.getObjValue();
-	
+	/// FIXED: Bug #9d6c973e040c2a8da57051d05e46d92c6e366c45 -- Inconsistency between actual and saved objective values due to incorrect slack sum comparison
+	tmpSolutions[thID].oMIPCost = fMIP.getOMIPCost(tmpSolutions[thID].sol);
+
 	PRINT_OUT("Proc: %3d - FeasMIP Objective: %20.2f", thID, tmpSolutions[thID].slackSum);
 	setBestACSIncumbent(tmpSolutions[thID]);
 

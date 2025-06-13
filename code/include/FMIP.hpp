@@ -92,6 +92,9 @@ public:
 	[[nodiscard]]
 	size_t getMIPNumVars() noexcept override { return MIPNumVars; };
 
+	[[nodiscard]]
+	double getOMIPCost(const std::vector<double>& sol);
+
 private:
 	/**
 	 * @brief Sets up the FMIP problem.
@@ -108,6 +111,7 @@ private:
 	 * Mixed Integer Programming problem.
 	 */
 	size_t MIPNumVars;
+	std::vector<double> ogObjFun;
 };
 
 #endif
