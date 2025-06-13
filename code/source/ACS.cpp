@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
 			incumbent.sol.resize(og.getNumCols());
 
 			if(std::abs(og.checkObjValue(incumbent.sol)-incumbent.oMIPCost) > EPSILON){
-				throw ACSException(ACSException::ExceptionType::General, "MIP::chekObjValue:\tFAILED -- "+std::to_string(og.checkObjValue(incumbent.sol)-incumbent.oMIPCost),"ACSmain");
+				throw ACSException(ACSException::ExceptionType::General, "MIP::chekObjValue:\tFAILED","ACSmain");
 			}
 
 			double maxViol = og.checkFeasibility(incumbent.sol);
