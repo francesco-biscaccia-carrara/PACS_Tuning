@@ -30,7 +30,7 @@ void MTContext::setBestACSIncumbent(Solution& sol) {
 		A_RhoChanges = numMIPs;
 
 		if (bestACSIncumbent.oMIPCost < CPX_INFBOUND && bestACSIncumbent.slackSum <= EPSILON)
-			PRINT_BEST("New MIP Incumbent found %12.2f\t[*]", bestACSIncumbent.oMIPCost);
+			PRINT_BEST("New MIP Incumbent found %12.2f\t\t[*]", bestACSIncumbent.oMIPCost);
 
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("New ACS Incumbent found %12.2f|%-10.2f\t[*]", bestACSIncumbent.oMIPCost, bestACSIncumbent.slackSum);

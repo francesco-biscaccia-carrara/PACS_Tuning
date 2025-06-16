@@ -343,7 +343,7 @@ double MIP::checkFeasibility(const std::vector<double>& sol) {
 	if(CPXgetrows(env, model, &nnCPLEX, rmatbeg, rmatind, rmatval, nzcnt, &surplus, 0, numRows - 1))
 		throw MIPException(MIPEx::General, "Error on retriving the matrix rows");
 
-	double maxViolation = -CPX_INFBOUND;
+	double maxViolation = 0.0;
 
 	for (size_t i {0}; i < numRows; i++) {
         int start = rmatbeg[i];
@@ -387,16 +387,15 @@ double MIP::checkIntegrality(const std::vector<double>& sol){
 	if (sol.size() != getNumCols())
 		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
 
-	double maxIntViolation = -CPX_INFBOUND;
+	double maxIntViolation = 0.0;
 	for (size_t i{ 0 }; i < sol.size(); i++) {
 		char type = getVarType(i);
 		if (type == CPX_BINARY || type == CPX_INTEGER){
-			double roundVal = std::round(sol[i]);
-			if(roundVal > sol[i] + maxIntViolation)
-				maxIntViolation = roundVal - sol[i];
-			
-			if(roundVal < sol[i] - maxIntViolation)
-				maxIntViolation = sol[i] - maxIntViolation;
+/// FIXED: Bug #9fb83189145371b5c9acdfea1718509d9f332514 - Wrong computation of maxIntViolation
+			double tmpIntVal = std::abs(sol[i] - std::round(sol[i]));
+        	if (tmpIntVal > maxIntViolation) {
+           	 	maxIntViolation = tmpIntVal;
+        	}
 		}
 	}
 	return maxIntViolation;

@@ -66,6 +66,7 @@
  * @return Calculated deterministic time limit
  */
 #define DET_TL(nnz) std::max(MIN_DET_TL, std::min((double)(nnz / SCALE), MAX_DET_TL))
+#define REL_ERR(act, exp) std::abs((act-exp)/exp)
 
 /** Macro for printing error messages */
 #define PRINT_ERR(...) Logger::print(Logger::LogLevel::ERROR, __VA_ARGS__)

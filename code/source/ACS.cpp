@@ -148,27 +148,31 @@ int main(int argc, char* argv[]) {
 			MIP og(CLIArgs.fileName);
 			incumbent.sol.resize(og.getNumCols());
 
-			if(std::abs(og.checkObjValue(incumbent.sol)-incumbent.oMIPCost) > EPSILON){
+			double ABS_MaxViol = og.checkFeasibility(incumbent.sol);
+			double ABS_MaxIntViol = og.checkIntegrality(incumbent.sol);
+			double REL_ObjErr = REL_ERR(incumbent.oMIPCost, og.checkObjValue(incumbent.sol));
+
+#if ACS_VERBOSE
+			PRINT_INFO("-------------------------------TEST PHASE--------------------------------");
+			PRINT_INFO("MIP::checkFeasibility\tMax Constraint  Violation:\t%11.10f", ABS_MaxViol);
+			PRINT_INFO("MIP::checkIntegrality\tMax Integrality Violation:\t%11.10f", ABS_MaxIntViol);
+			PRINT_INFO("MIP::checkObjectiveVal\tRelative Objective Error:\t%11.10f", REL_ObjErr);
+			PRINT_INFO("-------------------------------------------------------------------------");
+#endif
+
+			if(ABS_MaxViol > EPSILON){
+				throw ACSException(ACSException::ExceptionType::General, "MIP::checkFeasibility:\tFAILED","ACSmain");
+			}
+
+			if(ABS_MaxIntViol > EPSILON){
+				throw ACSException(ACSException::ExceptionType::General, "MIP::checkFeasibility:\tFAILED","ACSmain");
+			}
+
+			if(REL_ObjErr > EPSILON){
 				throw ACSException(ACSException::ExceptionType::General, "MIP::chekObjValue:\tFAILED","ACSmain");
 			}
 
-			double maxViol = og.checkFeasibility(incumbent.sol);
-			double maxIntViol = og.checkIntegrality(incumbent.sol);
-
-			if(maxViol > EPSILON){
-				throw ACSException(ACSException::ExceptionType::General, "MIP::checkFeasibility:\tFAILED","ACSmain");
-			}
-
-			if(maxViol > EPSILON){
-				throw ACSException(ACSException::ExceptionType::General, "MIP::checkFeasibility:\tFAILED","ACSmain");
-			}
-
-#if ACS_VERBOSE
-			PRINT_INFO("-------------------------------TEST PHASE-------------------------------");
-			PRINT_INFO("MIP::checkFeasibility : PASSED -- Max Constraint  Violation: %10.9f", maxViol);
-			PRINT_INFO("MIP::checkIntegrality : PASSED -- Max Integrality Violation: %10.9f", maxIntViol);
-			PRINT_INFO("------------------------------------------------------------------------");
-#endif
+			
 			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
 #if ACS_TEST
 			jsData[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)] = { incumbent.oMIPCost, retTime };
