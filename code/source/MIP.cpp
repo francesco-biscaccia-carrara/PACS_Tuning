@@ -198,7 +198,7 @@ MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef, const 
 	}
 
 MIP& MIP::addCol(const size_t index, const double value, const double objCoef, const double lb, const double ub, const std::string name) {
-	if (index < 0 || static_cast<size_t>(index) > getNumRows() - 1)
+	if (index > getNumRows() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index addCol()!");
 
 	char** cname{ (char**)calloc(1, sizeof(char*)) };
