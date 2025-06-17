@@ -27,7 +27,35 @@ int main(int argc, char* argv[]) {
 
 		std::vector<double> startSol;
 		Random				mainRnd = Random(CLIArgs.seed);
-		FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
+		
+		switch(CLIArgs.algo){
+			case 0:
+				CLIArgs.rho = 0.1;
+			break;
+
+			case 1:
+				CLIArgs.rho = 0.25;
+			break;
+
+			case 2:
+				CLIArgs.rho = 0.5;
+			break;
+
+			case 3:
+				CLIArgs.rho = 0.75;
+			break;
+
+			case 4:
+				CLIArgs.rho = 0.9;
+			break;
+
+			default:break;
+		}
+		PRINT_WARN("No Dyn -- Rho: %3.2f", CLIArgs.rho);
+
+		FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, mainRnd);
+		
+		//FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
 		Solution tmpSol = { .sol = startSol, .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Starting vector found!");
@@ -54,7 +82,7 @@ int main(int argc, char* argv[]) {
 
 				if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {	
 					MergeFMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
-					FixPolicy::fixSlackUpperBound("1_Phase", MergeFMIP, MTEnv.getBestACSIncumbent().sol);
+					//FixPolicy::fixSlackUpperBound("1_Phase", MergeFMIP, MTEnv.getBestACSIncumbent().sol);
 				}
 
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -68,17 +96,18 @@ int main(int argc, char* argv[]) {
 
 				if (MIP::isINForUNBD(solveCode)) {
 #if ACS_VERBOSE >= VERBOSE
-					PRINT_INFO("MergeOMIP - Aborted: Infeasible with given TL");
+					PRINT_INFO("MergeFMIP - Aborted: Infeasible with given TL");
 #endif
 					continue;
 				}
+				
 				tmpSol.sol = MergeFMIP.getSol();
 				tmpSol.slackSum = MergeFMIP.getObjValue();
 				tmpSol.oMIPCost = MergeFMIP.getOMIPCost(tmpSol.sol);
 				PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
 				MTEnv.setBestACSIncumbent(tmpSol);
 
-				FixPolicy::dynamicAdjustRho("1_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
+				// FixPolicy::dynamicAdjustRho("1_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
 				MTEnv.broadcastSol(tmpSol);
 			}
 
@@ -90,7 +119,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			// PARALLEL OMIP Phase
-			MTEnv.parallelOMIPOptimization(CLIArgs);
+			MTEnv.parallelOMIPOptimization(CLIArgs,tmpSol.slackSum);
 			if (MTEnv.isFeasibleSolFound())
 				break;
 
@@ -99,10 +128,11 @@ int main(int argc, char* argv[]) {
 			MergeOMIP.setNumCores(CPLEX_CORE);
 
 			MergePolicy::recombine(MergeOMIP, MTEnv.getTmpSolutions(), "2_Phase");
+			MergeOMIP.updateBudgetConstr(tmpSol.slackSum);
 
 			if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {
 				MergeOMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
-				FixPolicy::fixSlackUpperBound("2_Phase", MergeOMIP, MTEnv.getBestACSIncumbent().sol);
+				// FixPolicy::fixSlackUpperBound("2_Phase", MergeOMIP, MTEnv.getBestACSIncumbent().sol);
 			}
 
 			if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -111,6 +141,7 @@ int main(int argc, char* argv[]) {
 #endif
 				break;
 			}
+
 			int solveCode{ MergeOMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), DET_TL(MergeOMIP.getNumNonZeros())) };
 
 			if (MIP::isINForUNBD(solveCode)) {
@@ -126,7 +157,7 @@ int main(int argc, char* argv[]) {
 
 			PRINT_OUT("OptMIP Objective|SlackSum after merging: %12.2f|%-10.2f", MergeOMIP.getObjValue(), tmpSol.slackSum);
 			MTEnv.setBestACSIncumbent(tmpSol);
-			FixPolicy::dynamicAdjustRho("2_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
+			// FixPolicy::dynamicAdjustRho("2_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
 
 			if (MTEnv.isFeasibleSolFound())
 				break;
@@ -156,7 +187,7 @@ int main(int argc, char* argv[]) {
 			PRINT_INFO("-------------------------------TEST PHASE--------------------------------");
 			PRINT_INFO("MIP::checkFeasibility\tMax Constraint  Violation:\t%11.10f", ABS_MaxViol);
 			PRINT_INFO("MIP::checkIntegrality\tMax Integrality Violation:\t%11.10f", ABS_MaxIntViol);
-			PRINT_INFO("MIP::checkObjectiveVal\tRelative Objective Error:\t%11.10f", REL_ObjErr);
+			PRINT_INFO("MIP::checkObjValue\t\tRelative Objective Error :\t%11.10f", REL_ObjErr);
 			PRINT_INFO("-------------------------------------------------------------------------");
 #endif
 

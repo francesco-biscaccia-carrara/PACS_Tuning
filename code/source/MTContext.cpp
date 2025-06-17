@@ -73,11 +73,11 @@ MTContext& MTContext::parallelFMIPOptimization(Args& CLIArgs) {
 	return *this;
 }
 
-MTContext& MTContext::parallelOMIPOptimization(Args& CLIArgs) {
+MTContext& MTContext::parallelOMIPOptimization(Args& CLIArgs, double rhs) {
 	waitAllJobs();
 
 	for (size_t i{ 0 }; i < CLIArgs.numsubMIPs; i++) {
-		threads.emplace_back(&MTContext::OMIPInstanceJob, this, i, std::ref(CLIArgs));
+		threads.emplace_back(&MTContext::OMIPInstanceJob, this, i, std::ref(CLIArgs), rhs);
 	}
 
 	waitAllJobs();
@@ -96,7 +96,7 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	FMIP fMIP{ CLIArgs.fileName };
 	if (bestACSIncumbent.slackSum < CPX_INFBOUND) {
 		fMIP.addMIPStart(bestACSIncumbent.sol);
-		FixPolicy::fixSlackUpperBoundMT(thID, "FMIP", fMIP, bestACSIncumbent.sol);
+		// FixPolicy::fixSlackUpperBoundMT(thID, "FMIP", fMIP, bestACSIncumbent.sol);
 	}
 	fMIP.setNumCores(CPLEX_CORE);
 
@@ -126,19 +126,20 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	PRINT_OUT("Proc: %3d - FeasMIP Objective: %20.2f", thID, tmpSolutions[thID].slackSum);
 	setBestACSIncumbent(tmpSolutions[thID]);
 
-	FixPolicy::dynamicAdjustRhoMT(thID, "FMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
+	// FixPolicy::dynamicAdjustRhoMT(thID, "FMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
 }
 
 #pragma region MTContextPrivateSec
 
-void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs) {
+void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs, double rhs) {
 
 	OMIP oMIP{ CLIArgs.fileName };
 	if (bestACSIncumbent.slackSum < CPX_INFBOUND) {
 		oMIP.addMIPStart(bestACSIncumbent.sol);
-		FixPolicy::fixSlackUpperBoundMT(thID, "OMIP", oMIP, bestACSIncumbent.sol);
+		// FixPolicy::fixSlackUpperBoundMT(thID, "OMIP", oMIP, bestACSIncumbent.sol);
 	}
 	oMIP.setNumCores(CPLEX_CORE);
+	oMIP.updateBudgetConstr(rhs);
 
 	FixPolicy::randomRhoFixMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
 
@@ -165,7 +166,7 @@ void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	PRINT_OUT("Proc: %3d - OptMIP Objective: %20.2f|%-10.2f", thID, tmpSolutions[thID].oMIPCost, tmpSolutions[thID].slackSum);
 	setBestACSIncumbent(tmpSolutions[thID]);
 
-	FixPolicy::dynamicAdjustRhoMT(thID, "OMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
+	// FixPolicy::dynamicAdjustRhoMT(thID, "OMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
 }
 
 #pragma endregion

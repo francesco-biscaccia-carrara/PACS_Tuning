@@ -153,7 +153,7 @@ public:
 	 * @param CLIArgs The command-line arguments for optimization.
 	 * @return Reference to the current MTContext object.
 	 */
-	MTContext& parallelOMIPOptimization(Args& CLIArgs);
+	MTContext& parallelOMIPOptimization(Args& CLIArgs, double rhs);
 
 	/**
 	 * @brief Destructor for MTContext. Cleans up resources used by the context.
@@ -196,7 +196,7 @@ private:
 	 * @param thID The ID of the thread running the job.
 	 * @param CLIArgs The command-line arguments for the optimization process.
 	 */
-	void OMIPInstanceJob(const size_t thID, Args& CLIArgs);
+	void OMIPInstanceJob(const size_t thID, Args& CLIArgs, double rhs);
 };
 
 #endif
