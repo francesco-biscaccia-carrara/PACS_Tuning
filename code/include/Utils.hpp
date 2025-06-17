@@ -67,7 +67,7 @@
  */
 #define DET_TL(nnz) std::max(MIN_DET_TL, std::min((double)(nnz / SCALE), MAX_DET_TL))
 
-#define REL_ERR(act, exp) ((std::exp(exp < EPSILON)) ? std::abs(act-exp) :  std::abs((act-exp)/exp))
+#define REL_ERR(act, exp) ((std::abs(exp < EPSILON)) ? std::abs(act-exp) :  std::abs((act-exp)/exp))
 		
 
 /** Macro for printing error messages */
