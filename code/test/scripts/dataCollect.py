@@ -46,40 +46,28 @@ def main(pipeline):
                     if algo == "CPLEX": continue
                     else:
                         values = []
-                        times = []
                         for seed in JSdata[inst][algo]:
-                            values.append(JSdata[inst][algo][seed][0])
-                            times.append(JSdata[inst][algo][seed][1])
-
+                            values.append([JSdata[inst][algo][seed][0], JSdata[inst][algo][seed][1]])
+                        
                         # Sanitizing
                         nosol=0
                         for val in values:
-                            if val == "NO SOL":
+                            if val[0] == "NO SOL":
                                 nosol+=1
 
-                        if nosol < len(values)/2:
+                        if nosol <= len(values)//2:
                             newVal = []
-                            for val in values:
-                                if val != "NO SOL":
-                                    newVal.append(val)
-                            avgVal = mean(newVal)
-                        else:
-                            avgVal = "NO SOL"
-                        
-
-                        nosoltl=0
-                        for time in times:
-                            if time >= 300:
-                                nosoltl+=1
-                        
-                        if nosoltl < len(times)/2:
                             newTime = []
-                            for time in times:
-                                if time < 300:
-                                    newTime.append(time)
+                            for val in values:
+                                if val[0] != "NO SOL":
+                                    newVal.append(val[0])
+                                    newTime.append(val[1])
+                            avgVal = mean(newVal)
                             avgTime = mean(newTime)
                         else:
                             avgTime = 300
+                            avgVal = "NO SOL"
+
                         
                         JSdata[inst][algo]=[avgVal,avgTime]
     
@@ -90,6 +78,11 @@ def main(pipeline):
     with open(outputfile, 'w', encoding='utf-8') as f:
         json.dump(JSdata, f, ensure_ascii=False, indent=4)
     print(f"Generated {outputfile} JSON file")
+
+    if os.system(f"python3 checkDataInt.py {outputfile}") != 0:
+        print(f'Integrity check: FAILED')
+        exit(1)
+    print(f'Integrity check: PASSED')
     
 if __name__ == "__main__":
     if len(sys.argv) == 1:

@@ -45,14 +45,8 @@ namespace FixPolicy {
 			FixPolicyException(ExceptionType type,const std::string& message) : ACSException(type, message, "FixPolicy") {}
 	};
 
-	/**
-	 * @brief Modifies the sol vector to obtain a starting solution for FMIP optimization.
-	 * @param sol Vector of double values to be updated.
-	 * @param fileName Name of the file used to build the RelaxedFMIP object.
-	 * @param theta Parameter influencing the percentage of value to fix
-	 * @param rnd Random number generator instance.
-	 */
-	void startSolTheta(std::vector<double>& sol, std::string fileName, double theta, Random& rnd);
+	
+	void startSolTheta(std::vector<double>& sol, std::string fileName, double theta, double timelimit, Random& rnd);
 
 	/**
 	 * @brief Modifies the sol vector to obtain a starting solution for FMIP optimization.

@@ -12,7 +12,7 @@ def createDict(filename, dataDict, numRanges):
             for inst in JSdata:
                 for algo in JSdata[inst]:
                     if algo == "_obj": continue
-                    dataDict.update({ algo : np.zeros(numRanges)})
+                    dataDict.update({ algo : np.zeros(numRanges+1)})
                 break;
 
 def main(pipeline):
@@ -29,7 +29,6 @@ def main(pipeline):
     succDict = {}
     createDict(filename,succDict,NUM_RANGES)
 
-
     with open(filename, 'r') as file:
             JSdata = json.load(file)
 
@@ -45,7 +44,7 @@ def main(pipeline):
     for algo in succDict:
          succDict[algo] = np.cumsum(succDict[algo])/instances
 
-    x_values = np.arange(DISCR_FACT,TL+DISCR_FACT,DISCR_FACT)
+    x_values = np.arange(DISCR_FACT,TL+DISCR_FACT+1,DISCR_FACT)
 
     plt.figure(figsize=(12, 8))
     for algo, succ_array in succDict.items():

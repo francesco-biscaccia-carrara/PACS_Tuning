@@ -6,7 +6,7 @@ bool isInteger(double n) {
 	return ((n < CPX_INFBOUND) && (static_cast<int>(n) == n));
 }
 
-void FixPolicy::startSolTheta(std::vector<double>& sol, std::string fileName, double theta, Random& rnd) {
+void FixPolicy::startSolTheta(std::vector<double>& sol, std::string fileName, double theta, double timelimit, Random& rnd) {
 	if (theta < EPSILON || theta > 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Theta par. must be within (0,1)!");
 
@@ -51,7 +51,7 @@ void FixPolicy::startSolTheta(std::vector<double>& sol, std::string fileName, do
 		PRINT_INFO("FixPolicy::startSolTheta - %zu vars hard-fixed", varsToFix);
 #endif
 
-		relaxedFMIP.solveRelaxation();
+		relaxedFMIP.solveRelaxation(Clock::timeRemaining(timelimit),DET_TL(relaxedFMIP.getNumNonZeros()));
 
 		std::vector<double> lpSol = relaxedFMIP.getSol();
 		for (size_t i = 0; i < numVarsToFix; ++i) {

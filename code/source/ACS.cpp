@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 		}
 		PRINT_WARN("No Dyn -- Rho: %3.2f", CLIArgs.rho);
 
-		FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, mainRnd);
+		FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, CLIArgs.timeLimit, mainRnd);
 		
 		//FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
 		Solution tmpSol = { .sol = startSol, .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
