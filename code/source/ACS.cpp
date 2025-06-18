@@ -3,7 +3,7 @@
  *
  * @author Francesco Biscaccia Carrara
  * @version v1.2.5
- * @since 06/16/2025
+ * @since 06/18/2025
  */
 
 #include <iostream>
@@ -41,17 +41,9 @@ int main(int argc, char* argv[]) {
 				CLIArgs.rho = 0.5;
 			break;
 
-			case 3:
-				CLIArgs.rho = 0.75;
-			break;
-
-			case 4:
-				CLIArgs.rho = 0.9;
-			break;
-
 			default:break;
 		}
-		PRINT_WARN("No Dyn -- Rho: %3.2f", CLIArgs.rho);
+		PRINT_WARN("Dyn -- Rho: %3.2f", CLIArgs.rho);
 
 		FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, CLIArgs.timeLimit, mainRnd);
 		
@@ -107,7 +99,7 @@ int main(int argc, char* argv[]) {
 				PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
 				MTEnv.setBestACSIncumbent(tmpSol);
 
-				// FixPolicy::dynamicAdjustRho("1_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
+				FixPolicy::dynamicAdjustRho("1_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
 				MTEnv.broadcastSol(tmpSol);
 			}
 
@@ -157,7 +149,7 @@ int main(int argc, char* argv[]) {
 
 			PRINT_OUT("OptMIP Objective|SlackSum after merging: %12.2f|%-10.2f", MergeOMIP.getObjValue(), tmpSol.slackSum);
 			MTEnv.setBestACSIncumbent(tmpSol);
-			// FixPolicy::dynamicAdjustRho("2_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
+			FixPolicy::dynamicAdjustRho("2_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
 
 			if (MTEnv.isFeasibleSolFound())
 				break;

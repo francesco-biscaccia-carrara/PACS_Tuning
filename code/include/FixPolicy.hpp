@@ -5,7 +5,7 @@
  *
  * @author Francesco Biscaccia Carrara
  * @version v1.2.5
- * @since 06/16/2025
+ * @since 06/18/2025
  */
 
 #ifndef FIX_POL_H
@@ -45,7 +45,7 @@ namespace FixPolicy {
 			FixPolicyException(ExceptionType type,const std::string& message) : ACSException(type, message, "FixPolicy") {}
 	};
 
-	
+
 	void startSolTheta(std::vector<double>& sol, std::string fileName, double theta, double timelimit, Random& rnd);
 
 	/**
