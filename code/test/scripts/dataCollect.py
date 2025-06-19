@@ -14,11 +14,11 @@ def dataSanitizing(filename):
                 if algo == "_obj": continue
                 if algo == "CPLEX":
                     CPLEXTime = JSdata[inst]["CPLEX"][1]
-                    JSdata[inst]["CPLEX"][1] = CPLEXTime if CPLEXTime<300 else 300
+                    JSdata[inst]["CPLEX"][1] = CPLEXTime if CPLEXTime < 300 else 300
                 else:
                     for seed in JSdata[inst][algo]:
                         ACSTime = JSdata[inst][algo][seed][1]
-                        JSdata[inst][algo][seed][1] = ACSTime if ACSTime<300 else 300
+                        JSdata[inst][algo][seed][1] = ACSTime if ACSTime < 300 else 300
     
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(JSdata, f, ensure_ascii=False, indent=4)
