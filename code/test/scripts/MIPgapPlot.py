@@ -58,8 +58,11 @@ def main(pipeline):
     x_values = np.arange(0,NUM_RANGES+1,1)
 
     plt.figure(figsize=(12, 8))
+
+    integralValues = []
     for algo, succ_array in succDict.items():
         plt.plot(x_values, succ_array, label=algo, linewidth=2)
+        integralValues.append([np.trapezoid(succ_array,x_values),algo])
 
     plt.xlabel('MIG Gap (%)')
     plt.ylabel('Success Rate')
@@ -71,11 +74,22 @@ def main(pipeline):
 
     plt.tight_layout()
     
+    integralValues.sort(reverse=True)
+    txtOut = outputfile[:-4]+".txt"
+    with open(txtOut, 'w') as f:
+        f.write("--------------------INTEGRAL VALUES--------------------\n")
+        for line in integralValues:
+            f.write(f"{line[1]}: {line[0]}\n")
+        f.write("-------------------------------------------------------\n")
+    print(f"Integral values saved on {txtOut}")
+
     if not pipeline :
         if input(f"Do you want to collect and save the succes-rate plot on {outputfile} file [y/n]? ") != "y":
             exit(0)
 
     plt.savefig(outputfile, dpi=300)
+
+   
     
 if __name__ == "__main__":
     if len(sys.argv) == 1:
