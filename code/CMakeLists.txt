@@ -10,7 +10,7 @@ endif()
 
 project(ACS)
 set(CODE_VERSION "v1.2.5")
-set(LAST_UPDATE "06/18/2025")
+set(LAST_UPDATE "06/20/2025")
 
 # setting flags for optimization and debug builds
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")

@@ -3,7 +3,7 @@
  *
  * @author Francesco Biscaccia Carrara
  * @version v1.2.5
- * @since 06/18/2025
+ * @since 06/20/2025
  */
 
 #include <iostream>
@@ -27,31 +27,34 @@ int main(int argc, char* argv[]) {
 
 		std::vector<double> startSol;
 		Random				mainRnd = Random(CLIArgs.seed);
+
+		// Default values section
+		CLIArgs.rho = 0.1;
 		
 		switch(CLIArgs.algo){
 			case 0:
-				CLIArgs.rho = 0.1;
+				CLIArgs.theta = 0.25;
+				FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, CLIArgs.timeLimit, mainRnd);
 			break;
 
 			case 1:
-				CLIArgs.rho = 0.25;
-			break;
+				CLIArgs.theta = 1.0;
+				FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, CLIArgs.timeLimit, mainRnd);
+				break;
 
 			case 2:
-				CLIArgs.rho = 0.5;
+				FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
 			break;
 
 			default:break;
 		}
-		PRINT_WARN("Dyn -- Rho: %3.2f", CLIArgs.rho);
-
-		FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, CLIArgs.timeLimit, mainRnd);
 		
-		//FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
-		Solution tmpSol = { .sol = startSol, .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
+		PRINT_WARN("Dyn, Rho: %3.2f, Theta: %3.2f", CLIArgs.rho, CLIArgs.theta);
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Starting vector found!");
 #endif
+		
+		Solution tmpSol = { .sol = startSol, .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
 		MTEnv.broadcastSol(tmpSol);
 
 		while (Clock::timeElapsed() < CLIArgs.timeLimit) {
