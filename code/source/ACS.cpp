@@ -3,7 +3,7 @@
  *
  * @author Francesco Biscaccia Carrara
  * @version v1.2.5
- * @since 06/20/2025
+ * @since 06/21/2025
  */
 
 #include <iostream>
@@ -30,26 +30,8 @@ int main(int argc, char* argv[]) {
 
 		// Default values section
 		CLIArgs.rho = 0.1;
-		
-		switch(CLIArgs.algo){
-			case 0:
-				CLIArgs.theta = 0.25;
-				FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, CLIArgs.timeLimit, mainRnd);
-			break;
-
-			case 1:
-				CLIArgs.theta = 1.0;
-				FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, CLIArgs.timeLimit, mainRnd);
-				break;
-
-			case 2:
-				FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
-			break;
-
-			default:break;
-		}
-		
-		PRINT_WARN("Dyn, Rho: %3.2f, Theta: %3.2f", CLIArgs.rho, CLIArgs.theta);
+		PRINT_WARN("Dyn, MaxFeas, Rho: %3.2f, Theta: %3.2f", CLIArgs.rho);
+		FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Starting vector found!");
 #endif
@@ -77,7 +59,7 @@ int main(int argc, char* argv[]) {
 
 				if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {	
 					MergeFMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
-					//FixPolicy::fixSlackUpperBound("1_Phase", MergeFMIP, MTEnv.getBestACSIncumbent().sol);
+					if (CLIArgs.algo == 1) FixPolicy::fixSlackUpperBound("1_Phase", MergeFMIP, MTEnv.getBestACSIncumbent().sol);
 				}
 
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -127,7 +109,7 @@ int main(int argc, char* argv[]) {
 
 			if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {
 				MergeOMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
-				// FixPolicy::fixSlackUpperBound("2_Phase", MergeOMIP, MTEnv.getBestACSIncumbent().sol);
+				if (CLIArgs.algo == 1) FixPolicy::fixSlackUpperBound("2_Phase", MergeOMIP, MTEnv.getBestACSIncumbent().sol);
 			}
 
 			if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
