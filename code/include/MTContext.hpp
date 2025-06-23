@@ -12,8 +12,8 @@
  * and it provides mechanisms to broadcast solutions across threads and handle solution updates with thread safety.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.5
- * @since 06/21/2025
+ * @version v1.2.6
+ * @since 06/23/2025
  */
 
 #ifndef MT_CTX_H

@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [1.2.6] - 2025-06-23  
+### Fixed  
+- Resolved potential infeasibility caused by incorrect signed comparison of slack sums in `MTContext::setBestACSIncumbent` ([MTContext.cpp](code/source/MTContext.cpp)).  
+
+### Changed  
+- `MergeOMIP` is now executed before exiting on feasible solution discovery, potentially improving final solution quality ([ACS.cpp](code/source/ACS.cpp)). 
+
+
 ## [1.2.5] - 2025-06-16  
 ### Fixed  
 - Corrected bug in `MIP::checkIntegrality` related to the computation of the maximum integrality violation ([MIP.cpp](code/source/MIP.cpp)).  

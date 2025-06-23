@@ -25,7 +25,9 @@ void MTContext::setBestACSIncumbent(Solution& sol) {
 	std::lock_guard<std::mutex> lock(MTContextMTX);
 
 	/// FIXED: Bug #9d6c973e040c2a8da57051d05e46d92c6e366c45 -- Inconsistency between actual and saved objective values due to incorrect slack sum comparison
-	if ( (sol.slackSum < bestACSIncumbent.slackSum) || (std::abs(sol.slackSum) < EPSILON && sol.oMIPCost < bestACSIncumbent.oMIPCost) ) {		
+	/// FIXED: Bug #d9b16cbf9c62a1c1939b61df65b42343a8919607 -- Potential infeasibility caused by incorrect signed comparison of slack sums.
+	if ((std::abs(sol.slackSum) < std::abs(bestACSIncumbent.slackSum)) || (std::abs(sol.slackSum) < EPSILON && sol.oMIPCost < bestACSIncumbent.oMIPCost) ) {
+
 		bestACSIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = sol.oMIPCost };
 		A_RhoChanges = numMIPs;
 
@@ -96,7 +98,7 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	FMIP fMIP{ CLIArgs.fileName };
 	if (bestACSIncumbent.slackSum < CPX_INFBOUND) {
 		fMIP.addMIPStart(bestACSIncumbent.sol);
-		if (CLIArgs.algo == 1)  FixPolicy::fixSlackUpperBoundMT(thID, "FMIP", fMIP, bestACSIncumbent.sol);
+		//  FixPolicy::fixSlackUpperBoundMT(thID, "FMIP", fMIP, bestACSIncumbent.sol);
 	}
 	fMIP.setNumCores(CPLEX_CORE);
 
@@ -126,7 +128,7 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	PRINT_OUT("Proc: %3d - FeasMIP Objective: %20.2f", thID, tmpSolutions[thID].slackSum);
 	setBestACSIncumbent(tmpSolutions[thID]);
 
-	FixPolicy::dynamicAdjustRhoMT(thID, "FMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
+	// FixPolicy::dynamicAdjustRhoMT(thID, "FMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
 }
 
 #pragma region MTContextPrivateSec
@@ -136,7 +138,7 @@ void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs, double rhs) {
 	OMIP oMIP{ CLIArgs.fileName };
 	if (bestACSIncumbent.slackSum < CPX_INFBOUND) {
 		oMIP.addMIPStart(bestACSIncumbent.sol);
-		if (CLIArgs.algo == 1)  FixPolicy::fixSlackUpperBoundMT(thID, "OMIP", oMIP, bestACSIncumbent.sol);
+		//  FixPolicy::fixSlackUpperBoundMT(thID, "OMIP", oMIP, bestACSIncumbent.sol);
 	}
 	oMIP.setNumCores(CPLEX_CORE);
 	oMIP.updateBudgetConstr(rhs);
@@ -166,7 +168,7 @@ void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs, double rhs) {
 	PRINT_OUT("Proc: %3d - OptMIP Objective: %20.2f|%-10.2f", thID, tmpSolutions[thID].oMIPCost, tmpSolutions[thID].slackSum);
 	setBestACSIncumbent(tmpSolutions[thID]);
 
-	FixPolicy::dynamicAdjustRhoMT(thID, "OMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
+	// FixPolicy::dynamicAdjustRhoMT(thID, "OMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
 }
 
 #pragma endregion

@@ -3,8 +3,8 @@
  * @brief Exception class for handling ACS-related errors
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.5
- * @since 06/21/2025
+ * @version v1.2.6
+ * @since 06/23/2025
  */
 
 #ifndef ACS_EXC_H

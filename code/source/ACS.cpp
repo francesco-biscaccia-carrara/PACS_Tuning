@@ -2,8 +2,8 @@
  * ACS Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.5
- * @since 06/21/2025
+ * @version v1.2.6
+ * @since 06/23/2025
  */
 
 #include <iostream>
@@ -29,9 +29,35 @@ int main(int argc, char* argv[]) {
 		Random				mainRnd = Random(CLIArgs.seed);
 
 		// Default values section
-		CLIArgs.rho = 0.1;
-		PRINT_WARN("Dyn, MaxFeas, Rho: %3.2f, Theta: %3.2f", CLIArgs.rho);
-		FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
+		
+		switch(CLIArgs.algo){
+			case 0:
+				CLIArgs.rho = 0.1;
+			break;
+
+			case 1:
+				CLIArgs.rho = 0.25;
+			break;
+
+			case 2:
+				CLIArgs.rho = 0.5;
+			break;
+
+			case 3:
+				CLIArgs.rho = 0.75;
+			break;
+
+			case 4:
+				CLIArgs.rho = 0.9;
+			break;
+
+			default:break;
+		}
+
+		PRINT_WARN("STD, Rho: %3.2f, Theta: %3.2f", CLIArgs.rho,CLIArgs.theta);
+
+		FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, CLIArgs.timeLimit, mainRnd);
+		// FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Starting vector found!");
 #endif
@@ -59,7 +85,7 @@ int main(int argc, char* argv[]) {
 
 				if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {	
 					MergeFMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
-					if (CLIArgs.algo == 1) FixPolicy::fixSlackUpperBound("1_Phase", MergeFMIP, MTEnv.getBestACSIncumbent().sol);
+					//  FixPolicy::fixSlackUpperBound("1_Phase", MergeFMIP, MTEnv.getBestACSIncumbent().sol);
 				}
 
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -84,7 +110,7 @@ int main(int argc, char* argv[]) {
 				PRINT_OUT("FeasMIP Objective after merging: %20.2f", tmpSol.slackSum);
 				MTEnv.setBestACSIncumbent(tmpSol);
 
-				FixPolicy::dynamicAdjustRho("1_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
+				// FixPolicy::dynamicAdjustRho("1_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
 				MTEnv.broadcastSol(tmpSol);
 			}
 
@@ -97,8 +123,7 @@ int main(int argc, char* argv[]) {
 
 			// PARALLEL OMIP Phase
 			MTEnv.parallelOMIPOptimization(CLIArgs,tmpSol.slackSum);
-			if (MTEnv.isFeasibleSolFound())
-				break;
+			// if (MTEnv.isFeasibleSolFound()) break;
 
 			// 2° Recombination phase
 			OMIP MergeOMIP(CLIArgs.fileName);
@@ -109,7 +134,7 @@ int main(int argc, char* argv[]) {
 
 			if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {
 				MergeOMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
-				if (CLIArgs.algo == 1) FixPolicy::fixSlackUpperBound("2_Phase", MergeOMIP, MTEnv.getBestACSIncumbent().sol);
+				// FixPolicy::fixSlackUpperBound("2_Phase", MergeOMIP, MTEnv.getBestACSIncumbent().sol);
 			}
 
 			if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -134,7 +159,7 @@ int main(int argc, char* argv[]) {
 
 			PRINT_OUT("OptMIP Objective|SlackSum after merging: %12.2f|%-10.2f", MergeOMIP.getObjValue(), tmpSol.slackSum);
 			MTEnv.setBestACSIncumbent(tmpSol);
-			FixPolicy::dynamicAdjustRho("2_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
+			// FixPolicy::dynamicAdjustRho("2_Phase", solveCode, CLIArgs.numsubMIPs, CLIArgs.rho, MTEnv.getRhoChanges());
 
 			if (MTEnv.isFeasibleSolFound())
 				break;
