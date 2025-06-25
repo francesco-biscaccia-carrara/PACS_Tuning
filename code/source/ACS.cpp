@@ -28,32 +28,10 @@ int main(int argc, char* argv[]) {
 		std::vector<double> startSol;
 		Random				mainRnd = Random(CLIArgs.seed);
 
-		// Default values section
+		// DEFAULT VAL SECTION
 		CLIArgs.rho = 0.1;
+		FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
 
-		switch (CLIArgs.algo) {
-			case 0:
-				CLIArgs.theta = 0.25;
-				PRINT_WARN("Dyn, Rho: %3.2f, Theta: %3.2f", CLIArgs.rho,CLIArgs.theta);
-				FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, CLIArgs.timeLimit, mainRnd);
-			break;
-
-			case 1:
-				CLIArgs.theta = 1.0;
-				PRINT_WARN("Dyn, Rho: %3.2f, Theta: %3.2f", CLIArgs.rho,CLIArgs.theta);
-				FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, CLIArgs.timeLimit, mainRnd);
-			break;
-
-			case 2:
-				PRINT_WARN("Dyn, Rho: %3.2f, NO THETA", CLIArgs.rho);
-				FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
-			break;
-
-			default:break;
-		}
-
-		// FixPolicy::startSolTheta(startSol, CLIArgs.fileName, CLIArgs.theta, CLIArgs.timeLimit, mainRnd);
-		// FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Starting vector found!");
 #endif
