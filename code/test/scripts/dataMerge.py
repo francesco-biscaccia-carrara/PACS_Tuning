@@ -1,4 +1,4 @@
-import sys, os, numpy as np, json
+import sys, os, json
 from dotenv import load_dotenv # type: ignore
 
 sys.dont_write_bytecode = True

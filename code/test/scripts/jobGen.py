@@ -1,4 +1,4 @@
-import sys, pandas as pd, json, datetime, os
+import sys, pandas as pd, json, datetime, os # type: ignore
 from dotenv import load_dotenv # type: ignore
 
 sys.dont_write_bytecode = True
