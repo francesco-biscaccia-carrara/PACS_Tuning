@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 
 				if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {	
 					MergeFMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
-					if(CLIArgs.algo == 1) FixPolicy::fixSlackUpperBound("1_Phase", MergeFMIP, MTEnv.getBestACSIncumbent().sol);
+					FixPolicy::fixSlackUpperBound("1_Phase", MergeFMIP, MTEnv.getBestACSIncumbent().sol);
 				}
 
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -104,11 +104,11 @@ int main(int argc, char* argv[]) {
 			MergeOMIP.setNumCores(CPLEX_CORE);
 
 			MergePolicy::recombine(MergeOMIP, MTEnv.getTmpSolutions(), "2_Phase");
-			MergeOMIP.updateBudgetConstr(tmpSol.slackSum);
+			if (CLIArgs.algo == 0) MergeOMIP.updateBudgetConstr(tmpSol.slackSum);
 
 			if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {
 				MergeOMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
-				if(CLIArgs.algo == 1)  FixPolicy::fixSlackUpperBound("2_Phase", MergeOMIP, MTEnv.getBestACSIncumbent().sol);
+				FixPolicy::fixSlackUpperBound("2_Phase", MergeOMIP, MTEnv.getBestACSIncumbent().sol);
 			}
 
 			if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
