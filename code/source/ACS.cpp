@@ -30,6 +30,7 @@ int main(int argc, char* argv[]) {
 
 		// DEFAULT VAL SECTION
 		CLIArgs.rho = 0.1;
+		PRINT_WARN("DYN, Rho 0.1, MaxFeas, %s", CLIArgs.algo == 0 ? "NO UB" : "UB");
 		FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
 
 #if ACS_VERBOSE >= VERBOSE
@@ -59,7 +60,7 @@ int main(int argc, char* argv[]) {
 
 				if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {	
 					MergeFMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
-					//  FixPolicy::fixSlackUpperBound("1_Phase", MergeFMIP, MTEnv.getBestACSIncumbent().sol);
+					if(CLIArgs.algo == 1) FixPolicy::fixSlackUpperBound("1_Phase", MergeFMIP, MTEnv.getBestACSIncumbent().sol);
 				}
 
 				if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -97,7 +98,6 @@ int main(int argc, char* argv[]) {
 
 			// PARALLEL OMIP Phase
 			MTEnv.parallelOMIPOptimization(CLIArgs,tmpSol.slackSum);
-			// if (MTEnv.isFeasibleSolFound()) break;
 
 			// 2° Recombination phase
 			OMIP MergeOMIP(CLIArgs.fileName);
@@ -108,7 +108,7 @@ int main(int argc, char* argv[]) {
 
 			if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {
 				MergeOMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
-				// FixPolicy::fixSlackUpperBound("2_Phase", MergeOMIP, MTEnv.getBestACSIncumbent().sol);
+				if(CLIArgs.algo == 1)  FixPolicy::fixSlackUpperBound("2_Phase", MergeOMIP, MTEnv.getBestACSIncumbent().sol);
 			}
 
 			if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
