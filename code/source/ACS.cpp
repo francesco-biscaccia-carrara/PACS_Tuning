@@ -2,8 +2,8 @@
  * ACS Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.6
- * @since 06/23/2025
+ * @version v1.2.7
+ * @since 06/27/2025
  */
 
 #include <iostream>
@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
 			MergeOMIP.setNumCores(CPLEX_CORE);
 
 			MergePolicy::recombine(MergeOMIP, MTEnv.getTmpSolutions(), "2_Phase");
-			if (CLIArgs.algo == 0) MergeOMIP.updateBudgetConstr(tmpSol.slackSum);
+			// MergeOMIP.updateBudgetConstr(tmpSol.slackSum);			v1.2.7 -- no need of this
 
 			if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {
 				MergeOMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
@@ -168,15 +168,15 @@ int main(int argc, char* argv[]) {
 #endif
 
 			if(ABS_MaxViol > EPSILON){
-				throw ACSException(ACSException::ExceptionType::General, "MIP::checkFeasibility:\tFAILED","ACSmain");
+				throw ACSException(ACSException::ExceptionType::CheckFeasibilityFailed, "MIP::checkFeasibility:\tFAILED","ACSmain");
 			}
 
 			if(ABS_MaxIntViol > EPSILON){
-				throw ACSException(ACSException::ExceptionType::General, "MIP::checkFeasibility:\tFAILED","ACSmain");
+				throw ACSException(ACSException::ExceptionType::CheckIntegralityFailed, "MIP::checkFeasibility:\tFAILED","ACSmain");
 			}
 
 			if(REL_ObjErr > EPSILON){
-				throw ACSException(ACSException::ExceptionType::General, "MIP::chekObjValue:\tFAILED","ACSmain");
+				throw ACSException(ACSException::ExceptionType::CheckObectiveFailed, "MIP::chekObjValue:\tFAILED","ACSmain");
 			}
 
 			
@@ -193,9 +193,9 @@ int main(int argc, char* argv[]) {
 		oFile.close();
 		PRINT_INFO("JSON: Execution result saved on %s%s file",PATH_TO_TMP,JSfilename.c_str());
 #endif
-	} catch (const std::runtime_error& ex) {
+	} catch (const ACSException& ex) {
 		PRINT_ERR(ex.what());
-		return EXIT_FAILURE;
+		return ex.getErrorCode();
 	}
 	return EXIT_SUCCESS;
 }

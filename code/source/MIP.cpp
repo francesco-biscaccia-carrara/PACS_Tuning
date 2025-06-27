@@ -57,20 +57,20 @@ MIP::MIP(const MIP& otherMIP) {
 
 MIP& MIP::setNumCores(const int numCores) {
 	if (CPXsetintparam(env, CPX_PARAM_THREADS, numCores))
-		throw MIPException(MIPEx::General, "Number of dedicated cores not changed!");
+		throw MIPException(MIPEx::SetFunction, "Number of dedicated cores not changed!");
 	return *this;
 }
 
 MIP& MIP::setNumSols(const int numSols) {
 	if (CPXsetintparam(env, CPX_PARAM_INTSOLLIM, numSols))
-		throw MIPException(MIPEx::General, "Number of max solutions not changed!");
+		throw MIPException(MIPEx::SetFunction, "Number of max solutions not changed!");
 	return *this;
 }
 
 size_t MIP::getNumNonZeros() {
 	int nnz {(CPXgetnumnz(env, model)) };
 	if (!nnz)
-		throw MIPException(MIPEx::General, "Unable to get the number of nonzero elements!");
+		throw MIPException(MIPEx::GetFunction, "Unable to get the number of nonzero elements!");
 	return  static_cast<size_t>(nnz);
 }
 
@@ -103,14 +103,14 @@ MIP& MIP::addMIPStart(const std::vector<double>& MIPStart, bool CPLEXCheck) {
 	std::iota(indices.begin(), indices.end(), 0);
 
 	if (int error{ CPXaddmipstarts(env, model, 1, MIPStart.size(), &start_index, indices.data(), MIPStart.data(), &effort_level, NULL) })
-		throw MIPException(MIPEx::General, "Unable to set the MIP start!\t" + std::to_string(error));
+		throw MIPException(MIPEx::SetFunction, "Unable to set the MIP start!\t" + std::to_string(error));
 	return *this;
 }
 
 double MIP::getObjValue() {
 	double objValue;
 	if (int error{ CPXgetobjval(env, model, &objValue) })
-		throw MIPException(MIPEx::General, "Unable to obtain obj value!\t" + std::to_string(error));
+		throw MIPException(MIPEx::GetFunction, "Unable to obtain obj value!\t" + std::to_string(error));
 	return objValue;
 }
 
@@ -118,7 +118,7 @@ std::vector<double> MIP::getObjFunction() {
 	size_t		numCols{ getNumCols() };
 	double* objFun{ (double*)calloc(numCols, sizeof(double)) };
 	if (CPXgetobj(env, model, objFun, 0, numCols - 1))
-		throw MIPException(MIPEx::General, "Unable to get obj_function coefficients!");
+		throw MIPException(MIPEx::GetFunction, "Unable to get obj_function coefficients!");
 	std::vector<double> obj(objFun, objFun + numCols);
 	free(objFun);
 	return obj;
@@ -133,7 +133,7 @@ MIP& MIP::setObjFunction(const std::vector<double>& newObj) {
 	for (size_t i{ 0 }; i < numCols; i++)
 		indices[i] = i;
 	if (CPXchgobj(env, model, numCols, indices, newObj.data()))
-		throw MIPException(MIPEx::General, "obj_function not changed");
+		throw MIPException(MIPEx::SetFunction, "obj_function not changed");
 	free(indices);
 	return *this;
 }
@@ -142,7 +142,7 @@ std::vector<double> MIP::getSol() {
 	size_t		numCols{ getNumCols() };
 	double* xStar{ (double*)calloc(numCols, sizeof(double)) };
 	if (int error{ CPXgetx(env, model, xStar, 0, numCols - 1) })
-		throw MIPException(MIPEx::General, "Unable to obtain the solution! " + std::to_string(error) + " State: " + std::to_string(CPXgetstat(env, model)));
+		throw MIPException(MIPEx::GetFunction, "Unable to obtain the solution! " + std::to_string(error) + " State: " + std::to_string(CPXgetstat(env, model)));
 	std::vector<double> sol(xStar, xStar + numCols);
 	free(xStar);
 	return sol;
@@ -151,21 +151,21 @@ std::vector<double> MIP::getSol() {
 size_t MIP::getMIPNumVars() {
 	int numCols{ CPXgetnumcols(env, model) };
 	if(!numCols)
-		throw MIPException(MIPEx::General, "Unable to get the number of MIP vars of the model!");
+		throw MIPException(MIPEx::GetFunction, "Unable to get the number of MIP vars of the model!");
 	return static_cast<size_t>(numCols);
 }
 
 size_t MIP::getNumCols() {
 	int numCols{ CPXgetnumcols(env, model) };
 	if(!numCols)
-		throw MIPException(MIPEx::General, "Unable to get the number of cols of the model!");
+		throw MIPException(MIPEx::GetFunction, "Unable to get the number of cols of the model!");
 	return static_cast<size_t>(numCols);
 }
 
 size_t MIP::getNumRows() {
 	int numRows{ CPXgetnumrows(env, model) };
 	if(!numRows)
-		throw MIPException(MIPEx::General, "Unable to get the number of rows of the model!");
+		throw MIPException(MIPEx::GetFunction, "Unable to get the number of rows of the model!");
 	return static_cast<size_t>(numRows);
 }
 
@@ -190,7 +190,7 @@ MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef, const 
 		}
 
 		if (CPXaddcols(env, model, 1, nnz, &objCoef, &start, indices, values, &lb, &ub, &cname[0]))
-			throw MIPException(MIPEx::General, "No column added!");
+			throw MIPException(MIPEx::SetFunction, "No column added!");
 		free(cname);
 		free(indices);
 		free(values);
@@ -209,7 +209,7 @@ MIP& MIP::addCol(const size_t index, const double value, const double objCoef, c
 	int	   start{ 0 }, nnz{ 1 };
 
 	if (CPXaddcols(env, model, 1, nnz, &objCoef, &start, &tmpIndex, &tmpValue, &lb, &ub, &cname[0]))
-		throw MIPException(MIPEx::General, "No column added!");
+		throw MIPException(MIPEx::SetFunction, "No column added!");
 	free(cname);
 	return *this;
 }
@@ -232,7 +232,7 @@ MIP& MIP::addRow(const std::vector<double>& newRow, const char sense, const doub
 	}
 
 	if (CPXaddrows(env, model, 0, 1, nnz, &rhs, &sense, &start, indices, values, NULL, NULL))
-		throw MIPException(MIPEx::General, "No row added!");
+		throw MIPException(MIPEx::SetFunction, "No row added!");
 	free(indices);
 	free(values);
 	return *this;
@@ -243,7 +243,7 @@ MIP& MIP::removeRow(const int index) {
 		throw MIPException(MIPEx::OutOfBound, "Wrong index removeRow()!");
 
 	if (CPXdelrows(env, model, index, index))
-		throw MIPException(MIPEx::General, "Row not removed!");
+		throw MIPException(MIPEx::SetFunction, "Row not removed!");
 	return *this;
 }
 
@@ -252,7 +252,7 @@ MIP& MIP::removeCol(const int index) {
 		throw MIPException(MIPEx::OutOfBound, "Wrong index removeCol()!");
 
 	if (CPXdelcols(env, model, index, index))
-		throw MIPException(MIPEx::General, "Column not removed!");
+		throw MIPException(MIPEx::SetFunction, "Column not removed!");
 	return *this;
 }
 
@@ -261,10 +261,10 @@ VarBounds MIP::getVarBounds(const int index) {
 		throw MIPException(MIPEx::OutOfBound, "Wrong index getVarBounds()!");
 	double lb = CPX_INFBOUND, ub = CPX_INFBOUND;
 	if (CPXgetlb(env, model, &lb, index, index))
-		throw MIPException(MIPEx::General, "Unable to get the var lower_bound!");
+		throw MIPException(MIPEx::GetFunction, "Unable to get the var lower_bound!");
 
 	if (CPXgetub(env, model, &ub, index, index))
-		throw MIPException(MIPEx::General, "Unable to get the var upper_bound!");
+		throw MIPException(MIPEx::GetFunction, "Unable to get the var upper_bound!");
 	return VarBounds{ .lowerBound = lb, .upperBound = ub };
 }
 
@@ -274,7 +274,7 @@ char MIP::getVarType(const int index) {
 
 	char type;
 	if (int error{ CPXgetctype(env, model, &type, index, index) })
-		throw MIPException(MIPEx::General, "Unable to get var " + std::to_string(index) + "type!\t" + std::to_string(error));
+		throw MIPException(MIPEx::GetFunction, "Unable to get var " + std::to_string(index) + "type!\t" + std::to_string(error));
 	return type;
 }
 
@@ -284,7 +284,7 @@ MIP& MIP::setVarValue(const int index, const double val) {
 
 	char bound{ BOTH_BOUNDS };
 	if (CPXchgbds(env, model, 1, &index, &bound, &val))
-		throw MIPException(MIPEx::General, "Unable to set the value to var " + std::to_string(val));
+		throw MIPException(MIPEx::SetFunction, "Unable to set the value to var " + std::to_string(val));
 	return *this;
 }
 
@@ -294,7 +294,7 @@ MIP& MIP::setVarLowerBound(const int index, const double newLB){
 	
 	char bound{ LW_BOUND };
 	if (CPXchgbds(env, model, 1, &index, &bound, &newLB))
-		throw MIPException(MIPEx::General, "Unable to set the lower bound of the var  " + std::to_string(newLB));
+		throw MIPException(MIPEx::SetFunction, "Unable to set the lower bound of the var  " + std::to_string(newLB));
 	return *this;
 }
 
@@ -304,7 +304,7 @@ MIP& MIP::setVarUpperBound(const int index, const double newUB){
 	
 	char bound{ UP_BOUND };
 	if (CPXchgbds(env, model, 1, &index, &bound, &newUB))
-		throw MIPException(MIPEx::General, "Unable to set the upper bound of the var " + std::to_string(newUB));
+		throw MIPException(MIPEx::SetFunction, "Unable to set the upper bound of the var " + std::to_string(newUB));
 	return *this;
 }
 
@@ -333,15 +333,15 @@ double MIP::checkFeasibility(const std::vector<double>& sol) {
 	char* sense = (char* )malloc(numRows * sizeof(char));
 
 	if(CPXgetrhs(env, model, rhs, 0, numRows - 1))
-		throw MIPException(MIPEx::General, "Error on retriving the RHS values");
+		throw MIPException(MIPEx::GetFunction, "Error on retriving the RHS values");
 	
 	if(CPXgetsense(env, model, sense, 0, numRows - 1))
-		throw MIPException(MIPEx::General, "Error on retriving the RHS values");
+		throw MIPException(MIPEx::GetFunction, "Error on retriving the RHS values");
 	
 
 	int surplus, nnCPLEX; // Dummy values necessary for CPLXgetrows
 	if(CPXgetrows(env, model, &nnCPLEX, rmatbeg, rmatind, rmatval, nzcnt, &surplus, 0, numRows - 1))
-		throw MIPException(MIPEx::General, "Error on retriving the matrix rows");
+		throw MIPException(MIPEx::GetFunction, "Error on retriving the matrix rows");
 
 	double maxViolation = 0.0;
 
@@ -370,7 +370,7 @@ double MIP::checkFeasibility(const std::vector<double>& sol) {
 				break;
 
 			default:
-				throw MIPException(MIPEx::General, "Unknown type of sense");
+				throw MIPException(MIPEx::GetFunction, "Unknown type of sense");
 				break;
 		}
     }

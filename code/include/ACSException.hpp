@@ -3,12 +3,14 @@
  * @brief Exception class for handling ACS-related errors
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.6
- * @since 06/23/2025
+ * @version v1.2.7
+ * @since 06/27/2025
  */
 
 #ifndef ACS_EXC_H
 #define ACS_EXC_H
+
+#define CODE_ERROR_SAFE_OFFSET 200
 
 #include <stdexcept>
 #include <array>
@@ -21,8 +23,11 @@ public:
      * @enum ExceptionType
      * @brief Enumeration of possible ACS-related exception types
      */
-	enum class ExceptionType {
+	enum class ExceptionType : size_t{
         General,
+		CheckFeasibilityFailed,
+		CheckIntegralityFailed,
+		CheckObectiveFailed,
 		ModelCreation,
         GetFunction,
         SetFunction,
@@ -42,12 +47,18 @@ public:
      * @param message Detailed error message
      * @param className Name of the class that threw the exception
      */
-	explicit ACSException(ExceptionType type, const std::string& message, const std::string className="-") : std::runtime_error(formatMessage(type, message,className)){};
+	explicit ACSException(ExceptionType type, const std::string& message, const std::string className="-") : std::runtime_error(formatMessage(type, message,className)), errorCode(static_cast<size_t>(type)) {};
+	size_t getErrorCode() const { return  CODE_ERROR_SAFE_OFFSET + errorCode; }
 
 private:
+	size_t errorCode;
+
 	/// Static array of exception type names
 	static constexpr std::array<const char*, static_cast<size_t>(ExceptionType::_count)> typeNames = {
 		"_general-ex_",
+		"CheckFeasibilityFailed",
+		"CheckIntegralityFailed",
+		"CheckObectiveFailed",
 		"ModelCreation",
         "GetFunction",
         "SetFunction",

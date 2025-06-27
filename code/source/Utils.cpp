@@ -114,23 +114,111 @@ double Clock::timeRemaining(const double timeLimit) {
 	return timeLimit - timeElapsed();
 }
 
-constexpr const char* HELP_ACS = "Usage: ./ACS <PARS>\
-        \n '-h  / --help'\t\t\t\t Show help message\
-        \n '-f  / --filename <string>'\t\t Input file\
-        \n '-tl / --timelimit <double>'\t\t Max execution time\
-        \n '-th / --theta <double (0,1)>'\t\t %% of vars to fix in the initially vector\
-        \n '-rh / --rho <double (0,1)>'\t\t %% of vars to fix per ACS iteration\
-        \n '-sd / --seed <u long long>'\t\t Random seed\
-		\n '-nSMIPs/ --numsubMIPs <u long>'\t Number of subMIP in the parallel phase\
-		\n '-ag/ --algorithm <u long>'\t\t Type of algorithm for the initial vector (tbd value<->algo)";
+constexpr const char* HELP_ACS = R"(
+ACS - Alternating Criteria Search Optimizer
+Version: )" ACS_VERSION R"(| Last Update: )" LAST_UPDATE R"(
+
+DESCRIPTION:
+    Advanced implementation of the Alternating Criteria Search algorithm for 
+    Mixed Integer Programming problems with parallel subMIP solving capabilities.
+
+USAGE:
+    ./ACS -f <filename> -tl <seconds> [OPTIONS]
+
+OPTIONS:
+    General:
+      -h, --help                    Display this help message and exit
+      
+    Input/Output:
+      -f, --filename <name>         Input problem filename (required)
+                                    File must be located in /data/ directory
+                                    Extension .mps.gz will be added automatically
+                                    Example: -f "problem" loads ./data/problem.mps.gz
+      
+    Algorithm Parameters:
+      -tl, --timelimit <seconds>    Maximum execution time in seconds (required)
+
+      -rh, --rho <ratio>            Iteration variable fixing ratio (0.0-1.0)  
+                                    Percentage of variables to fix per ACS iteration
+                                    (default: 0.1, optimal for most problems)
+
+      -th, --theta <ratio>          Initial variable fixing ratio (0.0-1.0)
+                                    Percentage of variables to fix in initial vector
+                                    (default: 0.5)	
+			
+      -ag, --algorithm <id>         ONLY FOR DEBUG PURPOSE, WILL BE REMOVED
+                                    
+                                    
+    Parallelization:
+      -nSMIPs, --numsubMIPs <num>   Number of parallel subMIPs
+                                    (default: 4, optimal for most systems)
+                                    Note: Higher values may not improve performance
+                                    
+    Miscellaneous:
+      -sd, --seed <value>           Random seed for reproducible results
+                                    (default: random system generated value)
+
+EXAMPLES:
+    ./ACS -f problem -tl 1800 -rh 0.6
+    ./ACS --filename instance01 --timelimit 3600 --numsubMIPs 8 --seed 12345
+
+EXIT CODES:
+    Success:
+      0      Success - Heuristic found
+      
+    General Errors:
+      1      General program error (unexpected behavior - report it)
+
+    ACS Algorithm Errors:
+      201    Check feasibility failed - Solution violates constraints
+      202    Check integrality failed - Solution has non-integer values
+      203    Check objective failed - Objective function evaluation error
+      
+    Input/File Errors:
+      210    Wrong time limit - Invalid time limit parameter specified
+      211    File not found - Verify filename and data/ directory
+      212    Input size error - Problem dimensions exceed limits
+      213    Wrong argument values - Invalid parameter values provided
+      
+    MIP Solver Errors:
+      204    Model creation error - Problem with MIP model setup
+      205    Get function error - Failed to retrieve MIP solver data
+      206    Set function error - Failed to set MIP solver parameters
+      207    Out of bounds error - MIP array/vector index violation
+      208    MIP optimization error - Mixed Integer Programming solver failed
+      209    LP optimization error - Linear Programming solver failed
+
+For detailed error descriptions and handling, see ACSException.hpp
+
+For more information, visit: https://github.com/francesco-biscaccia-carrara/MIP_Heuristic
+Report bugs to: francesco.biscaccia.carrara@gmail.com
+)";
 
 constexpr const char* HELP_CPLEXRUN = "Usage: ./CPLEXRun <PARS>\
         \n '-h  / --help'\t\t\t\t Show help message\
         \n '-f  / --filename <string>'\t\t Input file\
         \n '-tl / --timelimit <double>'\t\t Max execution time";
 
-CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : args{ .fileName = "", .timeLimit = 0.0, .theta = 0.0, .rho = 0.0, .numsubMIPs = 0, .seed = 0, .algo = 0 } {
-	if (argc > 0 && argv != nullptr) {
+CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : 
+	args{.fileName = "", 
+			.timeLimit = 0.0, .theta = 0.0, 
+			.rho = DEF_RHO, 
+			.numsubMIPs = DEF_SUBMIPS, 
+			.seed = 0, 
+			.algo = 0 } 
+			
+	{ if (argc > 0 && argv != nullptr) {
+		for (int i = 1; i < argc; i++) {
+            std::string arg = argv[i];
+            if (arg == "-h" || arg == "--help") {
+                if (CPLEXRun) {
+                    printf("%s\n", HELP_CPLEXRUN);
+                } else {
+                    printf("%s\n", HELP_ACS);
+                }
+                std::exit(EXIT_SUCCESS);
+            }
+        }
 
 		constexpr std::array<std::pair<const char*, std::string Args::*>, 2> stringArgs{ {
 			{ "-f", &Args::fileName },

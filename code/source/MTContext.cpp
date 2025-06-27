@@ -141,7 +141,7 @@ void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs, double rhs) {
 		FixPolicy::fixSlackUpperBoundMT(thID, "OMIP", oMIP, bestACSIncumbent.sol);
 	}
 	oMIP.setNumCores(CPLEX_CORE);
-	if ( CLIArgs.algo == 0 ) oMIP.updateBudgetConstr(rhs);
+	// oMIP.updateBudgetConstr(rhs);			v1.2.7 -- no need of this
 
 	FixPolicy::randomRhoFixMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
 

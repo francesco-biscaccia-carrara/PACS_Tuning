@@ -3,8 +3,8 @@
  * @brief Utility header file providing various helper classes and macros for the project.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.6
- * @since 06/23/2025
+ * @version v1.2.7
+ * @since 06/27/2025
  */
 
 #ifndef UTILS_H
@@ -37,9 +37,9 @@
 #pragma region UTILS_DEFINTION
 
 /** Current version of the code */
-#define ACS_VERSION "v1.2.6"
+#define ACS_VERSION "v1.2.7"
 /** Last update date */
-#define LAST_UPDATE "06/23/2025"
+#define LAST_UPDATE "06/27/2025"
 
 /** Verbosity level constants */
 #define NO_VER -1
@@ -56,16 +56,29 @@
 #define MIN_DET_TL 1e3
 #define SCALE 1e2
 
+#define DEF_RHO 0.1
+#define DEF_SUBMIPS 4
 #pragma endregion
 
 #pragma region UTILS_MACRO
 
 /**
  * Compute the deterministic-timelimit based on non-zeros entries in the matrix (nnz)
+ * 
  * @param nnz Number of non-zero entries
  * @return Calculated deterministic time limit
  */
 #define DET_TL(nnz) std::max(MIN_DET_TL, std::min((double)(nnz / SCALE), MAX_DET_TL))
+
+/**
+ * Computes the relative error between two values, handling the special
+ * case where the expected value is close to zero to avoid division by zero.
+ * 
+ * @param act The actual value obtained
+ * @param exp The expected value for comparison
+ * @return For |exp| >= EPSILON: |act - exp| / |exp| (standard relative error)
+ *         For |exp| < EPSILON:  |act - exp| (absolute error to avoid division by zero)
+ */ 
 #define REL_ERR(act, exp) ( (std::abs(exp) < EPSILON) ? std::abs(act-exp) :  std::abs((act-exp)/exp))
 
 
