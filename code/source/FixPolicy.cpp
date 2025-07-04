@@ -1,6 +1,7 @@
 #include "../include/FixPolicy.hpp"
 
 using FPEx = FixPolicy::FixPolicyException::ExceptionType;
+using MIPEx = MIPException::ExceptionType;
 
 bool isInteger(double n) {
 	return ((n < CPX_INFBOUND) && (static_cast<int>(n) == n));
@@ -125,23 +126,167 @@ void FixPolicy::startSolMaxFeas(std::vector<double>& sol, std::string fileName, 
 #endif
 }
 
-void FixPolicy::fixSlackUpperBoundMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol){
-	
-	size_t numMIPVars{ model.getMIPNumVars()};
-	size_t numVars{ model.getNumCols()};
+static std::atomic<int> initViolConst = -1;
+void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol, double p, Random& rnd) {
+	if (p < EPSILON || p >= 1.0)
+		throw FixPolicyException(FPEx::InputSizeError, "WalkProb par. must be within (0,1)!");
 
-	if(sol.size() != numVars)
-		throw FixPolicyException(FPEx::InputSizeError, "Incosistent length: sol.size = "+std::to_string(sol.size())+", numVars = "+std::to_string(numVars));
+	std::vector<double> tmpSol(sol.begin(), sol.begin() + model.getMIPNumVars());
 
-	size_t fixedToUBVars = 0;
-	for (size_t i{ numMIPVars }; i < numVars; i++) {
-
-		auto [lb, ub] = model.getVarBounds(i);
-		if ( ub - sol[i] > EPSILON){
-			model.setVarUpperBound(i, sol[i]);
-			fixedToUBVars++;
-		}
+	std::vector<VarBounds> ogVarBounds;
+	for (size_t i{ 0 }; i < tmpSol.size();i++){
+		ogVarBounds.push_back(model.getVarBounds(i));
 	}
+
+	std::vector<int> violConstr = model.getViolatedConstrIndex(tmpSol);
+	if(violConstr.empty()) return;
+	if(initViolConst== -1) initViolConst = violConstr.size();
+
+#if ACS_VERBOSE >= VERBOSE
+	size_t				bestMoves = 0, minDMGMoves =0 , rndMoves = 0;
+	size_t 				iterInitviolConstr = violConstr.size();
+#endif
+
+	double ratio = static_cast<double>(violConstr.size()) / std::max(static_cast<double>(initViolConst), 1.0);
+	ratio = std::clamp(ratio, 0.0, 1.0);
+
+	size_t numVarToFix = static_cast<size_t>(std::ceil(WALK_MIP_MIN_MOVE + (WALK_MIP_MAX_MOVE - WALK_MIP_MIN_MOVE) * std::pow(ratio, WALK_MIP_BETA)));
+
+	size_t		ogNumRows = model.getMIPrmatbeg().size();
+	const auto& rmatbeg = model.getMIPrmatbeg();
+	const auto& rmatind = model.getMIPrmatind();
+
+	while (numVarToFix > 0) {
+		size_t	rndConstInd = violConstr[rnd.Int(0, violConstr.size() - 1)];
+		int 	start = rmatbeg[rndConstInd];
+		int	   	end = (rndConstInd == ogNumRows - 1) ? rmatind.size() : rmatbeg[rndConstInd + 1];
+
+		double				minDMG = std::numeric_limits<double>::max();
+		int 				candVar = -1;
+		double				newVal = 0.0;
+
+		for (int j = start; j < end; j++){ 
+			int index = rmatind[j];
+
+			std::vector<double> modSol(tmpSol);
+
+			switch (model.getVarType(index)) {
+				case CPX_BINARY : 
+					modSol[index] = not tmpSol[index];
+				break;
+			
+
+				case CPX_INTEGER :{
+					int intPer = (rnd.Double(0, 1) <= 0.5) ? -1 : 1;
+					auto [lb, ub] = ogVarBounds[index];
+
+					int tmpNewVal = tmpSol[index] + intPer;
+					if(tmpNewVal>= lb || tmpNewVal<=ub) modSol[index] = tmpNewVal;
+					else continue;
+					break;
+				}
+					
+
+				case CPX_CONTINUOUS :{
+					double doublePer = rnd.Double(-0.5,0.5);
+					auto [lb, ub] = ogVarBounds[index];
+					
+					double tmpNewVal = tmpSol[index] + doublePer;
+					
+					if(tmpNewVal>= lb || tmpNewVal<=ub) modSol[index] = tmpNewVal;
+					else continue;
+					break;
+				}
+
+				default:
+					throw MIPException(MIPEx::GetFunction, "Unknown variable type");
+				break;
+			}
+
+			double viol = model.violation(modSol) - model.violation(tmpSol);
+			if (viol < minDMG) {
+				minDMG = viol;
+				candVar = index;
+				newVal = modSol[index];
+			}
+		}
+
+		if(minDMG <= -EPSILON) {
+			tmpSol[candVar] = newVal,
+			model.setVarValue(candVar, newVal);
+#if ACS_VERBOSE >= VERBOSE
+			bestMoves++;
+#endif
+		} else {
+			if(rnd.Double(0,1) <= p && 	candVar!=-1){
+				tmpSol[candVar] = newVal,
+				model.setVarValue(candVar, newVal);
+#if ACS_VERBOSE >= VERBOSE
+				minDMGMoves++;
+#endif
+			} else {
+					int rndVar = rmatind[rnd.Int(start,end)];
+
+					switch (model.getVarType(rndVar)) {
+						case CPX_BINARY: {
+							tmpSol[rndVar] = not tmpSol[rndVar];
+							model.setVarValue(rndVar, not tmpSol[rndVar]);
+							break;
+						}
+
+						case CPX_INTEGER: {
+							auto [lb, ub] = ogVarBounds[rndVar];
+							int rndVal = rnd.Int(lb, ub);
+							tmpSol[rndVar] = rndVal;
+							model.setVarValue(rndVar, rndVal);
+							break;
+						}
+
+						case CPX_CONTINUOUS: {
+							auto [lb, ub] = ogVarBounds[rndVar];
+							double rndVal = rnd.Double(lb, ub);
+							tmpSol[rndVar] = rndVal;
+							model.setVarValue(rndVar, rndVal);
+							break;
+						}
+
+						default: {
+							throw MIPException(MIPEx::GetFunction, "Unknown variable type");
+							break;
+						}
+				}
+#if ACS_VERBOSE >= VERBOSE
+				rndMoves++;
+#endif
+			}
+		}
+		violConstr = model.getViolatedConstrIndex(tmpSol);
+		if(violConstr.empty()) break;
+		numVarToFix--;
+	}
+#if ACS_VERBOSE >= VERBOSE
+	PRINT_INFO("Proc: %3d [%s] - FixPolicy::walkMIPMT - Viol constr before|after: %10d|%-10d \n\t\t\
+		    - FixPolicy::walkMIPMT - Best Moves: %3zu| Min-Damage Moves: %3zu| RND Moves: %3zu", threadID, type, iterInitviolConstr , violConstr.size(),bestMoves, minDMGMoves, rndMoves);
+#endif
+}
+
+	void FixPolicy::fixSlackUpperBoundMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol) {
+
+		size_t numMIPVars{ model.getMIPNumVars() };
+		size_t numVars{ model.getNumCols() };
+
+		if (sol.size() != numVars)
+			throw FixPolicyException(FPEx::InputSizeError, "Incosistent length: sol.size = " + std::to_string(sol.size()) + ", numVars = " + std::to_string(numVars));
+
+		size_t fixedToUBVars = 0;
+		for (size_t i{ numMIPVars }; i < numVars; i++) {
+
+			auto [lb, ub] = model.getVarBounds(i);
+			if (ub - sol[i] > EPSILON) {
+				model.setVarUpperBound(i, sol[i]);
+				fixedToUBVars++;
+			}
+		}
 
 #if ACS_VERBOSE >= VERBOSE
 	PRINT_INFO("Proc: %3d [%s] - FixPolicy::fixSlackUpperBoundMT - %4d vars UB updated",threadID,type,fixedToUBVars);

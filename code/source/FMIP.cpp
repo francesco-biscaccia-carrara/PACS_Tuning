@@ -3,9 +3,13 @@
 #define FMIP_SLACK_OBJ_COEFF 1
 #define FMIP_VAR_OBJ_COEFF 0
 
+using MIPEx = MIPException::ExceptionType;
+
+std::vector<double> FMIP::ogObjFun;
+
 FMIP::FMIP(const std::string fileName) : MIP(fileName) {
 	MIPNumVars = getNumCols();
-	ogObjFun = getObjFunction();
+	if (ogObjFun.empty()) ogObjFun = getObjFunction();
 	setup();
 
 #if ACS_VERBOSE == DEBUG
@@ -15,7 +19,6 @@ FMIP::FMIP(const std::string fileName) : MIP(fileName) {
 
 FMIP::FMIP(const FMIP& otherFMIP) : MIP(otherFMIP) {
 	MIPNumVars = getNumCols();
-	ogObjFun = getObjFunction();
 
 #if ACS_VERBOSE == DEBUG
 	this->fileName += "_FMIP";
@@ -24,7 +27,7 @@ FMIP::FMIP(const FMIP& otherFMIP) : MIP(otherFMIP) {
 
 FMIP::FMIP(const MIP& otherMIP) : MIP(otherMIP) {
 	MIPNumVars = getNumCols();
-	ogObjFun = getObjFunction();
+	if (ogObjFun.empty()) ogObjFun = getObjFunction();
 	setup();
 
 #if ACS_VERBOSE == DEBUG
@@ -33,6 +36,7 @@ FMIP::FMIP(const MIP& otherMIP) : MIP(otherMIP) {
 }
 
 double FMIP::getOMIPCost(const std::vector<double>& sol) {
+	if(ogObjFun.empty()) throw MIPException(MIPEx::InputSizeError,"OGObjectiveFunction not initialized");
 	return std::inner_product(ogObjFun.begin(), ogObjFun.end(), sol.begin(), 0.0);
 }
 

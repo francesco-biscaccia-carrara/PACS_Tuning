@@ -9,6 +9,12 @@
 
 using MIPEx = MIPException::ExceptionType;
 
+std::vector<int> 	MIP::MIPrmatbeg;
+std::vector<int>	MIP::MIPrmatind;
+std::vector<double> MIP::MIPrmatval;
+std::vector<double> MIP::MIPrhs;
+std::vector<char>   MIP::MIPsense;
+
 MIP::MIP(const std::string fileName) {
 #if ACS_VERBOSE == DEBUG
 	std::ostringstream oss;
@@ -33,6 +39,31 @@ MIP::MIP(const std::string fileName) {
 	CPXsetdblparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
 #endif
+
+	if(MIPrmatbeg.empty() || MIPrmatind.empty() || MIPrmatval.empty()) {
+		size_t	numRows = getNumRows();
+		size_t	nzcnt = getNumNonZeros();
+
+		MIPrmatbeg.resize(numRows);
+		MIPrmatind.resize(nzcnt);
+		MIPrmatval.resize(nzcnt);
+
+		int surplus, nnCPLEX; // Dummy values necessary for CPLXgetrows
+		if(CPXgetrows(env, model, &nnCPLEX, MIPrmatbeg.data(), MIPrmatind.data(), MIPrmatval.data(), nzcnt, &surplus, 0, numRows - 1))
+			throw MIPException(MIPEx::GetFunction, "Error on retriving the matrix rows");
+	}
+
+	if (MIPrhs.empty() || MIPsense.empty()) {
+		size_t	numRows = getNumRows();
+
+		MIPrhs.resize(numRows);
+		if(CPXgetrhs(env, model, MIPrhs.data(), 0, numRows - 1))
+			throw MIPException(MIPEx::GetFunction, "Error on retriving the RHS values");
+		
+		MIPsense.resize(numRows);
+		if(CPXgetsense(env, model, MIPsense.data(), 0, numRows - 1))
+			throw MIPException(MIPEx::GetFunction, "Error on retriving the RHS values");
+	}
 }
 
 MIP::MIP(const MIP& otherMIP) {
@@ -270,7 +301,7 @@ VarBounds MIP::getVarBounds(const int index) {
 
 char MIP::getVarType(const int index) {
 	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
-		throw MIPException(MIPEx::OutOfBound, "Wrong index getVarType()!");
+		throw MIPException(MIPEx::OutOfBound, "Wrong index getVarType()! - "+std::to_string(index));
 
 	char type;
 	if (int error{ CPXgetctype(env, model, &type, index, index) })
@@ -337,7 +368,6 @@ double MIP::checkFeasibility(const std::vector<double>& sol) {
 	
 	if(CPXgetsense(env, model, sense, 0, numRows - 1))
 		throw MIPException(MIPEx::GetFunction, "Error on retriving the RHS values");
-	
 
 	int surplus, nnCPLEX; // Dummy values necessary for CPLXgetrows
 	if(CPXgetrows(env, model, &nnCPLEX, rmatbeg, rmatind, rmatval, nzcnt, &surplus, 0, numRows - 1))
@@ -419,6 +449,84 @@ double MIP::checkObjValue(const std::vector<double>& sol){
 	
 	std::vector<double> objCoef = getObjFunction();
 	return std::inner_product(objCoef.begin(), objCoef.end(), sol.begin(), 0.0);
+}
+
+double MIP::violation(const std::vector<double>& sol){
+	if (sol.size() != getMIPNumVars())
+		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
+
+	size_t numRows = MIPrmatbeg.size();
+	double overallViol = 0.0;
+
+	for (size_t i {0}; i < numRows; i++) {
+        int start = MIPrmatbeg[i];
+        int end = (i == numRows - 1) ? MIPrmatind.size() : MIPrmatbeg[i + 1];
+		
+		double lhs = 0.0;
+		for (int j = start; j < end; j++) lhs += sol[MIPrmatind[j]] * MIPrmatval[j];
+
+		switch (MIPsense[i]) {
+			case LE:
+				if(lhs > MIPrhs[i] + EPSILON)
+					overallViol += lhs - MIPrhs[i];
+				break;
+
+			case EQ :
+				if(std::abs(lhs - MIPrhs[i]) > EPSILON)
+					overallViol += std::abs(lhs - MIPrhs[i]);
+				break;
+
+			case GE:
+				if(lhs < MIPrhs[i] - EPSILON)
+					overallViol += MIPrhs[i] - lhs;
+				break;
+
+			default:
+				throw MIPException(MIPEx::GetFunction, "Unknown type of sense");
+				break;
+		}
+	}
+
+	return overallViol;
+}
+
+std::vector<int> MIP::getViolatedConstrIndex(const std::vector<double>& sol){
+	if (sol.size() != getMIPNumVars())
+		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
+
+	size_t numRows = MIPrmatbeg.size();
+	std::vector<int> rtn;
+	
+	for (size_t i {0}; i < numRows; i++) {
+        int start = MIPrmatbeg[i];
+        int end = (i == numRows - 1) ? MIPrmatind.size() : MIPrmatbeg[i + 1];
+
+		double lhs = 0.0;
+		for (int j = start; j < end; j++)  lhs += sol[MIPrmatind[j]] * MIPrmatval[j];
+		
+		switch (MIPsense[i]) {
+			case LE:
+				if(lhs > MIPrhs[i] + EPSILON)
+					rtn.push_back(i);
+				break;
+
+			case EQ :
+				if(std::abs(lhs - MIPrhs[i]) > EPSILON)
+					rtn.push_back(i);
+				break;
+
+			case GE:
+				if(lhs < MIPrhs[i] - EPSILON)
+					rtn.push_back(i);
+				break;
+
+			default:
+				throw MIPException(MIPEx::GetFunction, "Unknown type of sense");
+				break;
+		}
+	}
+
+	return rtn;
 }
 
 MIP::~MIP() noexcept {

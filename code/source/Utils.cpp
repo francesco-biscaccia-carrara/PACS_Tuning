@@ -201,7 +201,8 @@ constexpr const char* HELP_CPLEXRUN = "Usage: ./CPLEXRun <PARS>\
 
 CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) : 
 	args{.fileName = "", 
-			.timeLimit = 0.0, .theta = 0.0, 
+			.timeLimit = 0.0, 
+			.walkProb = DEF_WALK_PROB, 
 			.rho = DEF_RHO, 
 			.numsubMIPs = DEF_SUBMIPS, 
 			.seed = 0, 
@@ -234,8 +235,8 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) :
 
 		constexpr std::array<std::pair<const char*, double Args::*>, 6> doubleArgs{ { { "-tl", &Args::timeLimit },
 																					  { "--timelimit", &Args::timeLimit },
-																					  { "-th", &Args::theta },
-																					  { "--theta", &Args::theta },
+																					  { "-pb", &Args::walkProb },
+																					  { "--prob", &Args::walkProb },
 																					  { "-rh", &Args::rho },
 																					  { "--rho", &Args::rho } } };
 
@@ -282,15 +283,17 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) :
 				throw ArgsParserException(ExType::WrongArgsValue,"Wrong values passed as CLI args");
 			}	
 		} else {
-			if (args.fileName.empty() || !args.timeLimit || !args.theta || !args.rho || !args.seed || !args.numsubMIPs){
+			if (args.fileName.empty() || !args.timeLimit || !args.walkProb || !args.rho || !args.seed || !args.numsubMIPs){
 				printf("%s\n", HELP_ACS);
 				throw ArgsParserException(ExType::WrongArgsValue,"Wrong values passed as CLI args");
 			}
 		}
 
-		printf("%s\t%s -- %s\n", argv[0] + 2, ACS_VERSION, LAST_UPDATE);
+		printf("--------------------------------------------------------------------------------\n");
+		printf("\t\t%s\t%s -- Last update: %s\n", argv[0] + 2, ACS_VERSION, LAST_UPDATE);
 		std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-		printf("Date:\t%s", std::ctime(&time));
+		printf("\t\tDate:\t%s", std::ctime(&time));
+		printf("--------------------------------------------------------------------------------\n");
 
 #if ACS_VERBOSE >= VERBOSE
 		if (CPLEXRun) {
@@ -303,11 +306,11 @@ CLIParser::CLIParser(int argc, char* argv[], bool CPLEXRun) :
 							\n\t - Algorithm :  \t%d \
                             \n\t - File Name :  \t%s \
                             \n\t - Time Limit : \t%f\
-                            \n\t - Theta : \t\t%f\
+                            \n\t - WalkProb : \t\t%f\
                             \n\t - Rho : \t\t%f\
 							\n\t - Seed : \t\t%d\
 							\n\t - Num sub-MIP : \t%d",
-					   args.algo, args.fileName.c_str(), args.timeLimit, args.theta, args.rho, args.seed, args.numsubMIPs);
+					   args.algo, args.fileName.c_str(), args.timeLimit, args.walkProb, args.rho, args.seed, args.numsubMIPs);
 		}
 
 #endif

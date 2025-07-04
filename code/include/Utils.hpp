@@ -3,8 +3,8 @@
  * @brief Utility header file providing various helper classes and macros for the project.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.7
- * @since 06/27/2025
+ * @version v1.2.8
+ * @since 07/04/2025
  */
 
 #ifndef UTILS_H
@@ -37,9 +37,9 @@
 #pragma region UTILS_DEFINTION
 
 /** Current version of the code */
-#define ACS_VERSION "v1.2.7"
+#define ACS_VERSION "v1.2.8"
 /** Last update date */
-#define LAST_UPDATE "06/27/2025"
+#define LAST_UPDATE "07/04/2025"
 
 /** Verbosity level constants */
 #define NO_VER -1
@@ -57,6 +57,7 @@
 #define SCALE 1e2
 
 #define DEF_RHO 0.1
+#define DEF_WALK_PROB 0.7
 #define DEF_SUBMIPS 4
 #pragma endregion
 
@@ -106,7 +107,7 @@ namespace Utils {
 	struct Args {
 		std::string		   fileName;   ///< Input file name
 		double			   timeLimit;  ///< Time limit for execution
-		double			   theta;	   ///< Theta parameter
+		double			   walkProb;	///< TODO
 		double			   rho;		   ///< Rho parameter
 		unsigned long	   numsubMIPs; ///< Number of sub-MIPs
 		unsigned long long seed;	   ///< Random number generator see

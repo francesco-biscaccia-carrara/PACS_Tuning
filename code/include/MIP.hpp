@@ -8,8 +8,8 @@
  *
  * @note Requires CPLEX library and Utils.hpp
  * @author Francesco Biscaccia Carrara
- * @version v1.2.7
- * @since 06/27/2025
+ * @version v1.2.8
+ * @since 07/04/2025
  */
 
 #ifndef MIP_SOL_H
@@ -302,7 +302,6 @@ public:
 	[[nodiscard]]
 	double checkFeasibility(const std::vector<double>& sol);
 
-
 	[[nodiscard]]
 	double checkIntegrality(const std::vector<double>& sol);
 
@@ -311,6 +310,27 @@ public:
 
 	[[nodiscard]]
 	double checkObjValue(const std::vector<double>& sol);
+
+	[[nodiscard]]
+	inline const std::vector<int>& getMIPrmatbeg() { return MIPrmatbeg; }
+
+	[[nodiscard]]
+	inline const std::vector<int>& getMIPrmatind() { return MIPrmatind; }
+
+	[[nodiscard]]
+	inline const std::vector<double>& getMIPrmatval() { return MIPrmatval; }
+
+	[[nodiscard]]
+	inline const std::vector<char>& getMIPsense() { return MIPsense; }
+
+	[[nodiscard]]
+	inline const std::vector<double>& getMIPrhs() { return MIPrhs; }
+
+	[[nodiscard]]
+	double violation(const std::vector<double>& sol);
+
+	[[nodiscard]]
+	std::vector<int> getViolatedConstrIndex(const std::vector<double>& sol);
 
 // Debug-specific methods
 #if ACS_VERBOSE == DEBUG
@@ -353,6 +373,13 @@ protected:
 	std::string fileName; ///< Name of the input file
 	std::string id;		  ///< Unique identifier for the MIP instance
 #endif
+
+	static std::vector<int> MIPrmatbeg;
+	static std::vector<int>	MIPrmatind;
+	static std::vector<double> MIPrmatval;
+
+	static std::vector<char>   MIPsense;
+	static std::vector<double> MIPrhs;
 };
 
 #endif

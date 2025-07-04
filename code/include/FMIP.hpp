@@ -7,8 +7,8 @@
  * It inherits core functionality from the base MIP class while adding FMIP-specific features.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.7
- * @since 06/27/2025
+ * @version v1.2.8
+ * @since 07/04/2025
  */
 
 #ifndef FMIP_H
@@ -111,7 +111,7 @@ private:
 	 * Mixed Integer Programming problem.
 	 */
 	size_t MIPNumVars;
-	std::vector<double> ogObjFun;
+	static std::vector<double> ogObjFun;
 };
 
 #endif

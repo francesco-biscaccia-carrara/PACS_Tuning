@@ -102,7 +102,18 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	}
 	fMIP.setNumCores(CPLEX_CORE);
 
-	FixPolicy::randomRhoFixMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
+	bool needPerturbation = (rndGens[thID].Double(0,1) <= 1.0/numMIPs);
+	if(CLIArgs.algo > 0){
+		if (needPerturbation) {
+			FixPolicy::randomRhoFixMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
+		}else{
+			FixPolicy::walkMIPMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.walkProb, rndGens[thID]);
+		}
+	}else{
+		FixPolicy::randomRhoFixMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
+	}
+	
+	//FixPolicy::randomRhoFixMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
 
 	/// FIXED: Bug #e15760bcfd3dcca51cf9ea23f70072dd6cb2ac14 — Resolved MIPException::WrongTimeLimit triggered by a negligible time limit.
 	if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -128,7 +139,11 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	PRINT_OUT("Proc: %3d - FeasMIP Objective: %20.2f", thID, tmpSolutions[thID].slackSum);
 	setBestACSIncumbent(tmpSolutions[thID]);
 
-	FixPolicy::dynamicAdjustRhoMT(thID, "FMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
+	if(CLIArgs.algo > 0){
+		if(needPerturbation) FixPolicy::dynamicAdjustRhoMT(thID, "FMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
+	}else{
+		FixPolicy::dynamicAdjustRhoMT(thID, "FMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
+	}
 }
 
 #pragma region MTContextPrivateSec
@@ -141,9 +156,20 @@ void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs, double rhs) {
 		FixPolicy::fixSlackUpperBoundMT(thID, "OMIP", oMIP, bestACSIncumbent.sol);
 	}
 	oMIP.setNumCores(CPLEX_CORE);
-	// oMIP.updateBudgetConstr(rhs);			v1.2.7 -- no need of this
+	// oMIP.updateBudgetConstr(rhs);			v1.2.8 -- no need of this
 
-	FixPolicy::randomRhoFixMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
+	bool needPerturbation = (rndGens[thID].Double(0, 1) <= 1.0 / numMIPs);
+
+	if(CLIArgs.algo > 0){
+		if(bestACSIncumbent.slackSum <= EPSILON || needPerturbation){
+			FixPolicy::randomRhoFixMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
+		}else{
+			FixPolicy::walkMIPMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.walkProb, rndGens[thID]);
+		}
+	}else{
+		FixPolicy::randomRhoFixMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
+	}
+	
 
 	/// FIXED: Bug #e15760bcfd3dcca51cf9ea23f70072dd6cb2ac14 — Resolved MIPException::WrongTimeLimit triggered by a negligible time limit.
 	if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -168,7 +194,13 @@ void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs, double rhs) {
 	PRINT_OUT("Proc: %3d - OptMIP Objective: %20.2f|%-10.2f", thID, tmpSolutions[thID].oMIPCost, tmpSolutions[thID].slackSum);
 	setBestACSIncumbent(tmpSolutions[thID]);
 
-	FixPolicy::dynamicAdjustRhoMT(thID, "OMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
+	if(CLIArgs.algo >0){
+		if(bestACSIncumbent.slackSum <= EPSILON || needPerturbation){
+			FixPolicy::dynamicAdjustRhoMT(thID, "OMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
+		}
+	}else{
+		FixPolicy::dynamicAdjustRhoMT(thID, "OMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
+	}
 }
 
 #pragma endregion

@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [1.2.8] - 2025-07-04  
+### Added  
+- Introduced new fixing strategy `FixPolicy::walkMIPMT` inspired by the WalkSAT algorithm ([FixPolicy.cpp](code/source/FixPolicy.cpp)).  
+- Enabled sparse matrix retrieval, mimicking CPLEX’s structure, using a static vector to share the model across multiple MIP instances ([MIP.cpp](code/source/MIP.cpp)).  
+
+### Changed  
+- Renamed `Args::theta` to `Args::walkProb` to reflect the removal of the unused theta parameter ([Utils.hpp](code/include/Utils.hpp)).  
+- Made `FMIP::ogObjFun` static to allow sharing the original objective function across FMIP instances ([FMIP.hpp](code/include/FMIP.hpp)).  
+ 
+
 ## [1.2.7] - 2025-06-27  
 ### Added  
 - Introduced error codes based on `ExceptionType`, enabling streamlined error handling and integration with ACS pipelines ([ACSException.hpp](code/include/ACSException.hpp)).  

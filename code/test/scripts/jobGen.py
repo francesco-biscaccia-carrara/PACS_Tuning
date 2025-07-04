@@ -4,7 +4,7 @@ from dotenv import load_dotenv # type: ignore
 sys.dont_write_bytecode = True
 
 #EDITABLE PARS
-ALGOS = (0, 1)
+ALGOS = (0, 1, 2, 3)
 SEEDS = (38472910, 56473829, 27384910, 91827364, 83746592)
 
 def generate_env_file(env_vars, file_path="../../.ACSenv"):
@@ -107,7 +107,7 @@ echo "CPUS: $SLURM_CPUS_PER_TASK"
 echo "------------------------"
 
 cd {exec_dir}
-./{exe} -f {instance} -tl 300 -th 0.25 -nSMIPs 4 -rh 0.25 -sd {seed} -ag {rho}
+./{exe} -f {instance} -tl 300 -pb 0.25 -nSMIPs 4 -rh 0.25 -sd {seed} -ag {rho}
 
 #####################
 

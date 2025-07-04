@@ -2,8 +2,8 @@
  * ACS Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.7
- * @since 06/27/2025
+ * @version v1.2.8
+ * @since 07/04/2025
  */
 
 #include <iostream>
@@ -30,7 +30,27 @@ int main(int argc, char* argv[]) {
 
 		// DEFAULT VAL SECTION
 		CLIArgs.rho = 0.1;
-		PRINT_WARN("DYN, Rho 0.1, MaxFeas, %s", CLIArgs.algo == 0 ? "NO UB" : "UB");
+
+		switch (CLIArgs.algo){
+
+			case 1:
+				CLIArgs.walkProb = 0.6;
+			break;
+			
+			case 2:
+				CLIArgs.walkProb = 0.7;
+			break;
+
+			case 3:
+				CLIArgs.walkProb = 0.8;
+			break;
+
+			default:
+			case 0:
+			break;
+		}
+
+		PRINT_WARN("DYN, Rho 0.1, MaxFeas, UB, WalkP: %0.2f %s", CLIArgs.walkProb, (!CLIArgs.algo)? "[IGNORED]":"");
 		FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
 
 #if ACS_VERBOSE >= VERBOSE
@@ -104,7 +124,7 @@ int main(int argc, char* argv[]) {
 			MergeOMIP.setNumCores(CPLEX_CORE);
 
 			MergePolicy::recombine(MergeOMIP, MTEnv.getTmpSolutions(), "2_Phase");
-			// MergeOMIP.updateBudgetConstr(tmpSol.slackSum);			v1.2.7 -- no need of this
+			// MergeOMIP.updateBudgetConstr(tmpSol.slackSum);			v1.2.8 -- no need of this
 
 			if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {
 				MergeOMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
@@ -142,12 +162,13 @@ int main(int argc, char* argv[]) {
 
 		
 		Solution incumbent = MTEnv.getBestACSIncumbent();
-#if ACS_TEST
 		double	 retTime = Clock::timeElapsed();
+#if ACS_TEST
 		nlohmann::json jsData;
 #endif
+		printf("--------------------------------------------------------------------------------\n");
 		if (incumbent.sol.empty() || incumbent.slackSum > EPSILON) {
-			PRINT_ERR("NO FEASIBLE SOLUTION FIND");
+			PRINT_ERR("No solution found within time-limit: %-10.4ff",CLIArgs.timeLimit);
 #if ACS_TEST
 			jsData[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)] = { "NO SOL", retTime };
 #endif
@@ -179,8 +200,7 @@ int main(int argc, char* argv[]) {
 				throw ACSException(ACSException::ExceptionType::CheckObectiveFailed, "MIP::chekObjValue:\tFAILED","ACSmain");
 			}
 
-			
-			PRINT_BEST("BEST INCUMBENT: %16.2f|%-10.2f", incumbent.oMIPCost, incumbent.slackSum);
+			PRINT_BEST("ACS Solution: %16.4f \n\t\t   Time elapsed: %-10.4f", incumbent.oMIPCost, retTime);
 #if ACS_TEST
 			jsData[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)] = { incumbent.oMIPCost, retTime };
 #endif
@@ -197,5 +217,6 @@ int main(int argc, char* argv[]) {
 		PRINT_ERR(ex.what());
 		return ex.getErrorCode();
 	}
+	printf("-------------------- ACS::Francesco Biscaccia Carrara ©2025 --------------------\n");
 	return EXIT_SUCCESS;
 }
