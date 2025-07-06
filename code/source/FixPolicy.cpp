@@ -239,7 +239,7 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 #endif
 			} else {
 					int rndVar = rmatind[rnd.Int(start,end-1)];
-					
+
 					switch (model.getVarType(rndVar)) {
 						case CPX_BINARY: {
 							model.setVarValue(rndVar, not tmpSol[rndVar]);

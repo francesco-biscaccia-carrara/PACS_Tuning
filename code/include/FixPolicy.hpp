@@ -23,7 +23,7 @@ using namespace Utils;
 
 #define WALK_MIP_MIN_MOVE 32
 #define WALK_MIP_MAX_MOVE 256
-#define WALK_MIP_BETA 0.5
+#define WALK_MIP_BETA (std::sqrt(5)-1) / 2
 
 #pragma endregion
 
