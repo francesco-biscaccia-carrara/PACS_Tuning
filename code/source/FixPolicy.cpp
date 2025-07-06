@@ -126,7 +126,9 @@ void FixPolicy::startSolMaxFeas(std::vector<double>& sol, std::string fileName, 
 #endif
 }
 
-static std::atomic<int> initViolConst = -1;
+static std::once_flag initFlag;
+static int initViolConst = -1;
+
 void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol, double p, Random& rnd) {
 	if (p < EPSILON || p >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "WalkProb par. must be within (0,1)!");
@@ -140,7 +142,8 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 
 	std::vector<int> violConstr = model.getViolatedConstrIndex(tmpSol);
 	if(violConstr.empty()) return;
-	if(initViolConst== -1) initViolConst = violConstr.size();
+	
+	std::call_once(initFlag, [&]() {initViolConst = static_cast<int>(violConstr.size());});
 
 #if ACS_VERBOSE >= VERBOSE
 	size_t				bestMoves = 0, minDMGMoves =0 , rndMoves = 0;
@@ -157,7 +160,9 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 	const auto& rmatind = model.getMIPrmatind();
 
 	while (numVarToFix > 0) {
+		if(violConstr.empty()) break;
 		size_t	rndConstInd = violConstr[rnd.Int(0, violConstr.size() - 1)];
+
 		int 	start = rmatbeg[rndConstInd];
 		int	   	end = (rndConstInd == ogNumRows - 1) ? rmatind.size() : rmatbeg[rndConstInd + 1];
 
@@ -181,7 +186,7 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 					auto [lb, ub] = ogVarBounds[index];
 
 					int tmpNewVal = tmpSol[index] + intPer;
-					if(tmpNewVal>= lb || tmpNewVal<=ub) modSol[index] = tmpNewVal;
+					if(tmpNewVal>= lb && tmpNewVal<=ub) modSol[index] = tmpNewVal;
 					else continue;
 					break;
 				}
@@ -193,7 +198,7 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 					
 					double tmpNewVal = tmpSol[index] + doublePer;
 					
-					if(tmpNewVal>= lb || tmpNewVal<=ub) modSol[index] = tmpNewVal;
+					if(tmpNewVal>= lb && tmpNewVal<=ub) modSol[index] = tmpNewVal;
 					else continue;
 					break;
 				}
@@ -212,24 +217,23 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 		}
 
 		if(minDMG <= -EPSILON) {
-			tmpSol[candVar] = newVal,
+			tmpSol[candVar] = newVal;
 			model.setVarValue(candVar, newVal);
 #if ACS_VERBOSE >= VERBOSE
 			bestMoves++;
 #endif
 		} else {
 			if(rnd.Double(0,1) <= p && 	candVar!=-1){
-				tmpSol[candVar] = newVal,
+				tmpSol[candVar] = newVal;
 				model.setVarValue(candVar, newVal);
 #if ACS_VERBOSE >= VERBOSE
 				minDMGMoves++;
 #endif
 			} else {
-					int rndVar = rmatind[rnd.Int(start,end)];
+					int rndVar = rmatind[rnd.Int(start,end-1)];
 
 					switch (model.getVarType(rndVar)) {
 						case CPX_BINARY: {
-							tmpSol[rndVar] = not tmpSol[rndVar];
 							model.setVarValue(rndVar, not tmpSol[rndVar]);
 							break;
 						}
@@ -261,7 +265,6 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 			}
 		}
 		violConstr = model.getViolatedConstrIndex(tmpSol);
-		if(violConstr.empty()) break;
 		numVarToFix--;
 	}
 #if ACS_VERBOSE >= VERBOSE
@@ -367,53 +370,74 @@ void FixPolicy::dynamicAdjustRho(const char* phase, const int solveCode, const s
 	}
 }
 
-// Values to count the number of decrements/increments of Rho parameter in 1 iteration
-static size_t numDecRho = 0;
-static size_t numIncRho = 0;
+static std::atomic<size_t> numDecRho{0};
+static std::atomic<size_t> numIncRho{0};
+static std::mutex rhoMutex;
+static std::once_flag resetFlag;
 
 void FixPolicy::dynamicAdjustRhoMT(const size_t threadID, const char* type, const int solveCode, const size_t numMIPs, double& CLIRho, std::atomic_size_t& A_RhoChanges) {
-
-	if (A_RhoChanges >= numMIPs)
-		return; // Whenever an incumbent is found, we don't touch Rho anymore
-	if (A_RhoChanges == 0)
-		numDecRho = numIncRho = 0;
-
-	double scaledDeltaRho = DELTA_RHO / numMIPs;
-
-	switch (solveCode) {
-		case CPXMIP_OPTIMAL:
-		case CPXMIP_OPTIMAL_TOL:
-			CLIRho = (CLIRho - scaledDeltaRho < MIN_RHO) ? MIN_RHO : CLIRho - scaledDeltaRho;
-			A_RhoChanges++;
-			numDecRho++;
+    
+    if (A_RhoChanges.load() >= numMIPs)
+        return;
+    
+    // Reset counters once when first thread reaches here
+    if (A_RhoChanges.load() == 0) {
+        std::call_once(resetFlag, []() {
+            numDecRho.store(0);
+            numIncRho.store(0);
+        });
+    }
+    
+    double scaledDeltaRho = DELTA_RHO / numMIPs;
+    
+    // Use mutex only for CLIRho modifications
+    switch (solveCode) {
+        case CPXMIP_OPTIMAL:
+        case CPXMIP_OPTIMAL_TOL: {
+            std::lock_guard<std::mutex> lock(rhoMutex);
+            if (A_RhoChanges.load() >= numMIPs) return; // Double-check
+            
+            CLIRho = (CLIRho - scaledDeltaRho < MIN_RHO) ? MIN_RHO : CLIRho - scaledDeltaRho;
+            A_RhoChanges.fetch_add(1);
+            numDecRho.fetch_add(1);
 #if ACS_VERBOSE >= VERBOSE
-			PRINT_INFO("Proc: %3d [%s] - FixPolicy::dynamicAdjustRhoMT - Rho Decreased [%5.4f]", threadID, type, CLIRho);
+            PRINT_INFO("Proc: %3d [%s] - FixPolicy::dynamicAdjustRhoMT - Rho Decreased [%5.4f]", 
+                      threadID, type, CLIRho);
 #endif
-			break;
-
-		case CPXMIP_DETTIME_LIM_FEAS:
-		case CPXMIP_TIME_LIM_FEAS:
-			CLIRho = (CLIRho + scaledDeltaRho > MAX_RHO) ? MAX_RHO : CLIRho + scaledDeltaRho;
-			A_RhoChanges++;
-			numIncRho++;
+            break;
+        }
+        
+        case CPXMIP_DETTIME_LIM_FEAS:
+        case CPXMIP_TIME_LIM_FEAS: {
+            std::lock_guard<std::mutex> lock(rhoMutex);
+            if (A_RhoChanges.load() >= numMIPs) return; // Double-check
+            
+            CLIRho = (CLIRho + scaledDeltaRho > MAX_RHO) ? MAX_RHO : CLIRho + scaledDeltaRho;
+            A_RhoChanges.fetch_add(1);
+            numIncRho.fetch_add(1);
 #if ACS_VERBOSE >= VERBOSE
-			PRINT_INFO("Proc: %3d [%s] - FixPolicy::dynamicAdjustRhoMT - Rho Increased [%5.4f]", threadID, type, CLIRho);
+            PRINT_INFO("Proc: %3d [%s] - FixPolicy::dynamicAdjustRhoMT - Rho Increased [%5.4f]", 
+                      threadID, type, CLIRho);
 #endif
-			break;
-
-		default:
+            break;
+        }
+        
+        default:
 #if ACS_VERBOSE >= VERBOSE
-			PRINT_ERR("Unexpected value for solvecode: %d", solveCode);
+            PRINT_ERR("Unexpected value for solvecode: %d", solveCode);
 #endif
-
-			break;
-	}
-
-	// Policy in the coin-flip case: make the problem harder
-	if (A_RhoChanges == numMIPs && numIncRho == numDecRho) {
-		CLIRho = (CLIRho - DELTA_RHO < MIN_RHO) ? MIN_RHO : CLIRho - DELTA_RHO;
+            break;
+    }
+    
+    // Coinflip case handling (also needs mutex for CLIRho access)
+    {
+        std::lock_guard<std::mutex> lock(rhoMutex);
+        size_t currentChanges = A_RhoChanges.load();
+        if (currentChanges == numMIPs && numIncRho.load() == numDecRho.load()) {
+            CLIRho = (CLIRho - DELTA_RHO < MIN_RHO) ? MIN_RHO : CLIRho - DELTA_RHO;
 #if ACS_VERBOSE >= VERBOSE
-		PRINT_WARN("[\"COINFLIP\" CASE] - FixPolicy::dynamicAdjustRhoMT - Rho decreased [%5.4f]", CLIRho);
+            PRINT_WARN("[\"COINFLIP\" CASE] - FixPolicy::dynamicAdjustRhoMT - Rho decreased [%5.4f]", CLIRho);
 #endif
-	}
+        }
+    }
 }

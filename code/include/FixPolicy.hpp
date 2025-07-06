@@ -4,8 +4,8 @@
  *        specific policy-based fixing strategies in the ACS framework.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.8
- * @since 07/04/2025
+ * @version v1.2.9
+ * @since 07/06/2025
  */
 
 #ifndef FIX_POL_H

@@ -2,8 +2,8 @@
  * ACS Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.8
- * @since 07/04/2025
+ * @version v1.2.9
+ * @since 07/06/2025
  */
 
 #include <iostream>
@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
 			MergeOMIP.setNumCores(CPLEX_CORE);
 
 			MergePolicy::recombine(MergeOMIP, MTEnv.getTmpSolutions(), "2_Phase");
-			// MergeOMIP.updateBudgetConstr(tmpSol.slackSum);			v1.2.8 -- no need of this
+			// MergeOMIP.updateBudgetConstr(tmpSol.slackSum);			v1.2.9 -- no need of this
 
 			if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {
 				MergeOMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);

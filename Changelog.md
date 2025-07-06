@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.2.8] - 2025-07-06  
+### Fixed  
+- Resolved potential infinite loop in `FixPolicy::walkMIPMT` due to incorrect boundary checks, improper assignments, and race conditions ([FixPolicy.cpp](code/source/FixPolicy.cpp)).  
+- Fixed possible race conditions in `FixPolicy::randomRhoFixMT` ([FixPolicy.cpp](code/source/FixPolicy.cpp)).
+
+
 ## [1.2.8] - 2025-07-04  
 ### Added  
 - Introduced new fixing strategy `FixPolicy::walkMIPMT` inspired by the WalkSAT algorithm ([FixPolicy.cpp](code/source/FixPolicy.cpp)).  

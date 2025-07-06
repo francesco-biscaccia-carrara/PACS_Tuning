@@ -156,7 +156,7 @@ void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs, double rhs) {
 		FixPolicy::fixSlackUpperBoundMT(thID, "OMIP", oMIP, bestACSIncumbent.sol);
 	}
 	oMIP.setNumCores(CPLEX_CORE);
-	// oMIP.updateBudgetConstr(rhs);			v1.2.8 -- no need of this
+	// oMIP.updateBudgetConstr(rhs);			v1.2.9 -- no need of this
 
 	bool needPerturbation = (rndGens[thID].Double(0, 1) <= 1.0 / numMIPs);
 
