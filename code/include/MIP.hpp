@@ -330,6 +330,9 @@ public:
 	double violation(const std::vector<double>& sol);
 
 	[[nodiscard]]
+	double violationVarDelta(const int index, const double delta, const std::vector<int>& constrInv);
+
+	[[nodiscard]]
 	std::vector<int> getViolatedConstrIndex(const std::vector<double>& sol);
 
 // Debug-specific methods

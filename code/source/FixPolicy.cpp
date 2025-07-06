@@ -134,6 +134,7 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 		throw FixPolicyException(FPEx::InputSizeError, "WalkProb par. must be within (0,1)!");
 
 	std::vector<double> tmpSol(sol.begin(), sol.begin() + model.getMIPNumVars());
+	double 				initViol = model.violation(tmpSol);
 
 	std::vector<VarBounds> ogVarBounds;
 	for (size_t i{ 0 }; i < tmpSol.size();i++){
@@ -147,58 +148,65 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 
 #if ACS_VERBOSE >= VERBOSE
 	size_t				bestMoves = 0, minDMGMoves =0 , rndMoves = 0;
-	size_t 				iterInitviolConstr = violConstr.size();
 #endif
 
 	double ratio = static_cast<double>(violConstr.size()) / std::max(static_cast<double>(initViolConst), 1.0);
 	ratio = std::clamp(ratio, 0.0, 1.0);
 
 	size_t numVarToFix = static_cast<size_t>(std::ceil(WALK_MIP_MIN_MOVE + (WALK_MIP_MAX_MOVE - WALK_MIP_MIN_MOVE) * std::pow(ratio, WALK_MIP_BETA)));
-
 	size_t		ogNumRows = model.getMIPrmatbeg().size();
+
 	const auto& rmatbeg = model.getMIPrmatbeg();
 	const auto& rmatind = model.getMIPrmatind();
 
-	while (numVarToFix > 0) {
-		if(violConstr.empty()) break;
-		size_t	rndConstInd = violConstr[rnd.Int(0, violConstr.size() - 1)];
+	std::vector<std::vector<int>> varToConstr(model.getMIPNumVars());   // Variable → constraints
 
-		int 	start = rmatbeg[rndConstInd];
-		int	   	end = (rndConstInd == ogNumRows - 1) ? rmatind.size() : rmatbeg[rndConstInd + 1];
+	//Saving part of the bipartite graph var-cons involved 
+	for (size_t c: violConstr) {
+    	int start = rmatbeg[c];
+    	int end   = (c == ogNumRows - 1) ? rmatind.size() : rmatbeg[c + 1];
+    	for (int i = start; i < end; ++i) {
+        	int var = rmatind[i];
+        	varToConstr[var].push_back(c);
+    	}
+	}
+
+	while (numVarToFix-- > 0) {
+		size_t	rndConstrInd = violConstr[rnd.Int(0, violConstr.size() - 1)];
+
+		int 	start = rmatbeg[rndConstrInd];
+		int	   	end = (rndConstrInd == ogNumRows - 1) ? rmatind.size() : rmatbeg[rndConstrInd + 1];
 
 		double				minDMG = std::numeric_limits<double>::max();
 		int 				candVar = -1;
+		double				perturb = 0.0;
 		double				newVal = 0.0;
 
 		for (int j = start; j < end; j++){ 
-			int index = rmatind[j];
+			int varIndex = rmatind[j];
 
-			std::vector<double> modSol(tmpSol);
-
-			switch (model.getVarType(index)) {
-				case CPX_BINARY : 
-					modSol[index] = not tmpSol[index];
-				break;
-			
+			switch (model.getVarType(varIndex)) {
+				case CPX_BINARY :{
+					int tmpBin = not tmpSol[varIndex];
+					perturb = tmpBin - tmpSol[varIndex];
+					break;
+				}
 
 				case CPX_INTEGER :{
-					int intPer = (rnd.Double(0, 1) <= 0.5) ? -1 : 1;
-					auto [lb, ub] = ogVarBounds[index];
+					int tmpInt = tmpSol[varIndex] + ((rnd.Double(0, 1) <= 0.5) ? -1 : 1);
 
-					int tmpNewVal = tmpSol[index] + intPer;
-					if(tmpNewVal>= lb && tmpNewVal<=ub) modSol[index] = tmpNewVal;
+					auto [lb, ub] = ogVarBounds[varIndex];
+					if(tmpInt>= lb && tmpInt<=ub) perturb = tmpInt - tmpSol[varIndex];
 					else continue;
 					break;
 				}
 					
 
 				case CPX_CONTINUOUS :{
-					double doublePer = rnd.Double(-0.5,0.5);
-					auto [lb, ub] = ogVarBounds[index];
-					
-					double tmpNewVal = tmpSol[index] + doublePer;
-					
-					if(tmpNewVal>= lb && tmpNewVal<=ub) modSol[index] = tmpNewVal;
+					double tmpDouble = tmpSol[varIndex] + rnd.Double(-0.5,0.5);
+
+					auto [lb, ub] = ogVarBounds[varIndex];
+					if(tmpDouble>= lb && tmpDouble<=ub) perturb = tmpDouble - tmpSol[varIndex];
 					else continue;
 					break;
 				}
@@ -208,30 +216,30 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 				break;
 			}
 
-			double viol = model.violation(modSol) - model.violation(tmpSol);
-			if (viol < minDMG) {
-				minDMG = viol;
-				candVar = index;
-				newVal = modSol[index];
+			double delta = model.violationVarDelta(varIndex,perturb,varToConstr[varIndex]);
+			if (delta < minDMG) {
+				minDMG = delta;
+				candVar = varIndex;
+				newVal = tmpSol[varIndex]+perturb;
 			}
 		}
 
-		if(minDMG <= -EPSILON) {
+		if (minDMG <= -EPSILON) {
 			tmpSol[candVar] = newVal;
-			model.setVarValue(candVar, newVal);
+			model.setVarValue(candVar, tmpSol[candVar]);
 #if ACS_VERBOSE >= VERBOSE
 			bestMoves++;
 #endif
 		} else {
-			if(rnd.Double(0,1) <= p && 	candVar!=-1){
+			if(rnd.Double(0,1) <= p && candVar!=-1){
 				tmpSol[candVar] = newVal;
-				model.setVarValue(candVar, newVal);
+				model.setVarValue(candVar, tmpSol[candVar]);
 #if ACS_VERBOSE >= VERBOSE
 				minDMGMoves++;
 #endif
 			} else {
 					int rndVar = rmatind[rnd.Int(start,end-1)];
-
+					
 					switch (model.getVarType(rndVar)) {
 						case CPX_BINARY: {
 							model.setVarValue(rndVar, not tmpSol[rndVar]);
@@ -240,17 +248,17 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 
 						case CPX_INTEGER: {
 							auto [lb, ub] = ogVarBounds[rndVar];
-							int rndVal = rnd.Int(lb, ub);
-							tmpSol[rndVar] = rndVal;
-							model.setVarValue(rndVar, rndVal);
+
+							tmpSol[rndVar] = rnd.Int(lb, ub);
+							model.setVarValue(rndVar, tmpSol[rndVar]);
 							break;
 						}
 
 						case CPX_CONTINUOUS: {
 							auto [lb, ub] = ogVarBounds[rndVar];
-							double rndVal = rnd.Double(lb, ub);
-							tmpSol[rndVar] = rndVal;
-							model.setVarValue(rndVar, rndVal);
+					
+							tmpSol[rndVar] = rnd.Double(lb, ub);;
+							model.setVarValue(rndVar, tmpSol[rndVar]);
 							break;
 						}
 
@@ -258,22 +266,20 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 							throw MIPException(MIPEx::GetFunction, "Unknown variable type");
 							break;
 						}
-				}
+					}
 #if ACS_VERBOSE >= VERBOSE
 				rndMoves++;
 #endif
 			}
 		}
-		violConstr = model.getViolatedConstrIndex(tmpSol);
-		numVarToFix--;
 	}
 #if ACS_VERBOSE >= VERBOSE
-	PRINT_INFO("Proc: %3d [%s] - FixPolicy::walkMIPMT - Viol constr before|after: %10d|%-10d \n\t\t\
-		    - FixPolicy::walkMIPMT - Best Moves: %3zu| Min-Damage Moves: %3zu| RND Moves: %3zu", threadID, type, iterInitviolConstr , violConstr.size(),bestMoves, minDMGMoves, rndMoves);
+	PRINT_INFO("Proc: %3d [%s] - FixPolicy::walkMIPMT - Viol before|after: %10.2f|%-10.2f \n\t\t\
+		    - FixPolicy::walkMIPMT - Best Moves: %3zu| Min-Damage Moves: %3zu| RND Moves: %3zu", threadID, type, initViol , model.violation(tmpSol) ,bestMoves, minDMGMoves, rndMoves);
 #endif
 }
 
-	void FixPolicy::fixSlackUpperBoundMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol) {
+void FixPolicy::fixSlackUpperBoundMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol) {
 
 		size_t numMIPVars{ model.getMIPNumVars() };
 		size_t numVars{ model.getNumCols() };

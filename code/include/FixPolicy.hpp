@@ -13,6 +13,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <unordered_set>
 
 #include "RlxFMIP.hpp"
 #include "ACSException.hpp"

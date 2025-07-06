@@ -321,7 +321,7 @@ MIP& MIP::setVarValue(const int index, const double val) {
 
 MIP& MIP::setVarLowerBound(const int index, const double newLB){
 	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
-		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarValue()!");
+		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarLower()!");
 	
 	char bound{ LW_BOUND };
 	if (CPXchgbds(env, model, 1, &index, &bound, &newLB))
@@ -331,7 +331,7 @@ MIP& MIP::setVarLowerBound(const int index, const double newLB){
 
 MIP& MIP::setVarUpperBound(const int index, const double newUB){
 	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
-		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarValue()!");
+		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarUpper()!");
 	
 	char bound{ UP_BOUND };
 	if (CPXchgbds(env, model, 1, &index, &bound, &newUB))
@@ -488,6 +488,27 @@ double MIP::violation(const std::vector<double>& sol){
 	}
 
 	return overallViol;
+}
+
+double MIP::violationVarDelta(const int index, const double delta, const std::vector<int>& constrInv){
+
+	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
+		throw MIPException(MIPEx::OutOfBound, "Wrong index violationVar()!");
+
+	double perViolation = 0.0;
+	for (int c : constrInv) {
+		int start = MIPrmatbeg[c];
+        int end = (c == MIPrmatbeg.size() - 1) ? MIPrmatind.size() : MIPrmatbeg[c + 1];
+
+		for (int j = start; j < end;j++){
+			if(MIPrmatind[j] == index){
+				perViolation += delta * MIPrmatval[j];
+				break;
+			}
+		}
+	}
+
+	return perViolation;
 }
 
 std::vector<int> MIP::getViolatedConstrIndex(const std::vector<double>& sol){
