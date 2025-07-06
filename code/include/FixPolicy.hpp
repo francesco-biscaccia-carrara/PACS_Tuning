@@ -12,6 +12,7 @@
 #define FIX_POL_H
 
 #include <atomic>
+#include <mutex>
 
 #include "RlxFMIP.hpp"
 #include "ACSException.hpp"
