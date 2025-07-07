@@ -498,7 +498,7 @@ double MIP::violationVarDelta(const int index, const double delta, const std::ve
 	double perViolation = 0.0;
 	for (int c : constrInv) {
 		int start = MIPrmatbeg[c];
-        int end = (c == MIPrmatbeg.size() - 1) ? MIPrmatind.size() : MIPrmatbeg[c + 1];
+        int end = (c == static_cast<int>(MIPrmatbeg.size() - 1)) ? MIPrmatind.size() : MIPrmatbeg[c + 1];
 
 		for (int j = start; j < end;j++){
 			if(MIPrmatind[j] == index){

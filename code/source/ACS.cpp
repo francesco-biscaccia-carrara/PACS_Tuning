@@ -168,7 +168,7 @@ int main(int argc, char* argv[]) {
 #endif
 		printf("--------------------------------------------------------------------------------\n");
 		if (incumbent.sol.empty() || incumbent.slackSum > EPSILON) {
-			PRINT_ERR("No solution found within time-limit: %-10.4ff",CLIArgs.timeLimit);
+			PRINT_ERR("No solution found within time-limit: %-10.4f",CLIArgs.timeLimit);
 #if ACS_TEST
 			jsData[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)] = { "NO SOL", retTime };
 #endif

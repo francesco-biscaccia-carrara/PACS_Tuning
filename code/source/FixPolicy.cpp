@@ -154,7 +154,7 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 	ratio = std::clamp(ratio, 0.0, 1.0);
 
 	size_t numVarToFix = static_cast<size_t>(std::ceil(WALK_MIP_MIN_MOVE + (WALK_MIP_MAX_MOVE - WALK_MIP_MIN_MOVE) * std::pow(ratio, WALK_MIP_BETA)));
-	size_t		ogNumRows = model.getMIPrmatbeg().size();
+	size_t ogNumRows = model.getMIPrmatbeg().size();
 
 	const auto& rmatbeg = model.getMIPrmatbeg();
 	const auto& rmatind = model.getMIPrmatind();
@@ -274,8 +274,8 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 		}
 	}
 #if ACS_VERBOSE >= VERBOSE
-	PRINT_INFO("Proc: %3d [%s] - FixPolicy::walkMIPMT - Viol before|after: %10.2f|%-10.2f \n\t\t\
-		    - FixPolicy::walkMIPMT - Best Moves: %3zu| Min-Damage Moves: %3zu| RND Moves: %3zu", threadID, type, initViol , model.violation(tmpSol) ,bestMoves, minDMGMoves, rndMoves);
+	PRINT_INFO("Proc: %3d [%s] - FixPolicy::walkMIPMT - Viol before|after: %10d|%-10d \n\t\t\
+		    - FixPolicy::walkMIPMT - Best Moves: %3zu| Min-Damage Moves: %3zu| RND Moves: %3zu", threadID, type, violConstr.size() , model.getViolatedConstrIndex(tmpSol).size() ,bestMoves, minDMGMoves, rndMoves);
 #endif
 }
 
