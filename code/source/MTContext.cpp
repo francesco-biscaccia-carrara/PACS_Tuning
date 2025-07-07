@@ -102,13 +102,8 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	}
 	fMIP.setNumCores(CPLEX_CORE);
 
-	bool needPerturbation = (rndGens[thID].Double(0,1) <= 1.0/numMIPs);
 	if(CLIArgs.algo > 0){
-		if (needPerturbation) {
-			FixPolicy::randomRhoFixMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
-		}else{
-			FixPolicy::walkMIPMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.walkProb, rndGens[thID]);
-		}
+		FixPolicy::walkMIPMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.rho, CLIArgs.walkProb, rndGens[thID]);
 	}else{
 		FixPolicy::randomRhoFixMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
 	}
@@ -124,9 +119,10 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	}
 
 	int solveCode{ fMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), DET_TL(fMIP.getNumNonZeros())) };
+	
 	if (MIP::isINForUNBD(solveCode)) {
 #if ACS_VERBOSE >= VERBOSE
-		PRINT_INFO("Proc: %3d [FMIP] - Aborted: Infeasible with given TL", thID);
+		PRINT_INFO("Proc: %3d [FMIP] - Aborted: Infeasible with given TL [%d]", thID, solveCode);
 #endif
 		return;
 	}
@@ -139,11 +135,9 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	PRINT_OUT("Proc: %3d - FeasMIP Objective: %20.2f", thID, tmpSolutions[thID].slackSum);
 	setBestACSIncumbent(tmpSolutions[thID]);
 
-	if(CLIArgs.algo > 0){
-		if(needPerturbation) FixPolicy::dynamicAdjustRhoMT(thID, "FMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
-	}else{
-		FixPolicy::dynamicAdjustRhoMT(thID, "FMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
-	}
+
+	FixPolicy::dynamicAdjustRhoMT(thID, "FMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
+	
 }
 
 #pragma region MTContextPrivateSec
@@ -158,14 +152,8 @@ void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs, double rhs) {
 	oMIP.setNumCores(CPLEX_CORE);
 	// oMIP.updateBudgetConstr(rhs);			v1.2.9 -- no need of this
 
-	bool needPerturbation = (rndGens[thID].Double(0, 1) <= 1.0 / numMIPs);
-
 	if(CLIArgs.algo > 0){
-		if(bestACSIncumbent.slackSum <= EPSILON || needPerturbation){
-			FixPolicy::randomRhoFixMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
-		}else{
-			FixPolicy::walkMIPMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.walkProb, rndGens[thID]);
-		}
+		FixPolicy::walkMIPMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, CLIArgs.walkProb, rndGens[thID]);
 	}else{
 		FixPolicy::randomRhoFixMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
 	}
@@ -182,7 +170,7 @@ void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs, double rhs) {
 	int solveCode{ oMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), DET_TL(oMIP.getNumNonZeros())) };
 	if (MIP::isINForUNBD(solveCode)) {
 #if ACS_VERBOSE >= VERBOSE
-		PRINT_INFO("Proc: %3d [OMIP] - Aborted: Infeasible with given TL", thID);
+		PRINT_INFO("Proc: %3d [OMIP] - Aborted: Infeasible with given TL [%d]", thID, solveCode);
 #endif
 		return;
 	}
@@ -194,13 +182,9 @@ void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs, double rhs) {
 	PRINT_OUT("Proc: %3d - OptMIP Objective: %20.2f|%-10.2f", thID, tmpSolutions[thID].oMIPCost, tmpSolutions[thID].slackSum);
 	setBestACSIncumbent(tmpSolutions[thID]);
 
-	if(CLIArgs.algo >0){
-		if(bestACSIncumbent.slackSum <= EPSILON || needPerturbation){
-			FixPolicy::dynamicAdjustRhoMT(thID, "OMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
-		}
-	}else{
-		FixPolicy::dynamicAdjustRhoMT(thID, "OMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
-	}
+	
+	FixPolicy::dynamicAdjustRhoMT(thID, "OMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
+	
 }
 
 #pragma endregion

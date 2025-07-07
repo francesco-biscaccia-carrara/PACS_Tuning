@@ -21,8 +21,8 @@ using namespace Utils;
 
 #pragma region WALK_MIP_DEF
 
-#define WALK_MIP_MIN_MOVE 32
-#define WALK_MIP_MAX_MOVE 256
+#define WALK_MIP_MIN_MOVE 64
+#define WALK_MIP_MAX_MOVE 2048
 #define WALK_MIP_BETA (std::sqrt(5)-1) / 2
 
 #pragma endregion
@@ -66,7 +66,7 @@ namespace FixPolicy {
 	 */
 	void startSolMaxFeas(std::vector<double>& sol, std::string fileName, Random& rnd);
 
-	void walkMIPMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol, double p, Random& rnd);
+	void walkMIPMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol, double rho, double p, Random& rnd);
 
 	void fixSlackUpperBoundMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol);
 
