@@ -4,8 +4,8 @@
  *        specific policy-based fixing strategies in the ACS framework.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.9
- * @since 07/06/2025
+ * @version v1.2.10
+ * @since 07/09/2025
  */
 
 #ifndef FIX_POL_H
@@ -21,8 +21,8 @@ using namespace Utils;
 
 #pragma region WALK_MIP_DEF
 
-#define WALK_MIP_MIN_MOVE 64
-#define WALK_MIP_MAX_MOVE 2048
+#define WALK_MIP_MIN_MOVE 32
+#define WALK_MIP_MAX_MOVE 1024
 #define WALK_MIP_BETA (std::sqrt(5)-1) / 2
 
 #pragma endregion

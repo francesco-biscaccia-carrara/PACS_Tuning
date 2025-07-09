@@ -133,33 +133,44 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 	if (p < EPSILON || p >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "WalkProb par. must be within (0,1)!");
 
-	size_t				numMIPVars = model.getMIPNumVars();
-	std::vector<double> tmpSol(sol.begin(), sol.begin() + numMIPVars);
-
-	std::vector<VarBounds> ogVarBounds;
-	for (size_t i{ 0 }; i < tmpSol.size();i++){
-		ogVarBounds.push_back(model.getVarBounds(i));
-	}
-
-	std::vector<int> violConstr = model.getViolatedConstrIndex(tmpSol);
-	if(violConstr.empty()) return;
-	
-	std::call_once(initFlag, [&]() {initViolConst = static_cast<int>(violConstr.size());});
-
-#if ACS_VERBOSE >= VERBOSE
-	size_t				bestMoves = 0, minDMGMoves =0 , rndMoves = 0;
-#endif
-
-	double ratio = static_cast<double>(violConstr.size()) / std::max(static_cast<double>(initViolConst), 1.0);
-	ratio = std::clamp(ratio, 0.0, 1.0);
-
-	size_t numVarToFix = static_cast<size_t>(std::ceil(WALK_MIP_MIN_MOVE + (WALK_MIP_MAX_MOVE - WALK_MIP_MIN_MOVE) * std::pow(ratio, WALK_MIP_BETA)));
-	size_t ogNumRows = model.getMIPrmatbeg().size();
+	const size_t				numMIPVars = model.getMIPNumVars();
+	const size_t 				ogNumRows = model.getMIPrmatbeg().size();
 
 	const auto& rmatbeg = model.getMIPrmatbeg();
 	const auto& rmatind = model.getMIPrmatind();
+	std::vector<double> tmpSol(sol.begin(), sol.begin() + numMIPVars);
 
-	std::vector<std::vector<int>> varToConstr(numMIPVars);   // Variable → constraints
+	std::vector<VarBounds> ogVarBounds;
+	ogVarBounds.reserve(numMIPVars);
+	for (size_t i{ 0 }; i < numMIPVars; i++) {
+		ogVarBounds.push_back(model.getVarBounds(i));
+	}
+
+	std::vector<int> violConstr(ogNumRows);
+	model.getViolatedConstrIndex(tmpSol, violConstr);
+	if(violConstr.empty()) return;
+
+	std::call_once(initFlag, [&]() {initViolConst = static_cast<int>(violConstr.size());});
+
+#if ACS_VERBOSE >= VERBOSE
+	size_t		bestMoves = 0, minDMGMoves =0 , rndMoves = 0;
+#endif
+
+	const size_t numViolatedConstr = violConstr.size();
+	const double initialRatio = static_cast<double>(numViolatedConstr) / std::max(1.0, static_cast<double>(initViolConst));
+	const double clampedRatio = std::clamp(initialRatio, 0.0, 1.0);
+
+	size_t numVarToFix = 0;
+	if (numViolatedConstr > WALK_MIP_MIN_MOVE) {
+		const double scaled = WALK_MIP_MIN_MOVE + (WALK_MIP_MAX_MOVE - WALK_MIP_MIN_MOVE) * std::pow(clampedRatio, WALK_MIP_BETA);
+		numVarToFix = static_cast<size_t>(std::ceil(scaled));
+	} else {
+		numVarToFix = numViolatedConstr;
+	}
+
+	if(!numVarToFix) return;
+
+	std::vector<std::vector<int>> varToConstr(numMIPVars); // Variable → constraints
 
 	//Saving part of the bipartite graph var-cons involved
 	for (size_t c {0}; c < ogNumRows; c++) {
@@ -167,13 +178,14 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
     	int end   = (c == ogNumRows - 1) ? rmatind.size() : rmatbeg[c + 1];
     	for (int i = start; i < end; ++i) {
         	int var = rmatind[i];
-        	varToConstr[var].push_back(c);
-    	}
+			varToConstr[var].push_back(c);
+		}
 	}
 
+	
 	size_t counter = numVarToFix;
 	while (counter-- > 0) {
-		size_t	rndConstrInd = violConstr[rnd.Int(0, violConstr.size() - 1)];
+		size_t rndConstrInd = violConstr[rnd.Int(0, numViolatedConstr - 1)];
 
 		int 	start = rmatbeg[rndConstrInd];
 		int	   	end = (rndConstrInd == ogNumRows - 1) ? rmatind.size() : rmatbeg[rndConstrInd + 1];
@@ -183,7 +195,7 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 		double				perturb = 0.0;
 		double				newVal = 0.0;
 
-		for (int j = start; j < end; j++){ 
+		for (int j = start; j < end; ++j){ 
 			int varIndex = rmatind[j];
 
 			switch (model.getVarType(varIndex)) {
@@ -239,19 +251,20 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 				minDMGMoves++;
 #endif
 			} else {
-					int rndVar = rnd.Int(0,numMIPVars);
+					int rndVar = rnd.Int(0,numMIPVars-1);
 					model.setVarValue(rndVar, tmpSol[rndVar]);
 #if ACS_VERBOSE >= VERBOSE
 				rndMoves++;
 #endif
 			}
 		}
-		violConstr = model.getViolatedConstrIndex(tmpSol);
+		
+		model.getViolatedConstrIndex(tmpSol,violConstr);
 		if (violConstr.empty()) break;
 	}
 #if ACS_VERBOSE >= VERBOSE
 	PRINT_INFO("Proc: %3d [%s] - FixPolicy::walkMIPMT - Viol before|after: %10d|%-10d \n\t\t\
-		    - FixPolicy::walkMIPMT - Best Moves: %3zu| Min-Damage Moves: %3zu| RND Moves: %3zu", threadID, type, initViolConst,violConstr.size() ,bestMoves, minDMGMoves, rndMoves);
+		    - FixPolicy::walkMIPMT - Best Moves: %3zu| Min-Damage Moves: %3zu| RND Moves: %3zu", threadID, type, numViolatedConstr, violConstr.size() ,bestMoves, minDMGMoves, rndMoves);
 #endif
 	
 	if(numVarToFix < static_cast<size_t>(rho * numMIPVars)){
@@ -265,8 +278,7 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 #if ACS_VERBOSE >= VERBOSE
 	PRINT_INFO("Proc: %3d [%s] - FixPolicy::walkMIPMT - %zu vars hard-fixed [%5.4f]", threadID, type, remVar, rho);
 #endif
-
-	}
+	}	
 }
 
 void FixPolicy::fixSlackUpperBoundMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol) {
@@ -314,6 +326,7 @@ void FixPolicy::fixSlackUpperBound(const char* phase, MIP& model, const std::vec
 #if ACS_VERBOSE >= VERBOSE
 	PRINT_INFO("[%s] - FixPolicy::fixSlackUpperBound - Fixed UB of %10d vars",phase,fixedToUBVars);
 #endif
+
 }
 
 void FixPolicy::randomRhoFixMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol, double rho, Random& rnd) {

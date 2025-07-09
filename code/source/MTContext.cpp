@@ -102,7 +102,7 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	}
 	fMIP.setNumCores(CPLEX_CORE);
 
-	if(CLIArgs.algo > 0){
+	if(CLIArgs.algo > 0 && std::abs(bestACSIncumbent.slackSum) > EPSILON){
 		FixPolicy::walkMIPMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.rho, CLIArgs.walkProb, rndGens[thID]);
 	}else{
 		FixPolicy::randomRhoFixMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
@@ -150,9 +150,9 @@ void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs, double rhs) {
 		FixPolicy::fixSlackUpperBoundMT(thID, "OMIP", oMIP, bestACSIncumbent.sol);
 	}
 	oMIP.setNumCores(CPLEX_CORE);
-	// oMIP.updateBudgetConstr(rhs);			v1.2.9 -- no need of this
+	// oMIP.updateBudgetConstr(rhs);			v1.2.10 -- no need of this
 
-	if(CLIArgs.algo > 0){
+	if(CLIArgs.algo > 0 && std::abs(bestACSIncumbent.slackSum) > EPSILON){
 		FixPolicy::walkMIPMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, CLIArgs.walkProb, rndGens[thID]);
 	}else{
 		FixPolicy::randomRhoFixMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);

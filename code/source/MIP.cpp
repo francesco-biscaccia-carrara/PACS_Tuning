@@ -511,13 +511,14 @@ double MIP::violationVarDelta(const int index, const double delta, const std::ve
 	return perViolation;
 }
 
-std::vector<int> MIP::getViolatedConstrIndex(const std::vector<double>& sol){
+void MIP::getViolatedConstrIndex(const std::vector<double>& sol, std::vector<int>& constVect){
 	if (sol.size() != getMIPNumVars())
 		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
 
+	constVect.clear();
 	size_t numRows = MIPrmatbeg.size();
-	std::vector<int> rtn;
-	
+	constVect.reserve(numRows);
+
 	for (size_t i {0}; i < numRows; i++) {
         int start = MIPrmatbeg[i];
         int end = (i == numRows - 1) ? MIPrmatind.size() : MIPrmatbeg[i + 1];
@@ -528,17 +529,17 @@ std::vector<int> MIP::getViolatedConstrIndex(const std::vector<double>& sol){
 		switch (MIPsense[i]) {
 			case LE:
 				if(lhs > MIPrhs[i] + EPSILON)
-					rtn.push_back(i);
+					constVect.push_back(i);
 				break;
 
 			case EQ :
 				if(std::abs(lhs - MIPrhs[i]) > EPSILON)
-					rtn.push_back(i);
+					constVect.push_back(i);
 				break;
 
 			case GE:
 				if(lhs < MIPrhs[i] - EPSILON)
-					rtn.push_back(i);
+					constVect.push_back(i);
 				break;
 
 			default:
@@ -546,8 +547,6 @@ std::vector<int> MIP::getViolatedConstrIndex(const std::vector<double>& sol){
 				break;
 		}
 	}
-
-	return rtn;
 }
 
 MIP::~MIP() noexcept {

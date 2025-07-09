@@ -8,8 +8,8 @@
  *
  * @note Requires CPLEX library and Utils.hpp
  * @author Francesco Biscaccia Carrara
- * @version v1.2.9
- * @since 07/06/2025
+ * @version v1.2.10
+ * @since 07/09/2025
  */
 
 #ifndef MIP_SOL_H
@@ -332,8 +332,7 @@ public:
 	[[nodiscard]]
 	double violationVarDelta(const int index, const double delta, const std::vector<int>& constrInv);
 
-	[[nodiscard]]
-	std::vector<int> getViolatedConstrIndex(const std::vector<double>& sol);
+	void 	getViolatedConstrIndex(const std::vector<double>& sol, std::vector<int>& constVect);
 
 // Debug-specific methods
 #if ACS_VERBOSE == DEBUG
