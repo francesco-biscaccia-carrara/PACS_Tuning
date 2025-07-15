@@ -4,8 +4,8 @@
  *        specific policy-based fixing strategies in the ACS framework.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.10
- * @since 07/09/2025
+ * @version v1.2.11
+ * @since 15/09/2025
  */
 
 #ifndef FIX_POL_H
@@ -15,15 +15,16 @@
 #include <mutex>
 #include <unordered_set>
 
-#include "RlxFMIP.hpp"
 #include "ACSException.hpp"
+#include "RlxFMIP.hpp"
 using namespace Utils;
 
 #pragma region WALK_MIP_DEF
 
 #define WALK_MIP_MIN_MOVE 32
+#define WALK_MIP_HUGE_KICK 16
 #define WALK_MIP_MAX_MOVE 1024
-#define WALK_MIP_BETA (std::sqrt(5)-1) / 2
+#define WALK_MIP_BETA (std::sqrt(5) - 1) / 2
 
 #pragma endregion
 
@@ -50,11 +51,10 @@ namespace FixPolicy {
 	 * @class FixPolicyException
 	 * @brief Exception class for handling FixPolicy-related errors.
 	 */
-	class FixPolicyException : public ACSException{
-		public :
-			FixPolicyException(ExceptionType type,const std::string& message) : ACSException(type, message, "FixPolicy") {}
+	class FixPolicyException : public ACSException {
+	public:
+		FixPolicyException(ExceptionType type, const std::string& message) : ACSException(type, message, "FixPolicy") {}
 	};
-
 
 	void startSolTheta(std::vector<double>& sol, std::string fileName, double theta, double timelimit, Random& rnd);
 

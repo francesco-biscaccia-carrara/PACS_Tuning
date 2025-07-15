@@ -26,7 +26,7 @@ void MTContext::setBestACSIncumbent(Solution& sol) {
 
 	/// FIXED: Bug #9d6c973e040c2a8da57051d05e46d92c6e366c45 -- Inconsistency between actual and saved objective values due to incorrect slack sum comparison
 	/// FIXED: Bug #d9b16cbf9c62a1c1939b61df65b42343a8919607 -- Potential infeasibility caused by incorrect signed comparison of slack sums.
-	if ((std::abs(sol.slackSum) < std::abs(bestACSIncumbent.slackSum)) || (std::abs(sol.slackSum) < EPSILON && sol.oMIPCost < bestACSIncumbent.oMIPCost) ) {
+	if ((std::abs(sol.slackSum) < std::abs(bestACSIncumbent.slackSum)) || (std::abs(sol.slackSum) < EPSILON && sol.oMIPCost < bestACSIncumbent.oMIPCost)) {
 
 		bestACSIncumbent = { .sol = sol.sol, .slackSum = sol.slackSum, .oMIPCost = sol.oMIPCost };
 		A_RhoChanges = numMIPs;
@@ -86,7 +86,6 @@ MTContext& MTContext::parallelOMIPOptimization(Args& CLIArgs, double rhs) {
 	return *this;
 }
 
-
 MTContext::~MTContext() {
 #if ACS_VERBOSE >= VERBOSE
 	PRINT_INFO("MT Context: Closed");
@@ -102,13 +101,13 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	}
 	fMIP.setNumCores(CPLEX_CORE);
 
-	if(CLIArgs.algo > 0 && std::abs(bestACSIncumbent.slackSum) > EPSILON){
+	if (CLIArgs.algo > 0 && std::abs(bestACSIncumbent.slackSum) > EPSILON) {
 		FixPolicy::walkMIPMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.rho, CLIArgs.walkProb, rndGens[thID]);
-	}else{
+	} else {
 		FixPolicy::randomRhoFixMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
 	}
-	
-	//FixPolicy::randomRhoFixMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
+
+	// FixPolicy::randomRhoFixMT(thID, "FMIP", fMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
 
 	/// FIXED: Bug #e15760bcfd3dcca51cf9ea23f70072dd6cb2ac14 — Resolved MIPException::WrongTimeLimit triggered by a negligible time limit.
 	if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -119,7 +118,7 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	}
 
 	int solveCode{ fMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit), DET_TL(fMIP.getNumNonZeros())) };
-	
+
 	if (MIP::isINForUNBD(solveCode)) {
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Proc: %3d [FMIP] - Aborted: Infeasible with given TL [%d]", thID, solveCode);
@@ -135,9 +134,7 @@ void MTContext::FMIPInstanceJob(const size_t thID, Args& CLIArgs) {
 	PRINT_OUT("Proc: %3d - FeasMIP Objective: %20.2f", thID, tmpSolutions[thID].slackSum);
 	setBestACSIncumbent(tmpSolutions[thID]);
 
-
 	FixPolicy::dynamicAdjustRhoMT(thID, "FMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
-	
 }
 
 #pragma region MTContextPrivateSec
@@ -150,14 +147,13 @@ void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs, double rhs) {
 		FixPolicy::fixSlackUpperBoundMT(thID, "OMIP", oMIP, bestACSIncumbent.sol);
 	}
 	oMIP.setNumCores(CPLEX_CORE);
-	// oMIP.updateBudgetConstr(rhs);			v1.2.10 -- no need of this
+	// oMIP.updateBudgetConstr(rhs);			v1.2.11 -- no need of this
 
-	if(CLIArgs.algo > 0 && std::abs(bestACSIncumbent.slackSum) > EPSILON){
+	if (CLIArgs.algo > 0 && std::abs(bestACSIncumbent.slackSum) > EPSILON) {
 		FixPolicy::walkMIPMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, CLIArgs.walkProb, rndGens[thID]);
-	}else{
+	} else {
 		FixPolicy::randomRhoFixMT(thID, "OMIP", oMIP, tmpSolutions[thID].sol, CLIArgs.rho, rndGens[thID]);
 	}
-	
 
 	/// FIXED: Bug #e15760bcfd3dcca51cf9ea23f70072dd6cb2ac14 — Resolved MIPException::WrongTimeLimit triggered by a negligible time limit.
 	if (Clock::timeRemaining(CLIArgs.timeLimit) < EPSILON) {
@@ -182,9 +178,7 @@ void MTContext::OMIPInstanceJob(const size_t thID, Args& CLIArgs, double rhs) {
 	PRINT_OUT("Proc: %3d - OptMIP Objective: %20.2f|%-10.2f", thID, tmpSolutions[thID].oMIPCost, tmpSolutions[thID].slackSum);
 	setBestACSIncumbent(tmpSolutions[thID]);
 
-	
 	FixPolicy::dynamicAdjustRhoMT(thID, "OMIP", solveCode, numMIPs, CLIArgs.rho, A_RhoChanges);
-	
 }
 
 #pragma endregion

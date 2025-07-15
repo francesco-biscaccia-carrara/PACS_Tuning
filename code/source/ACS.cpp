@@ -2,12 +2,12 @@
  * ACS Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.10
- * @since 07/09/2025
+ * @version v1.2.11
+ * @since 15/09/2025
  */
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <nlohmann/json.hpp>
 
 #include "../include/FMIP.hpp"
@@ -31,32 +31,32 @@ int main(int argc, char* argv[]) {
 		// DEFAULT VAL SECTION
 		CLIArgs.rho = 0.1;
 
-		switch (CLIArgs.algo){
+		switch (CLIArgs.algo) {
 
 			case 1:
 				CLIArgs.walkProb = 0.6;
-			break;
-			
+				break;
+
 			case 2:
 				CLIArgs.walkProb = 0.7;
-			break;
+				break;
 
 			case 3:
 				CLIArgs.walkProb = 0.8;
-			break;
+				break;
 
 			default:
 			case 0:
-			break;
+				break;
 		}
 
-		PRINT_WARN("DYN, Rho 0.1, MaxFeas, UB, WalkP: %0.2f %s", CLIArgs.walkProb, (!CLIArgs.algo)? "[IGNORED]":"");
+		PRINT_WARN("DYN, Rho 0.1, MaxFeas, UB, WalkP: %0.2f %s", CLIArgs.walkProb, (!CLIArgs.algo) ? "[IGNORED]" : "");
 		FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
 
 #if ACS_VERBOSE >= VERBOSE
 		PRINT_INFO("Starting vector found!");
 #endif
-		
+
 		Solution tmpSol = { .sol = startSol, .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
 		MTEnv.broadcastSol(tmpSol);
 
@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
 
 				MergePolicy::recombine(MergeFMIP, MTEnv.getTmpSolutions(), "1_Phase");
 
-				if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {	
+				if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {
 					MergeFMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
 					FixPolicy::fixSlackUpperBound("1_Phase", MergeFMIP, MTEnv.getBestACSIncumbent().sol);
 				}
@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
 #endif
 					continue;
 				}
-				
+
 				tmpSol.sol = MergeFMIP.getSol();
 				tmpSol.slackSum = MergeFMIP.getObjValue();
 				tmpSol.oMIPCost = MergeFMIP.getOMIPCost(tmpSol.sol);
@@ -117,14 +117,14 @@ int main(int argc, char* argv[]) {
 			}
 
 			// PARALLEL OMIP Phase
-			MTEnv.parallelOMIPOptimization(CLIArgs,tmpSol.slackSum);
+			MTEnv.parallelOMIPOptimization(CLIArgs, tmpSol.slackSum);
 
 			// 2° Recombination phase
 			OMIP MergeOMIP(CLIArgs.fileName);
 			MergeOMIP.setNumCores(CPLEX_CORE);
 
 			MergePolicy::recombine(MergeOMIP, MTEnv.getTmpSolutions(), "2_Phase");
-			// MergeOMIP.updateBudgetConstr(tmpSol.slackSum);			v1.2.10 -- no need of this
+			// MergeOMIP.updateBudgetConstr(tmpSol.slackSum);			v1.2.11 -- no need of this
 
 			if (MTEnv.getBestACSIncumbent().slackSum < CPX_INFBOUND) {
 				MergeOMIP.addMIPStart(MTEnv.getBestACSIncumbent().sol);
@@ -160,7 +160,6 @@ int main(int argc, char* argv[]) {
 			MTEnv.broadcastSol(tmpSol);
 		}
 
-		
 		Solution incumbent = MTEnv.getBestACSIncumbent();
 		double	 retTime = Clock::timeElapsed();
 #if ACS_TEST
@@ -168,7 +167,7 @@ int main(int argc, char* argv[]) {
 #endif
 		printf("--------------------------------------------------------------------------------\n");
 		if (incumbent.sol.empty() || incumbent.slackSum > EPSILON) {
-			PRINT_ERR("No solution found within time-limit: %-10.4f",CLIArgs.timeLimit);
+			PRINT_ERR("No solution found within time-limit: %-10.4f", CLIArgs.timeLimit);
 #if ACS_TEST
 			jsData[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)] = { "NO SOL", retTime };
 #endif
@@ -188,16 +187,16 @@ int main(int argc, char* argv[]) {
 			PRINT_INFO("-------------------------------------------------------------------------");
 #endif
 
-			if(ABS_MaxViol > EPSILON){
-				throw ACSException(ACSException::ExceptionType::CheckFeasibilityFailed, "MIP::checkFeasibility:\tFAILED","ACSmain");
+			if (ABS_MaxViol > EPSILON) {
+				throw ACSException(ACSException::ExceptionType::CheckFeasibilityFailed, "MIP::checkFeasibility:\tFAILED", "ACSmain");
 			}
 
-			if(ABS_MaxIntViol > EPSILON){
-				throw ACSException(ACSException::ExceptionType::CheckIntegralityFailed, "MIP::checkFeasibility:\tFAILED","ACSmain");
+			if (ABS_MaxIntViol > EPSILON) {
+				throw ACSException(ACSException::ExceptionType::CheckIntegralityFailed, "MIP::checkFeasibility:\tFAILED", "ACSmain");
 			}
 
-			if(REL_ObjErr > EPSILON){
-				throw ACSException(ACSException::ExceptionType::CheckObectiveFailed, "MIP::chekObjValue:\tFAILED","ACSmain");
+			if (REL_ObjErr > EPSILON) {
+				throw ACSException(ACSException::ExceptionType::CheckObectiveFailed, "MIP::chekObjValue:\tFAILED", "ACSmain");
 			}
 
 			PRINT_BEST("ACS Solution: %16.4f \n\t\t   Time elapsed: %-10.4f", incumbent.oMIPCost, retTime);
@@ -211,7 +210,7 @@ int main(int argc, char* argv[]) {
 
 		oFile << jsData.dump(4);
 		oFile.close();
-		PRINT_INFO("JSON: Execution result saved on %s%s file",PATH_TO_TMP,JSfilename.c_str());
+		PRINT_INFO("JSON: Execution result saved on %s%s file", PATH_TO_TMP, JSfilename.c_str());
 #endif
 	} catch (const ACSException& ex) {
 		PRINT_ERR(ex.what());

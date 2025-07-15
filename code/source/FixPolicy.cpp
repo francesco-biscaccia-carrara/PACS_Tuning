@@ -12,7 +12,7 @@ void FixPolicy::startSolTheta(std::vector<double>& sol, std::string fileName, do
 		throw FixPolicyException(FPEx::InputSizeError, "Theta par. must be within (0,1)!");
 
 	RlxFMIP relaxedFMIP{ fileName };
-	size_t		numVarsToFix{relaxedFMIP.getMIPNumVars()};
+	size_t	numVarsToFix{ relaxedFMIP.getMIPNumVars() };
 	sol.resize(numVarsToFix, CPX_INFBOUND);
 
 	std::vector<size_t> varRangesIndices(numVarsToFix);
@@ -52,7 +52,7 @@ void FixPolicy::startSolTheta(std::vector<double>& sol, std::string fileName, do
 		PRINT_INFO("FixPolicy::startSolTheta - %zu vars hard-fixed", varsToFix);
 #endif
 
-		relaxedFMIP.solveRelaxation(Clock::timeRemaining(timelimit),DET_TL(relaxedFMIP.getNumNonZeros()));
+		relaxedFMIP.solveRelaxation(Clock::timeRemaining(timelimit), DET_TL(relaxedFMIP.getNumNonZeros()));
 
 		std::vector<double> lpSol = relaxedFMIP.getSol();
 		for (size_t i = 0; i < numVarsToFix; ++i) {
@@ -72,7 +72,7 @@ void FixPolicy::startSolTheta(std::vector<double>& sol, std::string fileName, do
 void FixPolicy::startSolMaxFeas(std::vector<double>& sol, std::string fileName, Random& rnd) {
 
 	MIP	   MIP{ fileName };
-	size_t numVarsToFix{ MIP.getMIPNumVars()};
+	size_t numVarsToFix{ MIP.getMIPNumVars() };
 	sol.resize(numVarsToFix, CPX_INFBOUND);
 
 	std::vector<VarBounds> varRanges(numVarsToFix);
@@ -127,17 +127,18 @@ void FixPolicy::startSolMaxFeas(std::vector<double>& sol, std::string fileName, 
 }
 
 static std::once_flag initFlag;
-static int initViolConst = -1;
+static int			  initViolConst = -1;
 
 void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol, double rho, double p, Random& rnd) {
 	if (p < EPSILON || p >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "WalkProb par. must be within (0,1)!");
 
-	const size_t				numMIPVars = model.getMIPNumVars();
-	const size_t 				ogNumRows = model.getMIPrmatbeg().size();
+	const size_t numMIPVars = model.getMIPNumVars();
+	const size_t ogNumRows = model.getOgNumRows();
 
-	const auto& rmatbeg = model.getMIPrmatbeg();
-	const auto& rmatind = model.getMIPrmatind();
+	const auto& varToConstr = model.getMIPVarToConstr();
+	const auto& constrToVar = model.getMIPConstrToVar();
+
 	std::vector<double> tmpSol(sol.begin(), sol.begin() + numMIPVars);
 
 	std::vector<VarBounds> ogVarBounds;
@@ -148,13 +149,10 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 
 	std::vector<int> violConstr(ogNumRows);
 	model.getViolatedConstrIndex(tmpSol, violConstr);
-	if(violConstr.empty()) return;
+	if (violConstr.empty())
+		return;
 
-	std::call_once(initFlag, [&]() {initViolConst = static_cast<int>(violConstr.size());});
-
-#if ACS_VERBOSE >= VERBOSE
-	size_t		bestMoves = 0, minDMGMoves =0 , rndMoves = 0;
-#endif
+	std::call_once(initFlag, [&]() { initViolConst = static_cast<int>(violConstr.size()); });
 
 	const size_t numViolatedConstr = violConstr.size();
 	const double initialRatio = static_cast<double>(numViolatedConstr) / std::max(1.0, static_cast<double>(initViolConst));
@@ -168,72 +166,85 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 		numVarToFix = numViolatedConstr;
 	}
 
-	if(!numVarToFix) return;
+	if (!numVarToFix)
+		return;
 
-	std::vector<std::vector<int>> varToConstr(numMIPVars); // Variable → constraints
-
-	//Saving part of the bipartite graph var-cons involved
-	for (size_t c {0}; c < ogNumRows; c++) {
-		int start = rmatbeg[c];
-    	int end   = (c == ogNumRows - 1) ? rmatind.size() : rmatbeg[c + 1];
-    	for (int i = start; i < end; ++i) {
-        	int var = rmatind[i];
-			varToConstr[var].push_back(c);
+	if (rnd.Double(0, 1) <= 1.0 / WALK_MIP_HUGE_KICK) {
+		for (size_t i{ 0 }; i < static_cast<size_t>(rho * numMIPVars); ++i) {
+			int varIndex = rnd.Int(0, numMIPVars - 1);
+			model.setVarValue(varIndex, sol[varIndex]);
 		}
+
+#if ACS_VERBOSE >= VERBOSE
+		PRINT_WARN("Proc: %3d [%s] - FixPolicy::walkMIPMT - Applying WalkMIP_Huge_Kick", threadID, type);
+#endif
+		return;
 	}
 
-	
+#if ACS_VERBOSE >= VERBOSE
+	size_t bestMoves = 0, minDMGMoves = 0, rndMoves = 0;
+#endif
+
 	size_t counter = numVarToFix;
 	while (counter-- > 0) {
 		size_t rndConstrInd = violConstr[rnd.Int(0, numViolatedConstr - 1)];
 
-		int 	start = rmatbeg[rndConstrInd];
-		int	   	end = (rndConstrInd == ogNumRows - 1) ? rmatind.size() : rmatbeg[rndConstrInd + 1];
+		double minDMG = std::numeric_limits<double>::max();
+		int	   candVar = -1;
+		double perturb = 0.0;
+		double newVal = 0.0;
 
-		double				minDMG = std::numeric_limits<double>::max();
-		int 				candVar = -1;
-		double				perturb = 0.0;
-		double				newVal = 0.0;
-
-		for (int j = start; j < end; ++j){ 
-			int varIndex = rmatind[j];
+		for (int varIndex : constrToVar[rndConstrInd]) {
 
 			switch (model.getVarType(varIndex)) {
-				case CPX_BINARY :{
+				case CPX_BINARY: {
 					int tmpBin = not tmpSol[varIndex];
 					perturb = tmpBin - tmpSol[varIndex];
 					break;
 				}
 
-				case CPX_INTEGER :{
+				case CPX_INTEGER: {
 					int tmpInt = tmpSol[varIndex] + ((rnd.Double(0, 1) <= 0.5) ? -1 : 1);
 
 					auto [lb, ub] = ogVarBounds[varIndex];
-					if(tmpInt>= lb && tmpInt<=ub) perturb = tmpInt - tmpSol[varIndex];
-					else continue;
+					if (tmpInt >= lb && tmpInt <= ub)
+						perturb = tmpInt - tmpSol[varIndex];
+					else if (tmpInt < lb)
+						perturb = tmpInt - lb;
+					else if (tmpInt > ub)
+						perturb = tmpInt - ub;
+					else {
+						continue;
+					}
 					break;
 				}
-					
 
-				case CPX_CONTINUOUS :{
-					double tmpDouble = tmpSol[varIndex] + rnd.Double(-0.5,0.5);
+				case CPX_CONTINUOUS: {
+					double tmpDouble = tmpSol[varIndex] + rnd.Double(-0.5, 0.5);
 
 					auto [lb, ub] = ogVarBounds[varIndex];
-					if(tmpDouble>= lb && tmpDouble<=ub) perturb = tmpDouble - tmpSol[varIndex];
-					else continue;
+					if (tmpDouble >= lb && tmpDouble <= ub)
+						perturb = tmpDouble - tmpSol[varIndex];
+					else if (tmpDouble < lb)
+						perturb = tmpDouble - lb;
+					else if (tmpDouble > ub)
+						perturb = tmpDouble - ub;
+					else {
+						continue;
+					}
 					break;
 				}
 
 				default:
 					throw MIPException(MIPEx::GetFunction, "Unknown variable type");
-				break;
+					break;
 			}
 
-			double delta = model.violationVarDelta(varIndex,perturb,varToConstr[varIndex]);
+			double delta = model.violationVarDelta(varIndex, perturb, varToConstr[varIndex]);
 			if (delta < minDMG) {
 				minDMG = delta;
 				candVar = varIndex;
-				newVal = tmpSol[varIndex]+perturb;
+				newVal = tmpSol[varIndex] + perturb;
 			}
 		}
 
@@ -244,96 +255,96 @@ void FixPolicy::walkMIPMT(const size_t threadID, const char* type, MIP& model, c
 			bestMoves++;
 #endif
 		} else {
-			if(rnd.Double(0,1) <= (1 - p) && candVar!=-1){
+			if (rnd.Double(0, 1) <= (1 - p) && candVar != -1) {
 				tmpSol[candVar] = newVal;
 				model.setVarValue(candVar, tmpSol[candVar]);
 #if ACS_VERBOSE >= VERBOSE
 				minDMGMoves++;
 #endif
 			} else {
-					int rndVar = rnd.Int(0,numMIPVars-1);
-					model.setVarValue(rndVar, tmpSol[rndVar]);
+				int rndVar = rnd.Int(0, numMIPVars - 1);
+				model.setVarValue(rndVar, tmpSol[rndVar]);
 #if ACS_VERBOSE >= VERBOSE
 				rndMoves++;
 #endif
 			}
 		}
-		
-		model.getViolatedConstrIndex(tmpSol,violConstr);
-		if (violConstr.empty()) break;
+
+		model.getViolatedConstrIndex(tmpSol, violConstr);
+		if (violConstr.empty())
+			break;
 	}
 #if ACS_VERBOSE >= VERBOSE
 	PRINT_INFO("Proc: %3d [%s] - FixPolicy::walkMIPMT - Viol before|after: %10d|%-10d \n\t\t\
-		    - FixPolicy::walkMIPMT - Best Moves: %3zu| Min-Damage Moves: %3zu| RND Moves: %3zu", threadID, type, numViolatedConstr, violConstr.size() ,bestMoves, minDMGMoves, rndMoves);
+		    - FixPolicy::walkMIPMT - Best Moves: %3zu| Min-Damage Moves: %3zu| RND Moves: %3zu",
+			   threadID, type, numViolatedConstr, violConstr.size(), bestMoves, minDMGMoves, rndMoves);
 #endif
-	
-	if(numVarToFix < static_cast<size_t>(rho * numMIPVars)){
-		size_t remVar = static_cast<size_t>(rho * numMIPVars) - numVarToFix;
-		const size_t start = rnd.Int(0, numMIPVars- 1);
+
+	if (numVarToFix < static_cast<size_t>(rho * numMIPVars)) {
+		size_t		 remVar = static_cast<size_t>(rho * numMIPVars) - numVarToFix;
+		const size_t start = rnd.Int(0, numMIPVars - 1);
 
 		for (size_t i{ 0 }; i < remVar; i++) {
-			size_t index{ (start + i) % numMIPVars};
+			size_t index{ (start + i) % numMIPVars };
 			model.setVarValue(index, sol[index]);
 		}
 #if ACS_VERBOSE >= VERBOSE
-	PRINT_INFO("Proc: %3d [%s] - FixPolicy::walkMIPMT - %zu vars hard-fixed [%5.4f]", threadID, type, remVar, rho);
+		PRINT_INFO("Proc: %3d [%s] - FixPolicy::walkMIPMT - %zu vars hard-fixed [%5.4f]", threadID, type, remVar, rho);
 #endif
-	}	
+	}
 }
 
 void FixPolicy::fixSlackUpperBoundMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol) {
 
-		size_t numMIPVars{ model.getMIPNumVars() };
-		size_t numVars{ model.getNumCols() };
+	size_t numMIPVars{ model.getMIPNumVars() };
+	size_t numVars{ model.getNumCols() };
 
-		if (sol.size() != numVars)
-			throw FixPolicyException(FPEx::InputSizeError, "Incosistent length: sol.size = " + std::to_string(sol.size()) + ", numVars = " + std::to_string(numVars));
-
-		size_t fixedToUBVars = 0;
-		for (size_t i{ numMIPVars }; i < numVars; i++) {
-
-			auto [lb, ub] = model.getVarBounds(i);
-			if (ub - sol[i] > EPSILON) {
-				model.setVarUpperBound(i, sol[i]);
-				fixedToUBVars++;
-			}
-		}
-
-#if ACS_VERBOSE >= VERBOSE
-	PRINT_INFO("Proc: %3d [%s] - FixPolicy::fixSlackUpperBoundMT - %4d vars UB updated",threadID,type,fixedToUBVars);
-#endif
-
-}
-
-void FixPolicy::fixSlackUpperBound(const char* phase, MIP& model, const std::vector<double>& sol) {
-
-	size_t numMIPVars{ model.getMIPNumVars()};
-	size_t numVars{ model.getNumCols()};
-
-	if(sol.size() != numVars)
-		throw FixPolicyException(FPEx::InputSizeError, "Incosistent length: sol.size = "+std::to_string(sol.size())+", numVars = "+std::to_string(numVars));
+	if (sol.size() != numVars)
+		throw FixPolicyException(FPEx::InputSizeError, "Incosistent length: sol.size = " + std::to_string(sol.size()) + ", numVars = " + std::to_string(numVars));
 
 	size_t fixedToUBVars = 0;
 	for (size_t i{ numMIPVars }; i < numVars; i++) {
 
 		auto [lb, ub] = model.getVarBounds(i);
-		if ( ub - sol[i] > EPSILON){
+		if (ub - sol[i] > EPSILON) {
 			model.setVarUpperBound(i, sol[i]);
 			fixedToUBVars++;
 		}
 	}
 
 #if ACS_VERBOSE >= VERBOSE
-	PRINT_INFO("[%s] - FixPolicy::fixSlackUpperBound - Fixed UB of %10d vars",phase,fixedToUBVars);
+	PRINT_INFO("Proc: %3d [%s] - FixPolicy::fixSlackUpperBoundMT - %4d vars UB updated", threadID, type, fixedToUBVars);
 #endif
+}
 
+void FixPolicy::fixSlackUpperBound(const char* phase, MIP& model, const std::vector<double>& sol) {
+
+	size_t numMIPVars{ model.getMIPNumVars() };
+	size_t numVars{ model.getNumCols() };
+
+	if (sol.size() != numVars)
+		throw FixPolicyException(FPEx::InputSizeError, "Incosistent length: sol.size = " + std::to_string(sol.size()) + ", numVars = " + std::to_string(numVars));
+
+	size_t fixedToUBVars = 0;
+	for (size_t i{ numMIPVars }; i < numVars; i++) {
+
+		auto [lb, ub] = model.getVarBounds(i);
+		if (ub - sol[i] > EPSILON) {
+			model.setVarUpperBound(i, sol[i]);
+			fixedToUBVars++;
+		}
+	}
+
+#if ACS_VERBOSE >= VERBOSE
+	PRINT_INFO("[%s] - FixPolicy::fixSlackUpperBound - Fixed UB of %10d vars", phase, fixedToUBVars);
+#endif
 }
 
 void FixPolicy::randomRhoFixMT(const size_t threadID, const char* type, MIP& model, const std::vector<double>& sol, double rho, Random& rnd) {
 	if (rho < EPSILON || rho >= 1.0)
 		throw FixPolicyException(FPEx::InputSizeError, "Rho par. must be within (0,1)!");
 
-	size_t		 xLen{ model.getMIPNumVars()};
+	size_t		 xLen{ model.getMIPNumVars() };
 	const size_t numFixedVars = static_cast<size_t>(rho * xLen);
 	const size_t start = rnd.Int(0, xLen - 1);
 
@@ -379,74 +390,76 @@ void FixPolicy::dynamicAdjustRho(const char* phase, const int solveCode, const s
 	}
 }
 
-static std::atomic<size_t> numDecRho{0};
-static std::atomic<size_t> numIncRho{0};
-static std::mutex rhoMutex;
-static std::once_flag resetFlag;
+static std::atomic<size_t> numDecRho{ 0 };
+static std::atomic<size_t> numIncRho{ 0 };
+static std::mutex		   rhoMutex;
+static std::once_flag	   resetFlag;
 
 void FixPolicy::dynamicAdjustRhoMT(const size_t threadID, const char* type, const int solveCode, const size_t numMIPs, double& CLIRho, std::atomic_size_t& A_RhoChanges) {
-    
-    if (A_RhoChanges.load() >= numMIPs)
-        return;
-    
-    // Reset counters once when first thread reaches here
-    if (A_RhoChanges.load() == 0) {
-        std::call_once(resetFlag, []() {
-            numDecRho.store(0);
-            numIncRho.store(0);
-        });
-    }
-    
-    double scaledDeltaRho = DELTA_RHO / numMIPs;
-    
-    // Use mutex only for CLIRho modifications
-    switch (solveCode) {
-        case CPXMIP_OPTIMAL:
-        case CPXMIP_OPTIMAL_TOL: {
-            std::lock_guard<std::mutex> lock(rhoMutex);
-            if (A_RhoChanges.load() >= numMIPs) return; // Double-check
-            
-            CLIRho = (CLIRho - scaledDeltaRho < MIN_RHO) ? MIN_RHO : CLIRho - scaledDeltaRho;
-            A_RhoChanges.fetch_add(1);
-            numDecRho.fetch_add(1);
+
+	if (A_RhoChanges.load() >= numMIPs)
+		return;
+
+	// Reset counters once when first thread reaches here
+	if (A_RhoChanges.load() == 0) {
+		std::call_once(resetFlag, []() {
+			numDecRho.store(0);
+			numIncRho.store(0);
+		});
+	}
+
+	double scaledDeltaRho = DELTA_RHO / numMIPs;
+
+	// Use mutex only for CLIRho modifications
+	switch (solveCode) {
+		case CPXMIP_OPTIMAL:
+		case CPXMIP_OPTIMAL_TOL: {
+			std::lock_guard<std::mutex> lock(rhoMutex);
+			if (A_RhoChanges.load() >= numMIPs)
+				return; // Double-check
+
+			CLIRho = (CLIRho - scaledDeltaRho < MIN_RHO) ? MIN_RHO : CLIRho - scaledDeltaRho;
+			A_RhoChanges.fetch_add(1);
+			numDecRho.fetch_add(1);
 #if ACS_VERBOSE >= VERBOSE
-            PRINT_INFO("Proc: %3d [%s] - FixPolicy::dynamicAdjustRhoMT - Rho Decreased [%5.4f]", 
-                      threadID, type, CLIRho);
+			PRINT_INFO("Proc: %3d [%s] - FixPolicy::dynamicAdjustRhoMT - Rho Decreased [%5.4f]",
+					   threadID, type, CLIRho);
 #endif
-            break;
-        }
-        
-        case CPXMIP_DETTIME_LIM_FEAS:
-        case CPXMIP_TIME_LIM_FEAS: {
-            std::lock_guard<std::mutex> lock(rhoMutex);
-            if (A_RhoChanges.load() >= numMIPs) return; // Double-check
-            
-            CLIRho = (CLIRho + scaledDeltaRho > MAX_RHO) ? MAX_RHO : CLIRho + scaledDeltaRho;
-            A_RhoChanges.fetch_add(1);
-            numIncRho.fetch_add(1);
+			break;
+		}
+
+		case CPXMIP_DETTIME_LIM_FEAS:
+		case CPXMIP_TIME_LIM_FEAS: {
+			std::lock_guard<std::mutex> lock(rhoMutex);
+			if (A_RhoChanges.load() >= numMIPs)
+				return; // Double-check
+
+			CLIRho = (CLIRho + scaledDeltaRho > MAX_RHO) ? MAX_RHO : CLIRho + scaledDeltaRho;
+			A_RhoChanges.fetch_add(1);
+			numIncRho.fetch_add(1);
 #if ACS_VERBOSE >= VERBOSE
-            PRINT_INFO("Proc: %3d [%s] - FixPolicy::dynamicAdjustRhoMT - Rho Increased [%5.4f]", 
-                      threadID, type, CLIRho);
+			PRINT_INFO("Proc: %3d [%s] - FixPolicy::dynamicAdjustRhoMT - Rho Increased [%5.4f]",
+					   threadID, type, CLIRho);
 #endif
-            break;
-        }
-        
-        default:
+			break;
+		}
+
+		default:
 #if ACS_VERBOSE >= VERBOSE
-            PRINT_ERR("Unexpected value for solvecode: %d", solveCode);
+			PRINT_ERR("Unexpected value for solvecode: %d", solveCode);
 #endif
-            break;
-    }
-    
-    // Coinflip case handling (also needs mutex for CLIRho access)
-    {
-        std::lock_guard<std::mutex> lock(rhoMutex);
-        size_t currentChanges = A_RhoChanges.load();
-        if (currentChanges == numMIPs && numIncRho.load() == numDecRho.load()) {
-            CLIRho = (CLIRho - DELTA_RHO < MIN_RHO) ? MIN_RHO : CLIRho - DELTA_RHO;
+			break;
+	}
+
+	// Coinflip case handling (also needs mutex for CLIRho access)
+	{
+		std::lock_guard<std::mutex> lock(rhoMutex);
+		size_t						currentChanges = A_RhoChanges.load();
+		if (currentChanges == numMIPs && numIncRho.load() == numDecRho.load()) {
+			CLIRho = (CLIRho - DELTA_RHO < MIN_RHO) ? MIN_RHO : CLIRho - DELTA_RHO;
 #if ACS_VERBOSE >= VERBOSE
-            PRINT_WARN("[\"COINFLIP\" CASE] - FixPolicy::dynamicAdjustRhoMT - Rho decreased [%5.4f]", CLIRho);
+			PRINT_WARN("[\"COINFLIP\" CASE] - FixPolicy::dynamicAdjustRhoMT - Rho decreased [%5.4f]", CLIRho);
 #endif
-        }
-    }
+		}
+	}
 }

@@ -7,8 +7,8 @@
  * It inherits core functionality from the base MIP class while adding FMIP-specific features.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.10
- * @since 07/09/2025
+ * @version v1.2.11
+ * @since 15/09/2025
  */
 
 #ifndef FMIP_H
@@ -110,7 +110,7 @@ private:
 	 * This member variable stores the total count of variables in the
 	 * Mixed Integer Programming problem.
 	 */
-	size_t MIPNumVars;
+	size_t					   MIPNumVars;
 	static std::vector<double> ogObjFun;
 };
 

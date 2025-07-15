@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.11] - 2025-07-15  
+### Added
+- Constraint matrix is now shared as a bipartite graph among instances of MIP by the `MIP::MIPVarToConstr` adn `MIP::MIPVarToConstr` vector ([MIP.hpp](code/include/MIP.hpp)).  
+
+### Changed 
+- Enanched `FixPolicy::walkMIPMT` diversifactin by applying a 'kick' with a given probability ([FixPolicy.cpp](code/source/FixPolicy.cpp)).  
+
 
 ## [1.2.10] - 2025-07-09  
 ### Fixed  

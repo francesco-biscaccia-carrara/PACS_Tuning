@@ -9,11 +9,14 @@
 
 using MIPEx = MIPException::ExceptionType;
 
-std::vector<int> 	MIP::MIPrmatbeg;
+std::vector<int>	MIP::MIPrmatbeg;
 std::vector<int>	MIP::MIPrmatind;
 std::vector<double> MIP::MIPrmatval;
 std::vector<double> MIP::MIPrhs;
-std::vector<char>   MIP::MIPsense;
+std::vector<char>	MIP::MIPsense;
+
+std::vector<std::vector<int>> MIP::MIPVarToConstr;
+std::vector<std::vector<int>> MIP::MIPConstrToVar;
 
 MIP::MIP(const std::string fileName) {
 #if ACS_VERBOSE == DEBUG
@@ -40,28 +43,55 @@ MIP::MIP(const std::string fileName) {
 	CPXsetintparam(env, CPX_PARAM_CLONELOG, -1);
 #endif
 
-	if(MIPrmatbeg.empty() || MIPrmatind.empty() || MIPrmatval.empty()) {
-		size_t	numRows = getNumRows();
-		size_t	nzcnt = getNumNonZeros();
+	if (MIPrmatbeg.empty() || MIPrmatind.empty() || MIPrmatval.empty()) {
+		size_t numRows = getNumRows();
+		size_t nzcnt = getNumNonZeros();
 
 		MIPrmatbeg.resize(numRows);
 		MIPrmatind.resize(nzcnt);
 		MIPrmatval.resize(nzcnt);
+		MIPVarToConstr.resize(getMIPNumVars());
+		MIPConstrToVar.resize(numRows);
 
 		int surplus, nnCPLEX; // Dummy values necessary for CPLXgetrows
-		if(CPXgetrows(env, model, &nnCPLEX, MIPrmatbeg.data(), MIPrmatind.data(), MIPrmatval.data(), nzcnt, &surplus, 0, numRows - 1))
+		if (CPXgetrows(env, model, &nnCPLEX, MIPrmatbeg.data(), MIPrmatind.data(), MIPrmatval.data(), nzcnt, &surplus, 0, numRows - 1))
 			throw MIPException(MIPEx::GetFunction, "Error on retriving the matrix rows");
+
+		for (size_t i{ 0 }; i < numRows; i++) {
+			int start = MIPrmatbeg[i];
+			int end = (i == numRows - 1) ? MIPrmatind.size() : MIPrmatbeg[i + 1];
+
+			for (int j{ start }; j < end; ++j) {
+				int varIndex = MIPrmatind[j];
+				MIPVarToConstr[varIndex].push_back(i);
+				MIPConstrToVar[i].push_back(varIndex);
+			}
+		}
+
+		for (auto e : MIPVarToConstr) {
+			for (auto c : e) {
+				if (c < 0 || c > numRows)
+					throw MIPException(MIPEx::GetFunction, "Error on rows");
+			}
+		}
+
+		for (auto e : MIPConstrToVar) {
+			for (auto v : e) {
+				if (v < 0 || v > getMIPNumVars())
+					throw MIPException(MIPEx::GetFunction, "Error on var");
+			}
+		}
 	}
 
 	if (MIPrhs.empty() || MIPsense.empty()) {
-		size_t	numRows = getNumRows();
+		size_t numRows = getNumRows();
 
 		MIPrhs.resize(numRows);
-		if(CPXgetrhs(env, model, MIPrhs.data(), 0, numRows - 1))
+		if (CPXgetrhs(env, model, MIPrhs.data(), 0, numRows - 1))
 			throw MIPException(MIPEx::GetFunction, "Error on retriving the RHS values");
-		
+
 		MIPsense.resize(numRows);
-		if(CPXgetsense(env, model, MIPsense.data(), 0, numRows - 1))
+		if (CPXgetsense(env, model, MIPsense.data(), 0, numRows - 1))
 			throw MIPException(MIPEx::GetFunction, "Error on retriving the RHS values");
 	}
 }
@@ -99,10 +129,10 @@ MIP& MIP::setNumSols(const int numSols) {
 }
 
 size_t MIP::getNumNonZeros() {
-	int nnz {(CPXgetnumnz(env, model)) };
+	int nnz{ (CPXgetnumnz(env, model)) };
 	if (!nnz)
 		throw MIPException(MIPEx::GetFunction, "Unable to get the number of nonzero elements!");
-	return  static_cast<size_t>(nnz);
+	return static_cast<size_t>(nnz);
 }
 
 int MIP::solve(const double timeLimit, const double detTimeLimit) {
@@ -146,7 +176,7 @@ double MIP::getObjValue() {
 }
 
 std::vector<double> MIP::getObjFunction() {
-	size_t		numCols{ getNumCols() };
+	size_t	numCols{ getNumCols() };
 	double* objFun{ (double*)calloc(numCols, sizeof(double)) };
 	if (CPXgetobj(env, model, objFun, 0, numCols - 1))
 		throw MIPException(MIPEx::GetFunction, "Unable to get obj_function coefficients!");
@@ -170,7 +200,7 @@ MIP& MIP::setObjFunction(const std::vector<double>& newObj) {
 }
 
 std::vector<double> MIP::getSol() {
-	size_t		numCols{ getNumCols() };
+	size_t	numCols{ getNumCols() };
 	double* xStar{ (double*)calloc(numCols, sizeof(double)) };
 	if (int error{ CPXgetx(env, model, xStar, 0, numCols - 1) })
 		throw MIPException(MIPEx::GetFunction, "Unable to obtain the solution! " + std::to_string(error) + " State: " + std::to_string(CPXgetstat(env, model)));
@@ -181,52 +211,52 @@ std::vector<double> MIP::getSol() {
 
 size_t MIP::getMIPNumVars() {
 	int numCols{ CPXgetnumcols(env, model) };
-	if(!numCols)
+	if (!numCols)
 		throw MIPException(MIPEx::GetFunction, "Unable to get the number of MIP vars of the model!");
 	return static_cast<size_t>(numCols);
 }
 
 size_t MIP::getNumCols() {
 	int numCols{ CPXgetnumcols(env, model) };
-	if(!numCols)
+	if (!numCols)
 		throw MIPException(MIPEx::GetFunction, "Unable to get the number of cols of the model!");
 	return static_cast<size_t>(numCols);
 }
 
 size_t MIP::getNumRows() {
 	int numRows{ CPXgetnumrows(env, model) };
-	if(!numRows)
+	if (!numRows)
 		throw MIPException(MIPEx::GetFunction, "Unable to get the number of rows of the model!");
 	return static_cast<size_t>(numRows);
 }
 
 MIP& MIP::addCol(const std::vector<double>& newCol, const double objCoef, const double lb, const double ub, const std::string name) {
-		size_t numRow{ getNumRows() };
+	size_t numRow{ getNumRows() };
 
-		if (newCol.size() != numRow)
-			throw MIPException(MIPEx::InputSizeError, "Wrong new column size");
+	if (newCol.size() != numRow)
+		throw MIPException(MIPEx::InputSizeError, "Wrong new column size");
 
-		char** cname{ (char**)calloc(1, sizeof(char*)) };
-		cname[0] = strdup(name.c_str());
+	char** cname{ (char**)calloc(1, sizeof(char*)) };
+	cname[0] = strdup(name.c_str());
 
-		int*	indices{ (int*)malloc(numRow * sizeof(int)) };
-		double* values{ (double*)malloc(numRow * sizeof(double)) };
-		int		start = 0, nnz = 0;
-		for (size_t i = 0; i < numRow; i++) {
-			if (newCol[i] != 0) {
-				indices[nnz] = i;
-				values[nnz] = newCol[i];
-				nnz++;
-			}
+	int*	indices{ (int*)malloc(numRow * sizeof(int)) };
+	double* values{ (double*)malloc(numRow * sizeof(double)) };
+	int		start = 0, nnz = 0;
+	for (size_t i = 0; i < numRow; i++) {
+		if (newCol[i] != 0) {
+			indices[nnz] = i;
+			values[nnz] = newCol[i];
+			nnz++;
 		}
-
-		if (CPXaddcols(env, model, 1, nnz, &objCoef, &start, indices, values, &lb, &ub, &cname[0]))
-			throw MIPException(MIPEx::SetFunction, "No column added!");
-		free(cname);
-		free(indices);
-		free(values);
-		return *this;
 	}
+
+	if (CPXaddcols(env, model, 1, nnz, &objCoef, &start, indices, values, &lb, &ub, &cname[0]))
+		throw MIPException(MIPEx::SetFunction, "No column added!");
+	free(cname);
+	free(indices);
+	free(values);
+	return *this;
+}
 
 MIP& MIP::addCol(const size_t index, const double value, const double objCoef, const double lb, const double ub, const std::string name) {
 	if (index > getNumRows() - 1)
@@ -301,7 +331,7 @@ VarBounds MIP::getVarBounds(const int index) {
 
 char MIP::getVarType(const int index) {
 	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
-		throw MIPException(MIPEx::OutOfBound, "Wrong index getVarType()! - "+std::to_string(index));
+		throw MIPException(MIPEx::OutOfBound, "Wrong index getVarType()! - " + std::to_string(index));
 
 	char type;
 	if (int error{ CPXgetctype(env, model, &type, index, index) })
@@ -319,20 +349,20 @@ MIP& MIP::setVarValue(const int index, const double val) {
 	return *this;
 }
 
-MIP& MIP::setVarLowerBound(const int index, const double newLB){
+MIP& MIP::setVarLowerBound(const int index, const double newLB) {
 	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarLower()!");
-	
+
 	char bound{ LW_BOUND };
 	if (CPXchgbds(env, model, 1, &index, &bound, &newLB))
 		throw MIPException(MIPEx::SetFunction, "Unable to set the lower bound of the var  " + std::to_string(newLB));
 	return *this;
 }
 
-MIP& MIP::setVarUpperBound(const int index, const double newUB){
+MIP& MIP::setVarUpperBound(const int index, const double newUB) {
 	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index setVarUpper()!");
-	
+
 	char bound{ UP_BOUND };
 	if (CPXchgbds(env, model, 1, &index, &bound, &newUB))
 		throw MIPException(MIPEx::SetFunction, "Unable to set the upper bound of the var " + std::to_string(newUB));
@@ -340,7 +370,7 @@ MIP& MIP::setVarUpperBound(const int index, const double newUB){
 }
 
 MIP& MIP::setVarsValues(const std::vector<double>& values) {
-	size_t numCols { getNumCols() };
+	size_t numCols{ getNumCols() };
 
 	if (values.size() != numCols)
 		throw MIPException(MIPEx::InputSizeError, "Wrong new values_array size!");
@@ -354,30 +384,30 @@ double MIP::checkFeasibility(const std::vector<double>& sol) {
 	if (sol.size() != getNumCols())
 		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
 
-	size_t	numRows = getNumRows();
-	size_t	nzcnt = getNumNonZeros();
+	size_t numRows = getNumRows();
+	size_t nzcnt = getNumNonZeros();
 
-	int* rmatbeg = (int* ) malloc(numRows * sizeof(int));
-    int* rmatind = (int* ) malloc(nzcnt * sizeof(int));
-    double* rmatval = (double* ) malloc(nzcnt * sizeof(double));
-	double* rhs = (double* )malloc(numRows * sizeof(double));
-	char* sense = (char* )malloc(numRows * sizeof(char));
+	int*	rmatbeg = (int*)malloc(numRows * sizeof(int));
+	int*	rmatind = (int*)malloc(nzcnt * sizeof(int));
+	double* rmatval = (double*)malloc(nzcnt * sizeof(double));
+	double* rhs = (double*)malloc(numRows * sizeof(double));
+	char*	sense = (char*)malloc(numRows * sizeof(char));
 
-	if(CPXgetrhs(env, model, rhs, 0, numRows - 1))
+	if (CPXgetrhs(env, model, rhs, 0, numRows - 1))
 		throw MIPException(MIPEx::GetFunction, "Error on retriving the RHS values");
-	
-	if(CPXgetsense(env, model, sense, 0, numRows - 1))
+
+	if (CPXgetsense(env, model, sense, 0, numRows - 1))
 		throw MIPException(MIPEx::GetFunction, "Error on retriving the RHS values");
 
 	int surplus, nnCPLEX; // Dummy values necessary for CPLXgetrows
-	if(CPXgetrows(env, model, &nnCPLEX, rmatbeg, rmatind, rmatval, nzcnt, &surplus, 0, numRows - 1))
+	if (CPXgetrows(env, model, &nnCPLEX, rmatbeg, rmatind, rmatval, nzcnt, &surplus, 0, numRows - 1))
 		throw MIPException(MIPEx::GetFunction, "Error on retriving the matrix rows");
 
 	double maxViolation = 0.0;
 
-	for (size_t i {0}; i < numRows; i++) {
-        int start = rmatbeg[i];
-        int end = (i == numRows - 1) ? nzcnt : rmatbeg[i + 1];
+	for (size_t i{ 0 }; i < numRows; i++) {
+		int start = rmatbeg[i];
+		int end = (i == numRows - 1) ? nzcnt : rmatbeg[i + 1];
 
 		double lhs = 0.0;
 		for (int j = start; j < end; j++)
@@ -385,17 +415,17 @@ double MIP::checkFeasibility(const std::vector<double>& sol) {
 
 		switch (sense[i]) {
 			case LE:
-				if(lhs > rhs[i] + maxViolation)
+				if (lhs > rhs[i] + maxViolation)
 					maxViolation = lhs - rhs[i];
 				break;
 
-			case EQ :
-				if(std::abs(lhs - rhs[i]) > maxViolation)
+			case EQ:
+				if (std::abs(lhs - rhs[i]) > maxViolation)
 					maxViolation = std::abs(lhs - rhs[i]);
 				break;
 
 			case GE:
-				if(lhs < rhs[i] - maxViolation)
+				if (lhs < rhs[i] - maxViolation)
 					maxViolation = rhs[i] - lhs;
 				break;
 
@@ -403,7 +433,7 @@ double MIP::checkFeasibility(const std::vector<double>& sol) {
 				throw MIPException(MIPEx::GetFunction, "Unknown type of sense");
 				break;
 		}
-    }
+	}
 
 	free(rmatbeg);
 	free(rmatind);
@@ -413,25 +443,25 @@ double MIP::checkFeasibility(const std::vector<double>& sol) {
 	return maxViolation;
 }
 
-double MIP::checkIntegrality(const std::vector<double>& sol){
+double MIP::checkIntegrality(const std::vector<double>& sol) {
 	if (sol.size() != getNumCols())
 		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
 
 	double maxIntViolation = 0.0;
 	for (size_t i{ 0 }; i < sol.size(); i++) {
 		char type = getVarType(i);
-		if (type == CPX_BINARY || type == CPX_INTEGER){
-/// FIXED: Bug #9fb83189145371b5c9acdfea1718509d9f332514 - Wrong computation of maxIntViolation
+		if (type == CPX_BINARY || type == CPX_INTEGER) {
+			/// FIXED: Bug #9fb83189145371b5c9acdfea1718509d9f332514 - Wrong computation of maxIntViolation
 			double tmpIntVal = std::abs(sol[i] - std::round(sol[i]));
-        	if (tmpIntVal > maxIntViolation) {
-           	 	maxIntViolation = tmpIntVal;
-        	}
+			if (tmpIntVal > maxIntViolation) {
+				maxIntViolation = tmpIntVal;
+			}
 		}
 	}
 	return maxIntViolation;
 }
 
-bool MIP::checkFeasibilityCPLEX(const std::vector<double>& sol){
+bool MIP::checkFeasibilityCPLEX(const std::vector<double>& sol) {
 	if (sol.size() != getNumCols())
 		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
 
@@ -443,41 +473,42 @@ bool MIP::checkFeasibilityCPLEX(const std::vector<double>& sol){
 	return (status == CPXMIP_OPTIMAL_TOL || status == CPXMIP_OPTIMAL);
 }
 
-double MIP::checkObjValue(const std::vector<double>& sol){
+double MIP::checkObjValue(const std::vector<double>& sol) {
 	if (sol.size() != getNumCols())
 		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
-	
+
 	std::vector<double> objCoef = getObjFunction();
 	return std::inner_product(objCoef.begin(), objCoef.end(), sol.begin(), 0.0);
 }
 
-double MIP::violation(const std::vector<double>& sol){
+double MIP::violation(const std::vector<double>& sol) {
 	if (sol.size() != getMIPNumVars())
 		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
 
 	size_t numRows = MIPrmatbeg.size();
 	double overallViol = 0.0;
 
-	for (size_t i {0}; i < numRows; i++) {
-        int start = MIPrmatbeg[i];
-        int end = (i == numRows - 1) ? MIPrmatind.size() : MIPrmatbeg[i + 1];
-		
+	for (size_t i{ 0 }; i < numRows; i++) {
+		int start = MIPrmatbeg[i];
+		int end = (i == numRows - 1) ? MIPrmatind.size() : MIPrmatbeg[i + 1];
+
 		double lhs = 0.0;
-		for (int j = start; j < end; j++) lhs += sol[MIPrmatind[j]] * MIPrmatval[j];
+		for (int j = start; j < end; j++)
+			lhs += sol[MIPrmatind[j]] * MIPrmatval[j];
 
 		switch (MIPsense[i]) {
 			case LE:
-				if(lhs > MIPrhs[i] + EPSILON)
+				if (lhs > MIPrhs[i] + EPSILON)
 					overallViol += lhs - MIPrhs[i];
 				break;
 
-			case EQ :
-				if(std::abs(lhs - MIPrhs[i]) > EPSILON)
+			case EQ:
+				if (std::abs(lhs - MIPrhs[i]) > EPSILON)
 					overallViol += std::abs(lhs - MIPrhs[i]);
 				break;
 
 			case GE:
-				if(lhs < MIPrhs[i] - EPSILON)
+				if (lhs < MIPrhs[i] - EPSILON)
 					overallViol += MIPrhs[i] - lhs;
 				break;
 
@@ -490,7 +521,7 @@ double MIP::violation(const std::vector<double>& sol){
 	return overallViol;
 }
 
-double MIP::violationVarDelta(const int index, const double delta, const std::vector<int>& constrInv){
+double MIP::violationVarDelta(const int index, const double delta, const std::vector<int>& constrInv) {
 
 	if (index < 0 || static_cast<size_t>(index) > getNumCols() - 1)
 		throw MIPException(MIPEx::OutOfBound, "Wrong index violationVar()!");
@@ -498,10 +529,10 @@ double MIP::violationVarDelta(const int index, const double delta, const std::ve
 	double perViolation = 0.0;
 	for (int c : constrInv) {
 		int start = MIPrmatbeg[c];
-        int end = (c == static_cast<int>(MIPrmatbeg.size() - 1)) ? MIPrmatind.size() : MIPrmatbeg[c + 1];
+		int end = (c == static_cast<int>(MIPrmatbeg.size() - 1)) ? MIPrmatind.size() : MIPrmatbeg[c + 1];
 
-		for (int j = start; j < end;j++){
-			if(MIPrmatind[j] == index){
+		for (int j = start; j < end; j++) {
+			if (MIPrmatind[j] == index) {
 				perViolation += delta * MIPrmatval[j];
 				break;
 			}
@@ -511,7 +542,7 @@ double MIP::violationVarDelta(const int index, const double delta, const std::ve
 	return perViolation;
 }
 
-void MIP::getViolatedConstrIndex(const std::vector<double>& sol, std::vector<int>& constVect){
+void MIP::getViolatedConstrIndex(const std::vector<double>& sol, std::vector<int>& constVect) {
 	if (sol.size() != getMIPNumVars())
 		throw MIPException(MIPEx::InputSizeError, "Wrong solution size!");
 
@@ -519,26 +550,27 @@ void MIP::getViolatedConstrIndex(const std::vector<double>& sol, std::vector<int
 	size_t numRows = MIPrmatbeg.size();
 	constVect.reserve(numRows);
 
-	for (size_t i {0}; i < numRows; i++) {
-        int start = MIPrmatbeg[i];
-        int end = (i == numRows - 1) ? MIPrmatind.size() : MIPrmatbeg[i + 1];
+	for (size_t i{ 0 }; i < numRows; i++) {
+		int start = MIPrmatbeg[i];
+		int end = (i == numRows - 1) ? MIPrmatind.size() : MIPrmatbeg[i + 1];
 
 		double lhs = 0.0;
-		for (int j = start; j < end; j++)  lhs += sol[MIPrmatind[j]] * MIPrmatval[j];
-		
+		for (int j = start; j < end; j++)
+			lhs += sol[MIPrmatind[j]] * MIPrmatval[j];
+
 		switch (MIPsense[i]) {
 			case LE:
-				if(lhs > MIPrhs[i] + EPSILON)
+				if (lhs > MIPrhs[i] + EPSILON)
 					constVect.push_back(i);
 				break;
 
-			case EQ :
-				if(std::abs(lhs - MIPrhs[i]) > EPSILON)
+			case EQ:
+				if (std::abs(lhs - MIPrhs[i]) > EPSILON)
 					constVect.push_back(i);
 				break;
 
 			case GE:
-				if(lhs < MIPrhs[i] - EPSILON)
+				if (lhs < MIPrhs[i] - EPSILON)
 					constVect.push_back(i);
 				break;
 

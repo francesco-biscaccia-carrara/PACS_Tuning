@@ -12,8 +12,8 @@
  * and it provides mechanisms to broadcast solutions across threads and handle solution updates with thread safety.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.10
- * @since 07/09/2025
+ * @version v1.2.11
+ * @since 15/09/2025
  */
 
 #ifndef MT_CTX_H
@@ -166,8 +166,8 @@ private:
 	std::vector<std::thread> threads;		   ///< Threads used for parallel optimization.
 	std::vector<Random>		 rndGens;		   ///< Random number generators for each thread.
 	Solution				 bestACSIncumbent; ///< Best ACS incumbent solution found.
-	std::mutex				 MTContextMTX; ///< Mutex for synchronizing solution updates.
-	std::atomic_size_t		 A_RhoChanges; ///< Size_t value used to manage the DynamicFixPolicy
+	std::mutex				 MTContextMTX;	   ///< Mutex for synchronizing solution updates.
+	std::atomic_size_t		 A_RhoChanges;	   ///< Size_t value used to manage the DynamicFixPolicy
 
 	/**
 	 * @brief Waits for all threads to complete their optimization jobs.

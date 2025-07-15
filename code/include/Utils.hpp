@@ -3,8 +3,8 @@
  * @brief Utility header file providing various helper classes and macros for the project.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.10
- * @since 07/09/2025
+ * @version v1.2.11
+ * @since 15/09/2025
  */
 
 #ifndef UTILS_H
@@ -13,10 +13,12 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cmath>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <fstream>
 #include <iostream>
 #include <numeric>
 #include <random>
@@ -25,9 +27,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <cmath>
-#include <iostream>
-#include <fstream>
 
 #include <string.h>
 #include <sys/time.h>
@@ -37,9 +36,9 @@
 #pragma region UTILS_DEFINTION
 
 /** Current version of the code */
-#define ACS_VERSION "v1.2.10"
+#define ACS_VERSION "v1.2.11"
 /** Last update date */
-#define LAST_UPDATE "07/09/2025"
+#define LAST_UPDATE "15/09/2025"
 
 /** Verbosity level constants */
 #define NO_VER -1
@@ -65,7 +64,7 @@
 
 /**
  * Compute the deterministic-timelimit based on non-zeros entries in the matrix (nnz)
- * 
+ *
  * @param nnz Number of non-zero entries
  * @return Calculated deterministic time limit
  */
@@ -74,14 +73,13 @@
 /**
  * Computes the relative error between two values, handling the special
  * case where the expected value is close to zero to avoid division by zero.
- * 
+ *
  * @param act The actual value obtained
  * @param exp The expected value for comparison
  * @return For |exp| >= EPSILON: |act - exp| / |exp| (standard relative error)
  *         For |exp| < EPSILON:  |act - exp| (absolute error to avoid division by zero)
- */ 
-#define REL_ERR(act, exp) ( (std::abs(exp) < EPSILON) ? std::abs(act-exp) :  std::abs((act-exp)/exp))
-
+ */
+#define REL_ERR(act, exp) ((std::abs(exp) < EPSILON) ? std::abs(act - exp) : std::abs((act - exp) / exp))
 
 /** Macro for printing error messages */
 #define PRINT_ERR(...) Logger::print(Logger::LogLevel::ERROR, __VA_ARGS__)
@@ -90,7 +88,7 @@
 /** Macro for printing informational messages */
 #define PRINT_INFO(...) Logger::print(Logger::LogLevel::INFO, __VA_ARGS__)
 /** Macro for printing standard output messages */
-#define PRINT_OUT(...) Logger::print(Logger::LogLevel::OUT,  __VA_ARGS__)
+#define PRINT_OUT(...) Logger::print(Logger::LogLevel::OUT, __VA_ARGS__)
 /** Macro for printing best result messages */
 #define PRINT_BEST(...) Logger::print(Logger::LogLevel::BEST, __VA_ARGS__)
 
@@ -107,7 +105,7 @@ namespace Utils {
 	struct Args {
 		std::string		   fileName;   ///< Input file name
 		double			   timeLimit;  ///< Time limit for execution
-		double			   walkProb;	///< TODO
+		double			   walkProb;   ///< TODO
 		double			   rho;		   ///< Rho parameter
 		unsigned long	   numsubMIPs; ///< Number of sub-MIPs
 		unsigned long long seed;	   ///< Random number generator see
@@ -232,9 +230,9 @@ namespace Utils {
 	/**
 	 * Custom exception for command-line argument parsing errors.
 	 */
-	class ArgsParserException : public ACSException{
-		public :
-			ArgsParserException(ExceptionType type,const std::string& message) : ACSException(type, message, "ArgsParser") {}
+	class ArgsParserException : public ACSException {
+	public:
+		ArgsParserException(ExceptionType type, const std::string& message) : ACSException(type, message, "ArgsParser") {}
 	};
 
 	/**

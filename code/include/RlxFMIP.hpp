@@ -9,8 +9,8 @@
  * to restore original problem formulations.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.10
- * @since 07/09/2025
+ * @version v1.2.11
+ * @since 15/09/2025
  */
 
 #ifndef RlxFMIP_H
@@ -105,7 +105,6 @@ public:
 	 * @return Status code indicating the result of the relaxation solution process.
 	 */
 	int solveRelaxation(const double timeLimit = CPX_INFBOUND, const double detTimeLimit = CPX_INFBOUND);
-
 
 	/**
 	 * @brief Change the type of a variable

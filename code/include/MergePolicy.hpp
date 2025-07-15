@@ -5,15 +5,15 @@
  *        and a function for recombining solutions.
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.10
- * @since 07/09/2025
+ * @version v1.2.11
+ * @since 15/09/2025
  */
 
 #ifndef MER_POL_H
 #define MER_POL_H
 
-#include "MIP.hpp"
 #include "ACSException.hpp"
+#include "MIP.hpp"
 
 using namespace Utils;
 
@@ -23,9 +23,9 @@ namespace MergePolicy {
 	 * @class MergePolicyException
 	 * @brief Exception class for handling MergePolicy-related errors.
 	 */
-	class MergePolicyException : public ACSException{
-		public :
-			MergePolicyException(ExceptionType type,const std::string& message) : ACSException(type, message, "MergePolicy") {}
+	class MergePolicyException : public ACSException {
+	public:
+		MergePolicyException(ExceptionType type, const std::string& message) : ACSException(type, message, "MergePolicy") {}
 	};
 
 	/**

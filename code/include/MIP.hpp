@@ -8,8 +8,8 @@
  *
  * @note Requires CPLEX library and Utils.hpp
  * @author Francesco Biscaccia Carrara
- * @version v1.2.10
- * @since 07/09/2025
+ * @version v1.2.11
+ * @since 15/09/2025
  */
 
 #ifndef MIP_SOL_H
@@ -27,7 +27,7 @@ using namespace Utils;
 /** CPELX Execution Constants */
 #define CPLEX_CORE 1
 #define NUM_SOL_STOP 1
-//#define ACS_CB_CONTEXTMASK CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS | CPX_CALLBACKCONTEXT_CANDIDATE
+// #define ACS_CB_CONTEXTMASK CPX_CALLBACKCONTEXT_GLOBAL_PROGRESS | CPX_CALLBACKCONTEXT_CANDIDATE
 
 #define MIP_DUAL_PRIM_GAP_TOL 1e-4 // Default value for CPX_PARAM_EPAGAP (see IBM ILOG CPLEX doc)
 #define MIP_GAP_TOL 1e-6		   // Default value for CPX_PARAM_EPGAP (see IBM ILOG CPLEX doc)
@@ -53,18 +53,16 @@ struct Solution {
 	double				oMIPCost; ///< Objective cost of the MIP solution
 };
 
-
 /**
  * @class MIPException
  * @brief Custom exception class for MIP-related errors
  *
  * Provides detailed exception types for various MIP processing scenarios
  */
-class MIPException : public ACSException{
-	public :
-		MIPException(ExceptionType type, const std::string& message) : ACSException(type, message, "MIP") {}
+class MIPException : public ACSException {
+public:
+	MIPException(ExceptionType type, const std::string& message) : ACSException(type, message, "MIP") {}
 };
-
 
 /**
  * @class MIP
@@ -312,19 +310,13 @@ public:
 	double checkObjValue(const std::vector<double>& sol);
 
 	[[nodiscard]]
-	inline const std::vector<int>& getMIPrmatbeg() { return MIPrmatbeg; }
+	inline const size_t getOgNumRows() { return MIPrmatbeg.size(); }
 
 	[[nodiscard]]
-	inline const std::vector<int>& getMIPrmatind() { return MIPrmatind; }
+	inline const std::vector<std::vector<int>>& getMIPVarToConstr() { return MIPVarToConstr; }
 
 	[[nodiscard]]
-	inline const std::vector<double>& getMIPrmatval() { return MIPrmatval; }
-
-	[[nodiscard]]
-	inline const std::vector<char>& getMIPsense() { return MIPsense; }
-
-	[[nodiscard]]
-	inline const std::vector<double>& getMIPrhs() { return MIPrhs; }
+	inline const std::vector<std::vector<int>>& getMIPConstrToVar() { return MIPConstrToVar; }
 
 	[[nodiscard]]
 	double violation(const std::vector<double>& sol);
@@ -332,7 +324,7 @@ public:
 	[[nodiscard]]
 	double violationVarDelta(const int index, const double delta, const std::vector<int>& constrInv);
 
-	void 	getViolatedConstrIndex(const std::vector<double>& sol, std::vector<int>& constVect);
+	void getViolatedConstrIndex(const std::vector<double>& sol, std::vector<int>& constVect);
 
 // Debug-specific methods
 #if ACS_VERBOSE == DEBUG
@@ -376,12 +368,15 @@ protected:
 	std::string id;		  ///< Unique identifier for the MIP instance
 #endif
 
-	static std::vector<int> MIPrmatbeg;
-	static std::vector<int>	MIPrmatind;
+	static std::vector<int>	   MIPrmatbeg;
+	static std::vector<int>	   MIPrmatind;
 	static std::vector<double> MIPrmatval;
 
 	static std::vector<char>   MIPsense;
 	static std::vector<double> MIPrhs;
+
+	static std::vector<std::vector<int>> MIPVarToConstr;
+	static std::vector<std::vector<int>> MIPConstrToVar;
 };
 
 #endif

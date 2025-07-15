@@ -2,12 +2,12 @@
  * CPLEX Execution file
  *
  * @author Francesco Biscaccia Carrara
- * @version v1.2.10
- * @since 07/09/2025
+ * @version v1.2.11
+ * @since 15/09/2025
  */
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <nlohmann/json.hpp>
 
 #include "../include/MIP.hpp"
@@ -28,14 +28,14 @@ int main(int argc, char* argv[]) {
 		Solution CPLEXSol = { .sol = std::vector<double>(), .slackSum = CPX_INFBOUND, .oMIPCost = CPX_INFBOUND };
 
 		int solveCode{ ogMIP.solve(Clock::timeRemaining(CLIArgs.timeLimit)) };
-		
+
 #if ACS_TEST
-		double	 retTime = Clock::timeElapsed();
+		double		   retTime = Clock::timeElapsed();
 		nlohmann::json jsData;
 #endif
 		if (MIP::isINForUNBD(solveCode)) {
 #if ACS_TEST
-		jsData[CLIArgs.fileName]["CPLEX"]= { "NO SOL", retTime };
+			jsData[CLIArgs.fileName]["CPLEX"] = { "NO SOL", retTime };
 #endif
 			PRINT_ERR("NO FEASIBLE SOLUTION FIND");
 		} else {
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 
 		oFile << jsData.dump(4);
 		oFile.close();
-		PRINT_INFO("JSON: Execution result saved on %s%s file",PATH_TO_TMP,JSfilename.c_str());
+		PRINT_INFO("JSON: Execution result saved on %s%s file", PATH_TO_TMP, JSfilename.c_str());
 #endif
 	} catch (const std::runtime_error& ex) {
 		PRINT_ERR(ex.what());
