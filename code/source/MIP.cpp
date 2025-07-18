@@ -70,15 +70,15 @@ MIP::MIP(const std::string fileName) {
 
 		for (auto e : MIPVarToConstr) {
 			for (auto c : e) {
-				if (c < 0 || c > numRows)
-					throw MIPException(MIPEx::GetFunction, "Error on rows");
+				if (c < 0 || c > static_cast<int>(numRows))
+					throw MIPException(MIPEx::GetFunction, "Error on VarToConstr");
 			}
 		}
 
 		for (auto e : MIPConstrToVar) {
 			for (auto v : e) {
-				if (v < 0 || v > getMIPNumVars())
-					throw MIPException(MIPEx::GetFunction, "Error on var");
+				if (v < 0 || v >  static_cast<int>(getMIPNumVars()))
+					throw MIPException(MIPEx::GetFunction, "Error on ConstrToVar");
 			}
 		}
 	}

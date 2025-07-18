@@ -310,7 +310,7 @@ public:
 	double checkObjValue(const std::vector<double>& sol);
 
 	[[nodiscard]]
-	inline const size_t getOgNumRows() { return MIPrmatbeg.size(); }
+	inline size_t getOgNumRows() { return MIPrmatbeg.size(); }
 
 	[[nodiscard]]
 	inline const std::vector<std::vector<int>>& getMIPVarToConstr() { return MIPVarToConstr; }

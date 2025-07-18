@@ -10,7 +10,8 @@
 #ifndef ACS_EXC_H
 #define ACS_EXC_H
 
-#define CODE_ERROR_SAFE_OFFSET 200
+#define NO_FEAS_SOL 2
+#define CODE_ERROR_SAFE_OFFSET 1000
 
 #include <array>
 #include <stdexcept>

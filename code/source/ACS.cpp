@@ -16,9 +16,12 @@
 #include "../include/MergePolicy.hpp"
 #include "../include/OMIP.hpp"
 
+#if ACS_TEST
 #define PATH_TO_TMP "../test/scripts/tmp/"
+#endif
 
 int main(int argc, char* argv[]) {
+	bool heuFound = false;
 	try {
 		Clock::initTime = Clock::getTime();
 
@@ -28,29 +31,7 @@ int main(int argc, char* argv[]) {
 		std::vector<double> startSol;
 		Random				mainRnd = Random(CLIArgs.seed);
 
-		// DEFAULT VAL SECTION
-		CLIArgs.rho = 0.1;
-
-		switch (CLIArgs.algo) {
-
-			case 1:
-				CLIArgs.walkProb = 0.6;
-				break;
-
-			case 2:
-				CLIArgs.walkProb = 0.7;
-				break;
-
-			case 3:
-				CLIArgs.walkProb = 0.8;
-				break;
-
-			default:
-			case 0:
-				break;
-		}
-
-		PRINT_WARN("DYN, Rho 0.1, MaxFeas, UB, WalkP: %0.2f %s", CLIArgs.walkProb, (!CLIArgs.algo) ? "[IGNORED]" : "");
+		PRINT_INFO("ACS -- Dyn_Rho_Adjustment - Init_Rho : %3.2f - Init_Sol : MaxFeas",CLIArgs.rho);
 		FixPolicy::startSolMaxFeas(startSol, CLIArgs.fileName, mainRnd);
 
 #if ACS_VERBOSE >= VERBOSE
@@ -179,7 +160,7 @@ int main(int argc, char* argv[]) {
 			double ABS_MaxIntViol = og.checkIntegrality(incumbent.sol);
 			double REL_ObjErr = REL_ERR(incumbent.oMIPCost, og.checkObjValue(incumbent.sol));
 
-#if ACS_VERBOSE
+#if ACS_VERBOSE >= VERBOSE
 			PRINT_INFO("-------------------------------TEST PHASE--------------------------------");
 			PRINT_INFO("MIP::checkFeasibility\tMax Constraint  Violation:\t%11.10f", ABS_MaxViol);
 			PRINT_INFO("MIP::checkIntegrality\tMax Integrality Violation:\t%11.10f", ABS_MaxIntViol);
@@ -199,6 +180,7 @@ int main(int argc, char* argv[]) {
 				throw ACSException(ACSException::ExceptionType::CheckObectiveFailed, "MIP::chekObjValue:\tFAILED", "ACSmain");
 			}
 
+			heuFound = true;
 			PRINT_BEST("ACS Solution: %16.4f \n\t\t   Time elapsed: %-10.4f", incumbent.oMIPCost, retTime);
 #if ACS_TEST
 			jsData[CLIArgs.fileName][std::to_string(CLIArgs.algo)][std::to_string(CLIArgs.seed)] = { incumbent.oMIPCost, retTime };
@@ -217,5 +199,5 @@ int main(int argc, char* argv[]) {
 		return ex.getErrorCode();
 	}
 	printf("-------------------- ACS::Francesco Biscaccia Carrara ©2025 --------------------\n");
-	return EXIT_SUCCESS;
+	return (heuFound)? EXIT_SUCCESS : NO_FEAS_SOL;
 }

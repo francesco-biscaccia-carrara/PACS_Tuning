@@ -55,6 +55,7 @@
 #define MIN_DET_TL 1e3
 #define SCALE 1e2
 
+#define DEF_TL 60.0
 #define DEF_RHO 0.1
 #define DEF_WALK_PROB 0.7
 #define DEF_SUBMIPS 4
@@ -105,11 +106,9 @@ namespace Utils {
 	struct Args {
 		std::string		   fileName;   ///< Input file name
 		double			   timeLimit;  ///< Time limit for execution
-		double			   walkProb;   ///< TODO
 		double			   rho;		   ///< Rho parameter
 		unsigned long	   numsubMIPs; ///< Number of sub-MIPs
 		unsigned long long seed;	   ///< Random number generator see
-		unsigned long	   algo;	   ///< Flag to set the type of algorithm (0,1,2,3,4)
 	};
 
 	/**
