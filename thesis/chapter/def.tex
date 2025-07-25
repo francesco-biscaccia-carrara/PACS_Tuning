@@ -1,0 +1,146 @@
+    Per esplicare in modo rigoroso e formale gli algoritmi risolutivi,
+    sono necessarie alcune considerazioni iniziali.
+    \section{Grafo}
+    Data l'interconnessione tra i vari elementi di cui è costituita, una rete sociale viene spesso rappresentata con un grafo.
+    Un grafo è una struttura matematica costituita da un insieme di vertici corrispondi agli elementi della rete (es. una pagina web o un utente). 
+    Ogni vertice è unito ad altri vertici mediante archi. Un arco è una coppia di vertici, con delle caratteristiche. 
+    A seconda delle proprietà degli archi, il grafo può essere:
+    \begin{itemize}
+        \item \emph{Grafo diretto}: ogni arco ha un verso di percorrenza; è una coppia ordinata di vertici.
+        \item \emph{Grafo non diretto}: ogni arco non ha un verso di percorrenza; è una coppia di vertici non ordinata.
+        \item \emph{Grafo semplice}: non ci sono archi multipli (più archi per lo stesso nodo) e self-loop.
+        \item \emph{Grafo pesato}: gli archi hanno un peso, un ``costo'' di percorrenza dell'arco.
+    \end{itemize}
+    Generalmente, un grafo si denota con $G=(V,E)$ dove $V$ 
+    è l'insieme dei vertici ed $E$ è l'insieme degli archi, con i relativi pesi.
+    \subsection{Grafo delle pagine web}
+    {Sia $G=(V,E)$ un grafo diretto e pesato 
+    con $|V|=n$ vertici, ognuno dei quali ha sia archi entranti che archi uscenti. 
+    L'insieme dei vertici $V$ può essere partizionato in 2 sottoinsiemi $R$ (Red) e $B$ (Blue) tali che 
+    $R\cup B=V$ e $R\cap B=\emptyset$. Questi due set saranno necessari per differire una categoria
+    dalle altre, all'interno di una rete sociale. Ad esempio, si può definire come $R$ l'insieme
+    dei link su Wikipedia aventi come topic ``Tecnologia'' e come $B$ l'insieme di tutti 
+    i link di Wikipedia con topic diverso da ``Tecnologia''. Per ogni $v \in V$,
+    l'insieme dei vertici aventi lo stesso colore di $v$ è denotato con $C_v$ mentre l'insieme dei 
+    vertici di colore differente da $v$ si denota con $\overline{C}_v$.\\
+
+    \begin{figure}[!h]
+    \centering
+    \begin{tikzpicture}
+        [
+  rednode/.style={shape=circle, draw=black, line width=1},
+  bluenode/.style={shape=circle, draw=black, line width=1, pattern=north west lines}
+]
+        \begin{scope}
+            [every node/.style={circle,thick,draw}]
+            \node[rednode] (A) at (0,0) {A};
+            \node[rednode] (B) at (0,3) {B};
+            \node[rednode] (C) at (2.5,4) {C};
+            \node[bluenode](D)  at (2,1.5) {D};
+            \node[bluenode] (E) at (5,3) {E};
+            \node[bluenode] (F) at (4.5,-1) {F} ;
+        \end{scope}
+        
+        \begin{scope}[>={Stealth[black]},
+                      every node/.style={fill=white,circle},
+                      every edge/.style={draw=black,very thick}]
+            \path [->] (A) edge node {$1$} (B);
+            \path [->] (B)[bend right=60] edge node {$.1$} (A);
+            \path [->] (B) edge node {$.9$} (C);
+            \path [->] (A) edge[dotted] node {$0$} (D);
+            \path [->] (D) edge[dotted] node {$0$} (C);
+            \path [->] (A) edge[dotted] node {$0$} (F);
+            \path [->] (D) edge node {$.5$} (F);
+            \path [->] (D) edge node {$.5$} (E);
+            \path [->] (C) edge node {$1$} (E);
+            \path [->] (E) edge node {$1$} (F); 
+            \path [->] (B) edge[dotted] node {$0$} (D);
+            \path [->] (F)[bend right=60] edge node {$.5$} (E);
+            \path [->] (F)[bend right=37] edge node {$.5$} (D);
+        \end{scope}
+
+        \begin{scope}
+            \matrix [draw,below left] at (10,3){
+                \node [bluenode,label=right:$v_B \in B $] {}; \\
+                \node [rednode,label=right:$v_R \in R $] {}; \\
+              }; 
+        \end{scope}
+        \end{tikzpicture}
+        \caption[]{Esempio di grafo}\label{fig:graph}
+    \end{figure}
+
+    Ogni arco $(v_i,v_j)\in E$ ha un peso che indica la probabilità di transizione dal vertice $v_i$ 
+    al vertice $v_j$. I pesi degli archi vengono raggruppati in una matrice stocastica-destra $M$ $n\times n$ 
+    dove ogni elemento $M(v_i,v_j)$ è una probabilità ($0\le M(v_i,v_j)\le 1$). Se $M(v_i,v_j)=0$ l'arco che collega 
+    $v_i$ e $v_j$ non esiste ($(v_i,v_j)\not \in E$). Inoltre, per definizione di matrice stocastica-destra,
+    ogni riga di $M$ somma a 1 $(\sum_{v_j=1}^n{M(v_i,v_j)}=1)$.
+
+    \begin{figure}[!h]\label{matrix_graph}
+        \[ M =\bordermatrix{ & A & B & C & D & E & F \cr 
+                            A &0 &1 &0 &0 &0 &0 \cr
+                            B &.1 &0 &.9 &0 &0 &0 \cr
+                            C &0 &0 &0 &0 &1 &0  \cr
+                            D &0 &0 &0 &0 &.5 &.5 \cr
+                            E &0 &0 &0 &0 &0 &1 \cr
+                            F &0 &0 &0 &.5 &.5 &0\cr
+                            }\]
+        \caption{Matrice $M$ per il grafico in \hyperref[fig:graph]{Figura\ \ref{fig:graph}}}
+    \end{figure}
+    }
+
+    \section{Random walks}
+        Un \emph{random walk} è un cammino sul grafo che parte da un vertice $v$ e, ad ogni vertice nel cammino, viene scelto, 
+        indipendentemente dalle scelte precedenti, un arco uscente con una probabilità uguale al suo peso. 
+        Tornerà utile definire una variabile aleatoria $T_v(S)$ che indica il primo istante di tempo in cui un random walk partito 
+        dal vertice $v$ raggiunge un vertice di $S\subseteq V$. Si denota con \emph{``hitting time of $S$ from $v$''} la quantità $\E_G[T_v(S)]$ 
+        dove l'aspettazione è calcolata tra tutti i possibili random walk che percorrono $G$ partendo da $v$, con le probabilità di transizione date dalla matrice $M$.
+        Nelle realtà, la lunghezza dei random walk è limitata superiormente ad un valore $t$ \emph{(``exploration factor'')}. Questo fattore è ricavato empiricamente: 
+        può essere, ad esempio, il numero di pagine web che un utente visita in una sessione web. Per misurare più accuratamente la lunghezza di una sessione web,
+        però, si può considerare la variabile aleatoria $T_{v}^{t}(S)=\min\{t,T_v(S)\}$.\\ 
+        Dato un grafo $Z$, un qualunque vertice $u$ e un qualunque insieme $S$ di vertici di $Z$, si definisce $u \overset{cond}{\underset{Z}{\leadsto}}S$ 
+        l'evento nel quale un random walk percorre $Z$ da $u$ a un vertice di $S$ senza visitare un vertice di $\overline{C}_u$ (di ``colore diverso'') 
+        e che soddisfa la condizione $cond$ in termini di step necessari per raggiungere $S$. Ad esempio, $u \overset{=t}{\underset{Z}{\leadsto}}S$ indica l'evento nel quale 
+        un random walk su $Z$ partendo da $u$ raggiunge un vertice di $S$ con esattamente $t$ steps, senza visitare vertici di $\overline{C}_u$.
+
+    
+    \section{Random-walk closeness centrality}
+        Gli algoritmi proposti utilizzano la ``Random-walk closeness centrality'' come discriminante per la scelta dei nuovi archi da aggiungere o per deterimanre gli archi di cui fare ``swapping''.
+        Nello specifico, si utilizza la definizione di \emph{Random-walk closeness centrality} per ridurre la lunghezza
+        dei random walk nel grafo in modo che il contributo alla centralità di $v$ dei vertici che non raggiungo $v$ in meno di $t'$ steps (in termini di aspettazione) sia uguale a 0, per ogni $t'$.
+        \begin{definition}[Closeness centrality]
+            La closeness centrality di un vertice è la lunghezza media dei cammini minimi tra un vertice e tutti gli altri vertici del grafo. 
+        \end{definition}
+        \begin{definition}[Random-walk closeness centrality (bounded)]
+            Dato un nodo $v \in V$, un sottoinsieme $S \subseteq V$, il t'-bounded Random Walk Closeness Centrality (RWCC) di $v$ rispetto a $S$ è
+            \begin{equation}
+                r^{t'}(v;S)\doteq{1\over{|S|}}\sum_{w\in S}\Big(t'-\E_G[T^{t'}_w(v)]\Big)
+            \end{equation}
+        \end{definition}
+        Dato che il calcolo del RWCC esatto è estremamente costoso, verrà utilizzata come stima $\overline{r}(v)$: si prendono $z$ vertici da $S$ (chiamati ${\{w_i\}}_{i=1}^{z}$) 
+        ed, eseguendo $k$ random walk, si ottiene la stima $\overline{h}_{w_i}$ di $\E_G[T^{t'}_{w_i}(v)]$ per ogni $w_i$.
+        \begin{equation}
+            \overline{r}(v)\doteq t' - {1\over{z}}\sum_{i=1}^{z}\overline{h}_{w_i}
+        \end{equation}
+
+    \section{Bubble radius}
+        Viene introdotto il concetto di \emph{``Bubble Radius''} per quantificare quanti steps, in media, sono necessari affinchè un utente, partendo con un random walk 
+        da un vertice $v\in V$ di un dato colore, raggiunga un vertice di un altro colore.
+        \begin{definition}[Bubble radius]
+            Il Bubble Radius $B_{G}^{t}(v)$ di v con $t$ exploration parameter è
+             \begin{equation}
+                B_{G}^{t}(v)\doteq \E_G[T_{v}^t(\overline{C}_v)]
+            \end{equation}
+        \end{definition}
+        Data la definizione, è improbabile che un random walk che parte da un vertice $v$, avente un elevato Bubble Radius,
+        raggiunga un vertice di colore opposto ($\in\overline{C}_v$) in meno di/esattamente $t$ steps. Per semplicità, 
+        si assume di avere l'esatto valore di BR per ogni vertice del grafo.
+        \subsubsection*{Estensione a più di 2 colori} 
+        Nella trattazione degli algoritmi, si assume l'esistenza di solo 2 colori (Red e Blue). Si può estendere il caso a più colori:
+        \begin{itemize}
+            \item Dividendo il grafo in 2 ``colori'': il gruppo ``Red'' conterrà tutti i vertici di un dato colore 
+            e il gruppo ``Blue'' contenente i vertici aventi tutti gli altri possibili colori.
+            \item Assegnando un colore diverso $C_i \, ,1 \le i \le k$, per ogni gruppo di vertici. 
+        \end{itemize}
+        Nel secondo caso, può essere definito il BR di un vertice $v$ come il minimo tra 
+        tutti i $B_G^{t}(v_i) \doteq \E_G[T_{v_i}^t({C}_j)] \; 1 \le j \le k ,j \not = i  $. 
+

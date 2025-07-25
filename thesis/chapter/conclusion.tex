@@ -1,0 +1,20 @@
+Questa tesi presenta diversi approcci per la riduzione della polarizzazione nella navigazione nei grafi, ovvero gli algoritmi RePBubLik e ShuffLik.
+RePBubLik permette di calcolare un'approssimazione accurata per il problema della riduzione del \emph{structural bias}.
+In seguito alle considerazioni teoriche, son stati svolti dei confronti tra RePBubLik+, la versione più veloce e pratica dell'
+algoritmo RePBubLik, e le attuali tecniche per la riduzione della polarizzaione dei grafi: ROV e 
+Node2Vec. Dalle analisi, è emerso che RePBubLik+ permette di ridurre drasticamente il \emph{structural bias} 
+del grafo con un numero di archi significativamente inferiore, rispetto agli altri approcci utilizzati. 
+\\
+In aggiunta, è stata brevemente descritta un tecnica alternativa a RePBubLik, che permette di aumentare
+la navigabilità di una rete effettuando \emph{edge swapping}. 
+Questo algoritmo prende il nome di ShuffLik ed esiste una sua versione più pratica, ShuffLik+.
+Importante notare che ShuffLik risulta efficace in contesti dove non è possibile eseguire \emph{edge inserction} per motivi di costo o di vincoli funzionali, 
+operando quindi interventi meno invasivi.
+\\
+Possiamo osservare diverse opportunità di sviluppo futuro:
+\begin{enumerate}
+    \item Nella pratica, potrebbe essere difficile stimare le probabilità di transizione all'interno del grafo. I pesi da assegnare agli archi potrebbero 
+    essere appresi mediante un algoritmo di machine learning sui dataset.
+    \item La determinazione di valori realistici del parametro $t$ non è semplice. È un problema rilevante individuare il valore ideale di random walk da fornire all'algoritmo, in funzione del trade-off tra guadagno e tempo di esecuzione.
+    \item Nell'estensione a più ``colori'' dell'algoritmo, diventa importante determinare quale coppia di ``colori'' permette, con un numero ridotto ti archi, di ridurre notevolmente il bias strutturale.
+\end{enumerate} 

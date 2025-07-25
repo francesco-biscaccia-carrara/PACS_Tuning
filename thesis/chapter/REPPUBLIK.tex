@@ -1,0 +1,129 @@
+L'idea alla base dell'algoritmo RePBubLik è quella di aggiungere al grafo
+della rete sociale archi pesati che permettano di ridurre la polarizzazione 
+rispetto ad un dato topic. Di seguito, vengono esposti i principi teorici e 
+le metriche per valutare l'efficacia di questo approccio. 
+
+\section{Vertici cosmopolitan e vertici parochial}
+In base al valore del Bubble Radius, viene diviso l'insieme dei vertici in 2 
+sottoinsiemi: \emph{cosmopolitan} e \emph{parochial}. L'insieme $Z(G)$ dei vertici 
+cosmopolitan contiene tutti e soli i vertici di $G$ con un Bubble Radius 
+\emph{al più} uguale a $b$ (cioè $\le b$), mentre il l'insieme $P(G)$ dei
+vertici parochial contiene tutti e soli i vertici di $G$ con un 
+Bubble Radius \emph{almeno} uguale a $r$ (cioè $\ge b$), con $1\le b < r \le t$ 
+numeri reali. Importante notare che $Z(G)$ e $P(G)$ sono disgiunti, 
+ma non formano necessariamente una partizione di $V$. Nelle analisi, infatti,
+partizioneremo il set $P(G)$ a seconda del colore: $P_R(G)$ per i parochial 
+aventi colore $R$ e $P_B(G)$ per i parochial aventi colore $B$. 
+Questa divisione si basa sulla facilità di un nodo di raggiungere, tramite un random walk, 
+un nodo di colore opposto: sarà più facile raggiungere un vertice di colore opposto partendo 
+da vertice cosmopolitan e, al contrario, sarà difficile per un vertice parochial.\\
+Dato il fatto che i nodi parochial sono i vertici per i quali è più difficile
+trovare un random walk che raggiunga un vertice di colore opposto, 
+risulta sensato utilizzare i valori dei Bubble Radius di quest'ultimi per stimare la polarizzazione 
+(\emph{structural bias}) del grafo.
+\begin{definition}[Structural Bias]
+    Il Bias Strutturale $\rho(G)$ di $G$ è la somma dei Bubble Radius dei nodi parochial di $G$
+    \begin{equation}\label{REP:bias}
+        \rho(G)=\sum_{v \in P(G)}{B_{G}^t(v)}
+    \end{equation}
+\end{definition}
+\section{Riduzione del bias strutturale mediante inserimento di archi}
+L'obiettivo di RePBubLik sarà quello di cercare un'insieme di archi, aventi come estremi vertici
+di colori opposti, da aggiungere al grafo $G$ per diminuire il structural bias. Se, ipoteticamente,
+si potesse aggiungere una quantità qualsiasi di archi, chiaramente il bias sarebbe 0, in quanto il 
+grafo sarebbe completo. Comprensibilmente, questo non è realistico se si tratta di reti sociali: un browser 
+può consentire solo un certo numero di link per pagina e l'essere umano non è in grado di distinguire 
+un numero elevato di link all'interno della singola web page.\\
+Per queste ragioni, la riduzione del bias strutturale mediante inserimento di archi, diventa un problema
+di ottimizzazione.
+\begin{definition}
+    Dato un set $\Sigma$ di archi non presenti in $G$, si denota con $G_{\Sigma}$ il nuovo grafo $G_{\Sigma}\doteq (V,E \cup \Sigma)$. 
+\end{definition}
+\begin{problem}\label{problem:1}
+    Dato $C \in \{R,B\}$, trovare il più piccolo insieme $\Sigma$ di vertici distinti $(v,w)\not \in E$ con $C_v=C$ e $C_w\not = C$ dove $P_C(G_\Sigma)= \emptyset $.
+\end{problem}
+In altri termini, il problema da risolvere all'ottimo consiste nel trovare un insieme minimo di archi aventi come estremi vertici di colore opposto, che permetta 
+di azzerare il numero di vertici parochial. Il problema \ref{problem:1} è NP-Hard e APX-Hard, cioè un problema non risolvibile all'ottimo in tempo polinomiale,
+ma ammette un'approssimazione polinomiale.
+\subsection{Approssimazione del problema}
+Per approssimare il problema \ref{problem:1}, saranno necessarie delle nuove metriche per analizzare come cambia il grafo $G$
+in seguito all'aggiunta di nuovi archi.
+\begin{definition}(Guadagno di $U$ grazie a $\Sigma$)
+    Si assuma di aggiungere al grafo $G$ tutti gli archi di $\Sigma$, ogni edge  $e=(v,w)$ ha un peso $M(e)$. Per un set $U$ di vertici, si definisce guadagno di $U$ 
+    grazie a $\Sigma$
+    \begin{equation}\label{REP:gain}
+        \Delta(G,U,\Sigma,\{M(e)\}_{e\in\Sigma},t')\doteq {1\over{|U|}}\sum_{u\in U}{\Big(B_{G}^{t'}(u) - B_{G_{\Sigma}}^{t'}(u)\Big)}
+    \end{equation} 
+\end{definition}
+In altri termini, si valuta il cambiamento medio del Bubble Radius dei vertici contenuti in U, cioè quelli coinvolti dagli archi di $\Sigma$.
+Ogni arco aggiunto, quindi, deve avere un peso $M(e)$. Questo peso è dato da un oracolo che calcola il peso di un arco $M(v,w)$ in funzione di $v$ e delle informazioni
+\emph{locali} di $v$ (es. numero di archi uscenti). Importante notare che, dopo l'aggiunta di un arco $e=(v,w)$, gli altri archi uscenti dal vertice $v$
+avranno un peso scalato di $1-M(e)$.
+Date queste considerazioni il problema \ref{problem:1} può essere approssimato come segue.
+\begin{problem}\label{problem:2}
+    Sia $C\in\{R,B\}$. Trovare un set $\Sigma={\{(v_i,w_i)\}}_{i=1}^{k}$ di $k$ archi con $v_i\in C$ e $w_i \not \in C$, per $1\le i \le k$,
+    che massimizzi $\Delta(G,P_C(G),\Sigma,\{M(e)\}_{e\in\Sigma},t)$.
+\end{problem}
+RePBubLik è l'algoritmo che approssima il problema \ref{problem:2}.
+\begin{definition}
+    Per un qualsiasi vertice $v$ e $ 0 \le t' \le t $, sia
+    \begin{equation}\label{eq:F}
+        F_{t'}(v)\doteq 1 -\Prob\Big( v \overset{<t'}{\underset{G}{\leadsto}}v\Big)
+    \end{equation}
+\end{definition} 
+Questa quantità è uno (cioè la probabilità di avere un random walk da $v$ che torni a $v$ in 0 passi) più la probabilità che un random walk da $v$ finisca in $v$
+in meno di $t'$ steps.
+\begin{theorem}[Approssimazione di RePBubLik]
+    Sia $\Sigma$ l'output di RePBubLik e $OPT$ la soluzione ottima al problema \ref{problem:2}. 
+    Sia $\Delta_{\Sigma}=\Delta(G,P_C(G),\Sigma,\{M(e)\}_{e\in\Sigma},t)$. Allora
+    \begin{equation}
+        \Delta(G,P_C(G),OPT,\{M(e)\}_{e\in OPT},t) \le \Big(2{t\over{r}}\gamma_{t-2} + 1\Big)\Big(1+{1\over{e}}\Big)\Delta_{\Sigma}
+    \end{equation}
+    dove $\gamma_t\doteq \max_{v\in V} F_{t'}(v)$
+\end{theorem}
+Dunque, RePBubLik fornisce una \emph{approssimazione a fattore costante}, sotto l'assunzione che $\gamma_t$ sia una costante e che $r\ge t/2$.
+\section{RePBubLik: definizione intuitiva}
+Dato il fatto che la funzione obiettivo (guadagno $\Delta$) è \emph{monotona} e \emph{sub-modulare}, la scelta gli archi da aggiungere al grafo $G$ può essere efftuata in maniera greedy.
+L'assunzione sui pesi che l'oracolo assegna agli archi, inoltre, garantisce che \emph{ogni} vertice di colore diverso da quello di partenza può essere scelto come estremo dell'arco, 
+senza che il peso di quest'ultimo venga modificato. Con queste assunzioni, si semplifica notevolmente il calcolo: invece che cercare le coppie $(v,w)$ da aggiungere a $G$, sarà necessario cercare solamente 
+solamente i \emph{vertici di partenza} da cui escono i nuovi archi. \\
+Per la scelta greedy, un buon candidato $v$ è il vertice che con maggior probabilità viene raggiunto da molti altri vertici in $P_{C_v}(G)$, attraverso random walk brevi. 
+Questa proprietà è espressa dal bounded RWCC $r^{t-2}(v,P_{C_v}(G))$.
+\newpage
+\section{RePBubLik: pseudocodice}
+\begin{algorithm}[!h]
+    \caption{RePBubLik}\label{alg:repbublik}
+    \begin{algorithmic}
+    \Require Grafo $G=(V,E)$, numero $k$ di archi che vogliamo inserire, oracolo $W_G: V \times 2^{V\times V} \to [0,1]$, $C\in\{R,B\}$
+    \Ensure L'insieme $\Sigma$ di $k$ archi da aggiungere, con relativi pesi.
+    \\
+    \State $\Sigma \gets \emptyset$
+    \For{$i=1 ,\dots, k$}
+        \State $P \gets computeParochials(G_{\Sigma},C)$
+        \State $R \gets computeRWCentrality(P,G_{\Sigma})$
+        \State $v_i \gets \arg\max_{v \in P} R(v)\times W_G(v,\Sigma)$
+        \State $u_i \gets arbitrary \; in \; \overline{C}_{v_i}$
+        \State $\Sigma \gets \Sigma \cup \{(v_i,u_i)\}$
+    \EndFor
+    \State\Return $\Sigma$
+    \end{algorithmic}
+\end{algorithm}
+L'algoritmo RePBubLik prende come input un grafo $G$, un numero $k$ di archi da inserire, 
+un oracolo $W$ che fornisce il peso dei nuovi archi e un set $C\in\{R,B\}$ di nodi di un dato colore.\\
+Per prima cosa, viene creato l'insieme $\Sigma$ (inizialmente vuoto) che conterrà gli archi da aggiungere.
+Successivamente, per $k$ volte: viene calcolato il Bubble Radius di ogni nodo in $C$ nel grafo $G_\Sigma$, ottenuto 
+aggiungendo a $G$ gli archi contenuti in $\Sigma$. Si ottiene, così, un set $P$ di nodi parochial del grafo $G_\Sigma$.
+In seguito, si calcola il RWCC $r^{t-2}(v,P)$ di ogni nodo $v\in P$ e questi valori vengo salvati in un dizionario $R$.
+Una volta popolato $R$, viene scelto il nodo $v_i\in P$ avente il valore più alto di $R(v_i)\times W_G(v_i,\Sigma)$ e un 
+qualsiasi nodo $u_i$ di colore $\overline{C}_{v_i}$. Così facendo, si ottiene l' arco $(v_i,u_i)$ da aggiungere all'insieme $\Sigma$.
+Dopo le $k$ iterazioni, infatti, l'insieme $\Sigma$ sarà popolato da $k$ archi, il cui peso è deciso dall'oracolo.
+\subsection{RePBubLik+}
+Come si può notare dallo pseudocodice, RePBubLik ripete il calcolo del Bubble Radius di \emph{tutti i vertici}  e del RWCC di \emph{tutti i vertici in $P$} 
+ad \emph{ogni iterazioni} del ciclo. Questo, a livello computazionale, è molto oneroso.\\
+Dunque, una pratica alternativa a RePBubLik è una sua versione approssimata (RePBubLik+) che calcola il Bubble Radius e RWCC una \emph{sola
+volta, prima di entare nel ciclo}. Chiaramente, questa approssimazione non permette di ottenere garanzie rigorose sull'approssimazione calcolata, 
+ma diventa necessaria per diminuire il tempo di esecuzione dell'algoritmo.
+
+
+
+    
