@@ -39,6 +39,8 @@
 
 \usepackage{amsmath}
 \usepackage{amsthm}
+\usepackage[sorting=none]{biblatex} % For biblatex
+\addbibresource{refs.bib} % Path to your .bib file
 
 
 \DeclareMathOperator{\E}{\mathbb{E}}
@@ -164,11 +166,11 @@
 %\afterpage{\blankpage}
 
 % % Chapter 1
-% \clearpage{\pagestyle{plain}\cleardoublepage}
-% \chapter{Definizioni Preliminari}
-% \input{chapter/def.tex}
+\clearpage{\pagestyle{plain}\cleardoublepage}
+\chapter{The ACS Framework}
+\input{chapter/ACSFramework.tex}
 
-% %\afterpage{\blankpage}
+%\afterpage{\blankpage}
 
 % % Chapter 2
 % \clearpage{\pagestyle{plain}\cleardoublepage}
@@ -206,5 +208,5 @@
 % \clearpage{\pagestyle{plain}\cleardoublepage}
 % \chapter*{Ringraziamenti}
 % \input{chapter/thanks.tex}
-
+\printbibliography[nottype=online]
 \end{document}

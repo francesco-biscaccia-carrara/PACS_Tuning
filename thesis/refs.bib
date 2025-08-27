@@ -1,0 +1,123 @@
+@manual{cplex,
+  title        = {IBM ILOG CPLEX Optimization Studio},
+  author       = {{IBM Corporation}},
+  year         = {2024},
+  note         = {Version 22.1},
+  url          = {https://www.ibm.com/products/ilog-cplex-optimization-studio}
+}
+
+@manual{gurobi,
+  title        = {Gurobi Optimizer Reference Manual},
+  author       = {{Gurobi Optimization, LLC}},
+  year         = {2024},
+  note         = {Version 11.0},
+  url          = {https://www.gurobi.com}
+}
+
+@Inbook{LNS,
+author="Pisinger, David
+and Ropke, Stefan",
+editor="Gendreau, Michel
+and Potvin, Jean-Yves",
+title="Large Neighborhood Search",
+bookTitle="Handbook of Metaheuristics",
+year="2010",
+publisher="Springer US",
+address="Boston, MA",
+pages="399--419",
+abstract="Heuristics based on large neighborhood search have recently shown outstanding results in solving various transportation and scheduling problems. Large neighborhood search methods explore a complex neighborhood by use of heuristics. Using large neighborhoods makes it possible to find better candidate solutions in each iteration and hence traverse a more promising search path. Starting from the large neighborhood search method, we give an overview of very large scale neighborhood search methods and discuss recent variants and extensions like variable depth search and adaptive large neighborhood search.",
+isbn="978-1-4419-1665-5",
+doi="10.1007/978-1-4419-1665-5_13",
+url="https://doi.org/10.1007/978-1-4419-1665-5_13"
+}
+
+@inproceedings{2opt,
+author = {Achterberg, Tobias and Berthold, Timo and Hendel, Gregor},
+year = {2012},
+month = {01},
+title = {Rounding and Propagation Heuristics for Mixed Integer Programming}
+}
+
+@Article{ACS,
+author={Mungu{\'i}a, Llu{\'i}s-Miquel
+and Ahmed, Shabbir
+and Bader, David A.
+and Nemhauser, George L.
+and Shao, Yufen},
+title={Alternating criteria search: a parallel large neighborhood search algorithm for mixed integer programs},
+journal={Computational Optimization and Applications},
+year={2018},
+month={Jan},
+day={01},
+volume={69},
+number={1},
+pages={1-24},
+abstract={We present a parallel large neighborhood search framework for finding high quality primal solutions for general mixed-integer programs (MIPs). The approach simultaneously solves a large number of sub-MIPs with the dual objective of reducing infeasibility and optimizing with respect to the original objective. Both goals are achieved by solving restricted versions of two auxiliary MIPs, where subsets of the variables are fixed. In contrast to prior approaches, ours does not require a feasible starting solution. We leverage parallelism to perform multiple searches simultaneously, with the objective of increasing the effectiveness of our heuristic. We computationally compare the proposed framework with a state-of-the-art MIP solver in terms of solution quality, scalability, reproducibility, and parallel efficiency. Results show the efficacy of our approach in finding high quality solutions quickly both as a standalone primal heuristic and when used in conjunction with an exact algorithm.},
+issn={1573-2894},
+doi={10.1007/s10589-017-9934-5},
+url={https://doi.org/10.1007/s10589-017-9934-5}
+}
+
+@Article{largeParallel,
+author={Koch, Thorsten
+and Ralphs, Ted
+and Shinano, Yuji},
+title={Could we use a million cores to solve an integer program?},
+journal={Mathematical Methods of Operations Research},
+year={2012},
+month={Aug},
+day={01},
+volume={76},
+number={1},
+pages={67-93},
+abstract={Given the steady increase in cores per CPU, it is only a matter of time before supercomputers will have a million or more cores. In this article, we investigate the opportunities and challenges that will arise when trying to utilize this vast computing power to solve a single integer linear optimization problem. We also raise the question of whether best practices in sequential solution of ILPs will be effective in massively parallel environments.},
+issn={1432-5217},
+doi={10.1007/s00186-012-0390-9},
+url={https://doi.org/10.1007/s00186-012-0390-9}
+}
+
+@Article{RINS,
+author={Danna, Emilie
+and Rothberg, Edward
+and Pape, Claude Le},
+title={Exploring relaxation induced neighborhoods to improve MIP solutions},
+journal={Mathematical Programming},
+year={2005},
+month={Jan},
+day={01},
+volume={102},
+number={1},
+pages={71-90},
+abstract={Given a feasible solution to a Mixed Integer Programming (MIP) model, a natural question is whether that solution can be improved using local search techniques. Local search has been applied very successfully in a variety of other combinatorial optimization domains. Unfortunately, local search relies extensively on the notion of a solution neighborhood, and this neighborhood is almost always tailored to the structure of the particular problem being solved. A MIP model typically conveys little information about the underlying problem structure. This paper considers two new approaches to exploring interesting, domain-independent neighborhoods in MIP. The more effective of the two, which we call Relaxation Induced Neighborhood Search (RINS), constructs a promising neighborhood using information contained in the continuous relaxation of the MIP model. Neighborhood exploration is then formulated as a MIP model itself and solved recursively. The second, which we call guided dives, is a simple modification of the MIP tree traversal order. Loosely speaking, it guides the search towards nodes that are close neighbors of the best known feasible solution. Extensive computational experiments on very difficult MIP models show that both approaches outperform default CPLEX MIP and a previously described approach for exploring MIP neighborhoods (local branching) with respect to several different metrics. The metrics we consider are quality of the best integer solution produced within a time limit, ability to improve a given integer solution (of both good and poor quality), and time required to diversify the search in order to find a new solution.},
+issn={1436-4646},
+doi={10.1007/s10107-004-0518-7},
+url={https://doi.org/10.1007/s10107-004-0518-7}
+}
+
+@inproceedings{DINS,
+author = {Ghosh, Shubhashis},
+year = {2007},
+month = {06},
+pages = {310-323},
+title = {DINS, a MIP Improvement Heuristic},
+isbn = {978-3-540-72791-0},
+doi = {10.1007/978-3-540-72792-7_24}
+}
+
+@Article{localBranching,
+author={Fischetti, Matteo
+and Lodi, Andrea},
+title={Local branching},
+journal={Mathematical Programming},
+year={2003},
+month={Sep},
+day={01},
+volume={98},
+number={1},
+pages={23-47},
+abstract={The availability of effective exact or heuristic solution methods for general Mixed-Integer Programs (MIPs) is of paramount importance for practical applications. In the present paper we investigate the use of a generic MIP solver as a black-box ``tactical'' tool to explore effectively suitable solution subspaces defined and controlled at a ``strategic'' level by a simple external branching framework. The procedure is in the spirit of well-known local search metaheuristics, but the neighborhoods are obtained through the introduction in the MIP model of completely general linear inequalities called local branching cuts. The new solution strategy is exact in nature, though it is designed to improve the heuristic behavior of the MIP solver at hand. It alternates high-level strategic branchings to define the solution neighborhoods, and low-level tactical branchings to explore them. The result is a completely general scheme aimed at favoring early updatings of the incumbent solution, hence producing high-quality solutions at early stages of the computation. The method is analyzed computationally on a large class of very difficult MIP problems by using the state-of-the-art commercial software ILOG-Cplex 7.0 as the black-box tactical MIP solver. For these instances, most of which cannot be solved to proven optimality in a reasonable time, the new method exhibits consistently an improved heuristic performance: in 23 out of 29 cases, the MIP solver produced significantly better incumbent solutions when driven by the local branching paradigm.},
+issn={1436-4646},
+doi={10.1007/s10107-003-0395-5},
+url={https://doi.org/10.1007/s10107-003-0395-5}
+}
+

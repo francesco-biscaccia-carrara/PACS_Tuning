@@ -1,0 +1,111 @@
+The Alternating Criteria Search (ACS) heuristic is designed to pursue a twofold objective: to identify a feasible solution and to subsequently enhance its quality with respect to the objective function $c^T x$. To this end, ACS employs a Large Neighborhood Search (LNS) strategy, which iteratively solves two auxiliary mixed-integer programming (MIP) subproblems in order to address both objectives.
+The heuristic requires an initial vector, which is not mandated to be a feasible solution for the original MIP. This vector is progressively refined by solving sub-MIPs in which a subset of variables is fixed to the values of the initial input.
+\section{Feasibility-MIP (FMIP)}
+In linear programming theory, it is well established that the feasibility problem can be addressed using the two-phase Simplex method, in which an auxiliary optimization problem is solved to obtain a feasible starting basis, and hence a feasible solution.
+In a similar manner, the following auxiliary MIP problem, denoted as the Feasibility-MIP (FMIP), is formulated to identify a feasible starting solution:
+\begin{align*}
+\text{min} \quad & \sum_{i=0}^m \Delta_i^{+}+\Delta_i^{-} \\ \text{s.t.} \quad & Ax + I_m\Delta^+ - I_m\Delta^- =b\\ & x_i = \hat{x_i}, \; \forall i \in F\\ & l \le x \le u\\ & x_i \in \mathbb{Z}, \; \forall i \in \mathcal{I} \\ & \Delta^+ \ge 0, \Delta^- \ge 0 
+\end{align*} 
+Here, $I_m$ denotes an $m \times m$ identity matrix, while $\Delta^+$ and $\Delta^-$ are vectors in $R^m$ corresponding to the $m$ constraints. These are introduced as slack variables, and the objective is to minimize their sum. 
+Analogous to the two-phase Simplex method, a vector $x$ is feasible for the original MIP if and only if it can be extended to a solution of value $0$ for the associated FMIP. Since solving an FMIP is as computationally demanding as solving the original problem, the neighborhoods are restricted by fixing a given subset $F$ of the integer variables to the values of an input vector $[\hat{x}, \Delta^+, \Delta^-]$. Because of the introduction of slack variables, the vector $\hat{x}$ is not required to be a feasible solution itself, but it must be integral and within the variable bounds to preserve the feasibility of the model. In this way, the FMIP guarantees that feasibility is preserved under any arbitrary variable-fixing scheme. Once a feasible solution is obtained, any LNS-based improving heuristic—such as RINS\cite{RINS}, DINS\cite{DINS}, or local branching\cite{localBranching}—can then be applied to refine the solution.
+\section{Optimality-MIP (OMIP)}
+Rather than executing the FMIP until convergence to a feasible solution vector, the following auxiliary MIP problem, denoted as Optimality-MIP (OMIP), is designed to improve a partially feasible solution $[\hat{x}, \hat{\Delta}^+, \hat{\Delta}^-]$, which satisfies $\sum_{i=1}^m (\hat{\Delta}_i^+ + \hat{\Delta}_i^-) \neq 0$, with respect to the original objective $c^T x$:
+\begin{align*}
+\text{min} \quad & c^T x \\ \text{s.t.} \quad & Ax + I_m\Delta^+ - I_m\Delta^- = b\\ & \sum_{i=0}^m \Delta_i^{+}+\Delta_i^{-} \le \sum_{i=0}^m \hat\Delta_i^{+}+\hat\Delta_i^{-}\\ & x_i = \hat{x_i}, \; \forall i \in F\\ & l \le x \le u\\ & x_i \in \mathbb{Z} \quad \forall i \in \mathcal{I} \\ & \Delta^+ \ge 0, \; \Delta^- \ge 0 \end{align*} Analogous to the FMIP, the OMIP represents a reformulation of the original MIP model in which auxiliary slack variables are introduced for each constraint. This formulation enables the OMIP to enhance a solution even if it is not feasible for the original MIP. Moreover, to ensure that the optimal solution of the OMIP does not exceed the infeasibility of the input solution $\hat{x}$, an additional budget constraint is imposed, limiting the total slack to $\sum_{i=0}^m \hat\Delta_i^{+}+\hat\Delta_i^{-}$.
+
+By iteratively solving subproblems of both auxiliary MIPs, the ACS heuristic is designed to converge—although convergence is not formally guaranteed—to a high-quality feasible solution. By construction, infeasibility decreases monotonically after each iteration. However, the quality of the solution with respect to the original objective function may fluctuate.
+
+\section{Parallelization of ACS}
+The parallelization of ACS exploits parallelism by generating a diversified set of large neighborhood searches, which are solved simultaneously. Exploring multiple search neighborhoods in parallel is expected to increase the likelihood of identifying high-quality solutions.
+Following this parallelization step, the improvements obtained in parallel must be combined efficiently. To this end, an additional search subproblem is generated in which variables with identical values across different solutions are fixed. Consequently, the recombination phase constitutes a crucial step in PACS: by merging the improvements achieved during the parallel phase, the subsequent phase can explore a newly diversified set of large neighborhood searches based on the recombined solution, thereby enhancing the probability of further improvements.
+The pseudocode[\ref{alg:PACS}] illustrates the overall workflow.
+\begin{algorithm}[h]
+\caption{Parallel Alternating Criteria Search}\label{alg:PACS}
+\begin{algorithmic}
+\Function{FMIP\_LNS}{$\mathcal{F}, \hat{x}$}
+    \State \Return $\min\{\sum_i \Delta^+_i + \Delta^-_i \mid A x + I_m \Delta^+ - I_m \Delta^- = b, \; x_j = \hat{x}_j \; \forall j \in F, \; x_j \in \mathbb{Z} \; \forall j \in \mathcal{I}\}$
+\EndFunction
+\end{algorithmic}
+\vspace{1em}
+\begin{algorithmic}
+\Function{OMIP\_LNS}{$\mathcal{F}, \hat{x}, \hat{\Delta}$}
+    \State \Return $\min\{c^t x \mid A x + I_m \Delta^+ - I_m \Delta^- = b, \; \sum_i \Delta^+_i + \Delta^-_i \leq \hat{\Delta}, \; x_j = \hat{x}_j \; \forall j \in F, \; x_j \in \mathbb{Z} \; \forall j \in \mathcal{I}\}$
+\EndFunction
+\end{algorithmic}
+\vspace{1em}
+\begin{algorithmic}[1]
+\Ensure{Feasible solution $\hat{x}$ if found}
+\State Initialize $[\hat{x}, \Delta^+, \Delta^-]$ as an integer solution
+\State $T := numThreads()$
+\While{$timeElapsed()\le $ time-Limit}
+    \If{$\sum_i \Delta_i^+ + \Delta_i^- > 0$}
+        \ForAll{threads $t_i \in \{0, T-1\}$ \textbf{in parallel}}
+            \State $F_{t_i} :=$ randomized variable index subset, $F_{t_i} \subseteq \mathcal{I}$ 
+            \State $[x^{t_i}, \Delta^{+t_i}, \Delta^{-t_i}] :=$ FMIP\_LNS$(F_{t_i}, \hat{x})$
+        \EndFor
+        \State $U := \{ j \in \mathcal{I} | x^{t_i}_j = x^{t_k}_j, \; 0 \leq i < k < T\}$
+        \State $[\hat{x}, \Delta^+, \Delta^-] :=$ FMIP\_LNS$(U, x^{t_0})$
+    \EndIf
+    \State $\Delta^{UB} := \sum_i \Delta^+_i + \Delta^-_i$
+    \ForAll{threads $t_i \in \{0, T-1\}$ \textbf{in parallel}}
+            \State $F_{t_i} :=$ randomized variable index subset, $F_{t_i} \subseteq \mathcal{I}$
+            \State $[x^{t_i}, \Delta^{+t_i}, \Delta^{-t_i}] :=$ OMIP\_LNS$(F_{t_i}, \hat{x}, \Delta^{UB})$
+    \EndFor
+    \State $U := \{ j \in \mathcal{I} | x^{t_i}_j = x^{t_k}_j, \; 0 \leq i < k < T\}$
+    \State $[\hat{x}, \Delta^+, \Delta^-] :=$ OMIP\_LNS$(U, x^{t_0}, \Delta^{UB})$
+    
+\EndWhile
+\State \Return $[\hat{x}, \Delta^+, \Delta^-]$
+\end{algorithmic}
+\end{algorithm}
+Each processor generates a set of randomized variable fixings and solves the associated sub-MIP—either FMIP or OMIP—until the allotted time limit is reached.
+Subsequently, the solutions are exchanged, and the set $U$, containing the indices of variables common across solutions, is constructed. The recombination MIP then consists of a subproblem, again associated with either FMIP or OMIP, in which the variables in $U$ are fixed.
+The best solution obtained will be either the most feasible or the most optimal, depending on whether a recombination FMIP or OMIP is employed. Moreover, every solution used as input can be incorporated as a MIP start, as it remains feasible under any variable-fixing strategy.
+Processor synchronization and memory communication are handled via the Message Passing Interface (MPI), owing to its efficient all-to-all collective communication primitives in distributed large-scale architectures.
+
+\section{Initialization of ACS}
+As introduced earlier in this chapter, ACS only requires a starting vector that is integer feasible and within the variable bounds. However, a stronger starting point is a solution that is as feasible as possible with respect to the objective function of the FMIP.
+The proposed algorithm provides a lightweight heuristic that seeks to minimize the infeasibility of the initial solution. This algorithm can be described by the pseudocode[\ref{alg:starting_vector}].
+\begin{algorithm}
+\caption{Starting vector heuristic}\label{alg:starting_vector}
+\begin{algorithmic}[1]
+\Require{Percentage of variables to fix $\theta$, $0 < \theta \leq 100$, Fixed bound constant $c_b$}
+\Ensure{Starting integer-feasible vector $\hat{x}$}
+\State $V :=$ list of integer variables sorted by increasing bound range $u-l$
+\State $F := \emptyset$
+\While{$\hat{x}$ is not integer feasible \textbf{AND} $\mathcal{F} \neq \mathcal{I}$}
+    \State $\mathcal{K} :=$ top $\theta \%$ of unfixed variables from $V$
+    \For{$k \in \mathcal{K}$}
+        \State $\hat{x}_k :=$ random integer value between $[\max(l_k, -c_b), \min(u_k, c_b)]$
+    \EndFor
+    \State $F := F \cup \mathcal{K}$
+    \State $[x, \Delta^+, \Delta^-] := \min\{\sum_i \Delta_i^+ + \Delta_i^- \mid A x + I_m \Delta^+ - I_m \Delta^- = b, \; x_j = \hat{x}_j \;\; \forall j \in F\}$
+    \State $Q :=$ index set of integer variables of $x$ with integer value
+    \State $\hat{x}_q = x_q, \;\; \forall q \in Q$
+    \State $F := F \cup Q$
+\EndWhile
+\State \Return $\hat{x}$
+\end{algorithmic}
+\end{algorithm}
+The algorithm first sorts the list of integer variables in order of increasing bound range. It then fixes the top $\theta$\% of variables to random integer values within their respective bounds. The input parameter $\theta$ controls the trade-off between the difficulty of the LP relaxation and the quality of the resulting starting solution. In cases where the bounds are infinite, a constant value of $10^6$ is used to clamp the bounds.
+The rationale behind the sorting step is to prioritize binary variables first, followed by the remaining integer variables.
+Until all integer variables are fixed, the LP relaxation of the FMIP is solved to optimize the unfixed variables. Any variables that attain integer values in this process are then fixed.
+Since at least $\theta$\% of the variables are fixed at each iteration, the algorithm is guaranteed to terminate after at most $\lceil 100 / \theta \rceil$ iterations.
+\section{Variable Fixing Strategy}
+Selecting an appropriate variable fixing scheme is a challenging task: an overly restrictive strategy may fail to yield improvements, whereas an excessively loose strategy can lead to a search space that is too large to explore efficiently within a reasonable timespan.
+The proposed algorithm constitutes a simple yet intuitive variable fixing method. It incorporates randomness to promote diversification and allows for controlling the number of variables to be fixed through an adjustable parameter.
+The algorithm is described in the  pseudocode[\ref{alg:variable_fixing}].
+\begin{algorithm}
+\caption{Variable Fixing Selection Algorithm}\label{alg:variable_fixing}
+\begin{algorithmic}[1]
+\Require{Fraction of variables to fix $\rho$, $0 < \rho < 1$}
+\Ensure{Set of integer indices $F$}
+\Function{RandomFixings}{$\rho$}
+    \State $i :=$ random element in $\mathcal{I}$
+    \State $F :=$ first $\rho \cdot |\mathcal{I}|$ consecutive integer variable indices starting from $i$ in a circular fashion
+    \State \Return $F$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+The fixings are determined by selecting a random integer variable $x'$ and fixing a consecutive sequence of integer variables starting from $x'$ up to a cap determined by $\rho$, an input parameter that specifies the number of variables to be fixed. The fixing is performed in a circular fashion: if the end of the set $\mathcal{I}$ is reached before the required number of variables are fixed, the algorithm continues from the beginning of $\mathcal{I}$.
+The effectiveness of this strategy relies on the fact that, for many problems—such as network flow and routing—the variables are arranged consecutively, often defining a cohesive substructure within the problem.
