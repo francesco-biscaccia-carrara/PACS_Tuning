@@ -1,0 +1,85 @@
+As discussed in the section[\ref{sec:lim_PACS}], the baseline PACS has a some limitations that make it not suitable for the general-purpose environments. Hence, the PACS parameter and PACS itself are tuned up with this aim: make PACS hardware and input independent, in order to be embedded into a state-of-the-art MIP solver-such as IBM ILOG CPLEX or GUROBI-.
+% Parameter to tune up: theta, rho, timing 
+
+\section{PACS with Generalized Fixing}
+The baseline PACS algorithm enforces both the starting vector construction and the fixing scheme to operate exclusively on the set $\mathcal{I}$ of integer variables. While this restriction may appear efficient and straightforward, it can, in fact, be limiting. In particular, if the MIP instance contains only a small fraction of integer variables relative to the total, focusing solely on them may reduce diversification and cause the algorithm to converge prematurely to a local minimum, which is undesirable in an optimization process.
+To overcome this issue, algorithm[\ref{alg:starting_vector}] and algorithm[\ref{alg:variable_fixing}] are generalized into algorithm[\ref{alg:gen_starting_vector}] and algorithm[\ref{alg:gen_variable_fixing}], respectively, thereby allowing both integer and continuous variables to be considered.
+\begin{algorithm}[H]
+\caption{Generalized Starting vector heuristic}\label{alg:gen_starting_vector}
+\begin{algorithmic}[1]
+\Require{Percentage of variables to fix $\theta$, $0 < \theta \leq 100$, Fixed bound constant $c_b$}
+\Ensure{Starting integer-feasible vector $\hat{x}$}
+\State $V :=$ list of \cancel{integer} variables sorted by increasing bound range $u-l$
+\State $F := \emptyset$
+\While{$\hat{x}$ is not integer feasible \textbf{AND} $F \neq V$}
+    \State $\mathcal{K} :=$ top $\theta \%$ of unfixed variables from $V$
+    \For{$k \in \mathcal{K}$}
+        \State $\hat{x}_k :=$ random integer value between $[\max(l_k, -c_b), \min(u_k, c_b)]$
+    \EndFor
+    \State $F := F \cup \mathcal{K}$
+    \State $[x, \Delta^+, \Delta^-] := \min\{\sum_i \Delta_i^+ + \Delta_i^- \mid A x + I_m \Delta^+ - I_m \Delta^- = b, \; x_j = \hat{x}_j \;\; \forall j \in F\}$
+    \State $Q :=$ index set of \cancel{integer} variables of $x$ with integer value
+    \State $\hat{x}_q = x_q, \;\; \forall q \in Q$
+    \State $F := F \cup Q$
+\EndWhile
+\State \Return $\hat{x}$
+\end{algorithmic}
+\end{algorithm}
+\begin{algorithm}[H]
+\caption{Generalized Variable Fixing Selection Algorithm}\label{alg:gen_variable_fixing}
+\begin{algorithmic}[1]
+\Require{Fraction of variables to fix $\rho$, $0 < \rho < 1$}
+\Ensure{Set of integer indices $F$}
+\Function{RandomFixings}{$\rho$}
+    \State $i :=$ random element in $\{1\dots n\}$ \Comment $n$: number of variables in the original MIP 
+    \State $F :=$ first $\rho \cdot n$ consecutive \cancel{integer} variable indices starting from $i$ in a circular fashion
+    \State \Return $F$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+Since these algorithms are executed on the auxiliary MIP problems -FMIP or OMIP-, the variables subject to fixing correspond exactly to those defined in the original MIP formulation.  
+By generalizing the fixing strategy to include both integer and continuous variables, diversification is enhanced, thereby reducing the likelihood of stagnation in local minima and potentially improving the exploration of the solution space.
+
+\section{Architecture-Agnostic Parallelization}
+In the original study, the Message Passing Interface (MPI) was employed to synchronize processors at each recombination phase. While this approach is well suited to high-performance computing environments, it may be unnecessarily complex in general-purpose scenarios, where a simpler multi-threading implementation is often preferable.  
+In this thesis, communication is instead managed through a set of logical threads, which may differ from the number of available hardware threads. This abstraction ensures that, even on machines with fewer physical cores, the algorithm can reproduce the same behavior across different architectures, provided sufficient computational time is allowed.  
+More specifically, during the coordination phase, either the most feasible or the most optimal solution—depending on whether a recombination FMIP or OMIP is performed—is shared among the logical processors. Each processor then continues working independently on its own copy, with updates to the incumbent solution handled exclusively through a thread-safe update function.  
+\begin{algorithm}[H]
+\caption{Parallel ACS Incumbent Update Procedure}
+\begin{algorithmic}[1]
+\Require Candidate solution $x$ with slack sum $S(x)$ and objective value $C(x)$; Incumbent $\tilde{x}$; Zero-tolerance $\epsilon$
+\Ensure Updated incumbent $\tilde{x}$ in a thread-safe manner
+\Function{UpdateIncumbent}{$x$}
+    \State acquire lock
+    \If{$(|S(x)| < |S(\tilde{x})|) \;\;\lor\;\; (|S(x)| < \epsilon \;\land\; C(x) < C(\tilde{x}))$}
+        \State $\tilde{x} \gets x$
+    \EndIf
+    \State release lock
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+This mechanism is crucial to ensure that the algorithm consistently improves and converges within the given time limit. The incumbent solution is updated whenever a better solution is identified: either one with a smaller total slack, indicating improved feasibility, or one with a lower objective value $c^T x$ provided that the slack sum is less than the tolerance parameter $\epsilon$, the zero-feasibility threshold.
+
+\section{Parameter Tuning without an Explicit Calibration Phase}
+To eliminate the need for a separate calibration phase, the parameters $\theta$ for the starting vector, $\rho$ for the fixing strategy, and the time span of each sub-MIP in Algorithm \ref{alg:PACS} must be carefully selected.  
+\subsection{Determination of Parameter $\theta$}
+For simplicity, the parameter $\theta$ is initially fixed to $0.25$. A more effective initialization strategy will be discussed in the Section \ref{}, where a new heuristic is introduced.  
+\subsection{Determination of Sub-MIP Time Limit}
+To ensure determinism in the implementation, each sub-MIP is assigned both a time limit equal to the remaining computation time and a deterministic time limit, defined as the maximum number of instructions the solver can execute before termination.  
+The deterministic time limit is set according to the following formula:
+$$
+TL_{DET} = \max\Big(x, \min\Big(\frac{nz}{y}, X\Big)\Big),
+$$
+which provides a dynamic strategy to determine the deterministic time limit of the sub-MIP.  
+Here, $x$ and $X$ denote the minimum and maximum allowable values for the deterministic time limit, respectively, $nz$ represents the number of nonzeros in the constraint matrix $A$ of the MIP problem, and $y$ serves as a scaling factor. The selected parameter values are as follows:
+\begin{enumerate}
+\item Minimum deterministic time limit: $x = 10^3$  
+\item Scaling factor: $y = 10^2$  
+\item Maximum deterministic time limit: $X = 10^7$  
+\end{enumerate}
+\subsection{Determination of Parameter $\rho$}
+The parameter $\rho$ is chosen from the set $\{0.1, 0.25, 0.5, 0.75, 0.9\}$ based on experimental results. Further details are provided in Chapter \ref{}. Intuitively, a smaller value of $\rho$ offers greater flexibility to the solver, which can improve the quality of the intermediate solutions.  
+
+\section{Dynamic Fixing Strategy}
+

@@ -7,7 +7,7 @@ In a similar manner, the following auxiliary MIP problem, denoted as the Feasibi
 \text{min} \quad & \sum_{i=0}^m \Delta_i^{+}+\Delta_i^{-} \\ \text{s.t.} \quad & Ax + I_m\Delta^+ - I_m\Delta^- =b\\ & x_i = \hat{x_i}, \; \forall i \in F\\ & l \le x \le u\\ & x_i \in \mathbb{Z}, \; \forall i \in \mathcal{I} \\ & \Delta^+ \ge 0, \Delta^- \ge 0 
 \end{align*} 
 Here, $I_m$ denotes an $m \times m$ identity matrix, while $\Delta^+$ and $\Delta^-$ are vectors in $R^m$ corresponding to the $m$ constraints. These are introduced as slack variables, and the objective is to minimize their sum. 
-Analogous to the two-phase Simplex method, a vector $x$ is feasible for the original MIP if and only if it can be extended to a solution of value $0$ for the associated FMIP. Since solving an FMIP is as computationally demanding as solving the original problem, the neighborhoods are restricted by fixing a given subset $F$ of the integer variables to the values of an input vector $[\hat{x}, \Delta^+, \Delta^-]$. Because of the introduction of slack variables, the vector $\hat{x}$ is not required to be a feasible solution itself, but it must be integral and within the variable bounds to preserve the feasibility of the model. In this way, the FMIP guarantees that feasibility is preserved under any arbitrary variable-fixing scheme. Once a feasible solution is obtained, any LNS-based improving heuristic—such as RINS\cite{RINS}, DINS\cite{DINS}, or local branching\cite{localBranching}—can then be applied to refine the solution.
+Analogous to the two-phase Simplex method, a vector $x$ is feasible for the original MIP if and only if it can be extended to a solution of value $0$ for the associated FMIP. Since solving an FMIP is as computationally demanding as solving the original problem, the neighborhoods are restricted by fixing a given subset $F$ of the integer variables to the values of an input vector $[\hat{x}, \Delta^+, \Delta^-]$. Because of the introduction of slack variables, the vector $\hat{x}$ is not required to be a feasible solution itself, but it must be integral and within the variable bounds to preserve the feasibility of the model. In this way, the FMIP guarantees that feasibility is preserved under any arbitrary variable-fixing scheme. Once a feasible solution is obtained, any LNS-based improving heuristic—such as RINS$^\text{\cite{RINS}}$, DINS$^\text{\cite{DINS}}$, or local branching$^\text{\cite{localBranching}}$—can then be applied to refine the solution.
 \section{Optimality-MIP (OMIP)}
 Rather than executing the FMIP until convergence to a feasible solution vector, the following auxiliary MIP problem, denoted as Optimality-MIP (OMIP), is designed to improve a partially feasible solution $[\hat{x}, \hat{\Delta}^+, \hat{\Delta}^-]$, which satisfies $\sum_{i=1}^m (\hat{\Delta}_i^+ + \hat{\Delta}_i^-) \neq 0$, with respect to the original objective $c^T x$:
 \begin{align*}
@@ -37,7 +37,7 @@ The pseudocode[\ref{alg:PACS}] illustrates the overall workflow.
 \Ensure{Feasible solution $\hat{x}$ if found}
 \State Initialize $[\hat{x}, \Delta^+, \Delta^-]$ as an integer solution
 \State $T := numThreads()$
-\While{$timeElapsed()\le $ time-Limit}
+\While{$timeElapsed()\le $ timeLimit}
     \If{$\sum_i \Delta_i^+ + \Delta_i^- > 0$}
         \ForAll{threads $t_i \in \{0, T-1\}$ \textbf{in parallel}}
             \State $F_{t_i} :=$ randomized variable index subset, $F_{t_i} \subseteq \mathcal{I}$ 
@@ -61,7 +61,7 @@ The pseudocode[\ref{alg:PACS}] illustrates the overall workflow.
 Each processor generates a set of randomized variable fixings and solves the associated sub-MIP—either FMIP or OMIP—until the allotted time limit is reached.
 Subsequently, the solutions are exchanged, and the set $U$, containing the indices of variables common across solutions, is constructed. The recombination MIP then consists of a subproblem, again associated with either FMIP or OMIP, in which the variables in $U$ are fixed.
 The best solution obtained will be either the most feasible or the most optimal, depending on whether a recombination FMIP or OMIP is employed. Moreover, every solution used as input can be incorporated as a MIP start, as it remains feasible under any variable-fixing strategy.
-Processor synchronization and memory communication are handled via the Message Passing Interface (MPI), owing to its efficient all-to-all collective communication primitives in distributed large-scale architectures.
+Processor synchronization and memory communication are handled via the Message Passing Interface (MPI)$^\text{\cite{MPI}}$, owing to its efficient all-to-all collective communication primitives in distributed large-scale architectures.
 
 \section{Initialization of ACS}
 As introduced earlier in this chapter, ACS only requires a starting vector that is integer feasible and within the variable bounds. However, a stronger starting point is a solution that is as feasible as possible with respect to the objective function of the FMIP.
@@ -73,7 +73,7 @@ The proposed algorithm provides a lightweight heuristic that seeks to minimize t
 \Ensure{Starting integer-feasible vector $\hat{x}$}
 \State $V :=$ list of integer variables sorted by increasing bound range $u-l$
 \State $F := \emptyset$
-\While{$\hat{x}$ is not integer feasible \textbf{AND} $\mathcal{F} \neq \mathcal{I}$}
+\While{$\hat{x}$ is not integer feasible \textbf{AND} $F \neq \mathcal{I}$}
     \State $\mathcal{K} :=$ top $\theta \%$ of unfixed variables from $V$
     \For{$k \in \mathcal{K}$}
         \State $\hat{x}_k :=$ random integer value between $[\max(l_k, -c_b), \min(u_k, c_b)]$
