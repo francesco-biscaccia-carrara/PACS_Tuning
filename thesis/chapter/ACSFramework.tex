@@ -91,7 +91,7 @@ The algorithm first sorts the list of integer variables in order of increasing b
 The rationale behind the sorting step is to prioritize binary variables first, followed by the remaining integer variables.
 Until all integer variables are fixed, the LP relaxation of the FMIP is solved to optimize the unfixed variables. Any variables that attain integer values in this process are then fixed.
 Since at least $\theta$\% of the variables are fixed at each iteration, the algorithm is guaranteed to terminate after at most $\lceil 100 / \theta \rceil$ iterations.
-\section{Variable Fixing Strategy}
+\section{Variable Fixing Strategy}\label{sec:PACS_var_fix}
 Selecting an appropriate variable fixing scheme is a challenging task: an overly restrictive strategy may fail to yield improvements, whereas an excessively loose strategy can lead to a search space that is too large to explore efficiently within a reasonable timespan.
 The proposed algorithm constitutes a simple yet intuitive variable fixing method. It incorporates randomness to promote diversification and allows for controlling the number of variables to be fixed through an adjustable parameter.
 The algorithm is described in the  pseudocode[\ref{alg:variable_fixing}].

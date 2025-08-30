@@ -1,9 +1,9 @@
-As discussed in the section[\ref{sec:lim_PACS}], the baseline PACS has a some limitations that make it not suitable for the general-purpose environments. Hence, the PACS parameter and PACS itself are tuned up with this aim: make PACS hardware and input independent, in order to be embedded into a state-of-the-art MIP solver-such as IBM ILOG CPLEX or GUROBI-.
+% As discussed in the section[\ref{sec:lim_PACS}], the baseline PACS has a some limitations that make it not suitable for the general-purpose environments. Hence, the PACS parameter and PACS itself are tuned up with this aim: make PACS hardware and input independent, in order to be embedded into a state-of-the-art MIP solver-such as IBM ILOG CPLEX or GUROBI-.
 % Parameter to tune up: theta, rho, timing 
 
 \section{PACS with Generalized Fixing}
 The baseline PACS algorithm enforces both the starting vector construction and the fixing scheme to operate exclusively on the set $\mathcal{I}$ of integer variables. While this restriction may appear efficient and straightforward, it can, in fact, be limiting. In particular, if the MIP instance contains only a small fraction of integer variables relative to the total, focusing solely on them may reduce diversification and cause the algorithm to converge prematurely to a local minimum, which is undesirable in an optimization process.
-To overcome this issue, algorithm[\ref{alg:starting_vector}] and algorithm[\ref{alg:variable_fixing}] are generalized into algorithm[\ref{alg:gen_starting_vector}] and algorithm[\ref{alg:gen_variable_fixing}], respectively, thereby allowing both integer and continuous variables to be considered.
+To overcome this issue, Algorithm \ref{alg:starting_vector} and Algorithm \ref{alg:variable_fixing} are generalized into Algorithm \ref{alg:gen_starting_vector} and Algorithm \ref{alg:gen_variable_fixing}, respectively, thereby allowing both integer and continuous variables to be considered.
 \begin{algorithm}[H]
 \caption{Generalized Starting vector heuristic}\label{alg:gen_starting_vector}
 \begin{algorithmic}[1]
@@ -43,9 +43,9 @@ By generalizing the fixing strategy to include both integer and continuous varia
 \section{Architecture-Agnostic Parallelization}
 In the original study, the Message Passing Interface (MPI) was employed to synchronize processors at each recombination phase. While this approach is well suited to high-performance computing environments, it may be unnecessarily complex in general-purpose scenarios, where a simpler multi-threading implementation is often preferable.  
 In this thesis, communication is instead managed through a set of logical threads, which may differ from the number of available hardware threads. This abstraction ensures that, even on machines with fewer physical cores, the algorithm can reproduce the same behavior across different architectures, provided sufficient computational time is allowed.  
-More specifically, during the coordination phase, either the most feasible or the most optimal solution—depending on whether a recombination FMIP or OMIP is performed—is shared among the logical processors. Each processor then continues working independently on its own copy, with updates to the incumbent solution handled exclusively through a thread-safe update function.  
+More specifically, during the coordination phase, either the most feasible or the most optimal solution—depending on whether a recombination FMIP or OMIP is performed—is shared among the logical processors. Each processor then continues working independently on its own copy, with updates to the incumbent solution handled exclusively through a thread-safe update function, formally described in Algorithm~\ref{alg:inc_update}.  
 \begin{algorithm}[H]
-\caption{Parallel ACS Incumbent Update Procedure}
+\caption{Parallel ACS Incumbent Update Procedure}\label{alg:inc_update}
 \begin{algorithmic}[1]
 \Require Candidate solution $x$ with slack sum $S(x)$ and objective value $C(x)$; Incumbent $\tilde{x}$; Zero-tolerance $\epsilon$
 \Ensure Updated incumbent $\tilde{x}$ in a thread-safe manner
@@ -59,27 +59,88 @@ More specifically, during the coordination phase, either the most feasible or th
 \end{algorithmic}
 \end{algorithm}
 
-This mechanism is crucial to ensure that the algorithm consistently improves and converges within the given time limit. The incumbent solution is updated whenever a better solution is identified: either one with a smaller total slack, indicating improved feasibility, or one with a lower objective value $c^T x$ provided that the slack sum is less than the tolerance parameter $\epsilon$, the zero-feasibility threshold.
+This mechanism is crucial to ensure that the algorithm consistently improves and converges within the given time limit. The incumbent solution is updated whenever a better solution is identified: either one with a smaller slack sum, indicating improved feasibility, or one with a lower objective value $c^T x$ provided that the slack sum is less than the tolerance parameter $\epsilon$, the zero-feasibility threshold.
 
-\section{Parameter Tuning without an Explicit Calibration Phase}
-To eliminate the need for a separate calibration phase, the parameters $\theta$ for the starting vector, $\rho$ for the fixing strategy, and the time span of each sub-MIP in Algorithm \ref{alg:PACS} must be carefully selected.  
-\subsection{Determination of Parameter $\theta$}
-For simplicity, the parameter $\theta$ is initially fixed to $0.25$. A more effective initialization strategy will be discussed in the Section \ref{}, where a new heuristic is introduced.  
-\subsection{Determination of Sub-MIP Time Limit}
-To ensure determinism in the implementation, each sub-MIP is assigned both a time limit equal to the remaining computation time and a deterministic time limit, defined as the maximum number of instructions the solver can execute before termination.  
-The deterministic time limit is set according to the following formula:
+\section{Eliminating Calibration in PACS Parameter Selection}
+After adapting the PACS algorithm to a more general-purpose environment, another important challenge arises: parameter selection. Since PACS must be applicable to a wide range of hard MIP instances, it is necessary to identify parameter settings that generally perform well, both in terms of computational efficiency and heuristic solution quality.  
+The goal is to remove the need for an explicit calibration phase, while still ensuring reliable performance. The tuning process specifically concerns the following parameters:
+\begin{enumerate}
+    \item The time span assigned to each sub-MIP, either FMIP\_LNS or OMIP\_LNS
+    \item The parameter $\rho$ governing the fixing strategy 
+    \item The parameter $\theta$ governing the starting vector
+\end{enumerate}
+
+\subsection{Adaptive Determination of Sub-MIP Time Span}
+To guarantee determinism in the implementation, each sub-MIP is assigned both a time limit equal to the remaining computation time and a deterministic time limit. The latter is defined as the maximum number of instructions that the solver may execute before termination.  
+The deterministic time limit is computed according to the following formula:
 $$
 TL_{DET} = \max\Big(x, \min\Big(\frac{nz}{y}, X\Big)\Big),
 $$
-which provides a dynamic strategy to determine the deterministic time limit of the sub-MIP.  
-Here, $x$ and $X$ denote the minimum and maximum allowable values for the deterministic time limit, respectively, $nz$ represents the number of nonzeros in the constraint matrix $A$ of the MIP problem, and $y$ serves as a scaling factor. The selected parameter values are as follows:
+which provides a dynamic mechanism for adapting the computational effort of each sub-MIP.  
+In this formulation, $x$ and $X$ denote the minimum and maximum allowable deterministic time limits, respectively, $nz$ represents the number of nonzeros in the constraint matrix $A$ of the MIP problem, and $y$ acts as a scaling factor. The chosen parameter values are:
 \begin{enumerate}
 \item Minimum deterministic time limit: $x = 10^3$  
 \item Scaling factor: $y = 10^2$  
 \item Maximum deterministic time limit: $X = 10^7$  
 \end{enumerate}
-\subsection{Determination of Parameter $\rho$}
-The parameter $\rho$ is chosen from the set $\{0.1, 0.25, 0.5, 0.75, 0.9\}$ based on experimental results. Further details are provided in Chapter \ref{}. Intuitively, a smaller value of $\rho$ offers greater flexibility to the solver, which can improve the quality of the intermediate solutions.  
+This dynamic adjustment removes the need to explicitly set a fixed time limit for each subproblem, thereby eliminating the necessity of parameter tuning in this respect.
 
-\section{Dynamic Fixing Strategy}
+\subsection{Adaptive Variable Fixing through $\rho$ Adjustment}
+\subsubsection{Fixed $\rho$ Initialization}
+As discussed in Section \ref{sec:PACS_var_fix}, selecting an appropriate variable fixing scheme is a non-trivial task. In particular, the random fixings scheme presents additional challenges: if the fraction $\rho$ of variables to be fixed is set too high, the procedure may fail to yield meaningful improvements; conversely, if $\rho$ is set too low, the resulting search space may become excessively large, making it computationally intractable within a reasonable time frame. \\
+For this reason, in the first instance, the parameter $\rho$ is selected from a set of predetermined candidate values. Anticipating the results presented in Section \ref{}, it can be observed that certain values of $\rho$ are more effective in terms of solution quality, as they grant the solver greater flexibility during the optimization process.
+
+\subsubsection{Dynamic Adjustment of Parameter $\rho$}
+Since the LNS heuristics in the PACS algorthm restrict the search space by fixing a number of variables according to the value of $\rho$, it is natural to design a mechanism for dynamically adapting this parameter in order to increase the likelihood of discovering high-quality solutions.  
+\begin{algorithm}[H]
+\caption{Parallel ACS Rho Update (Parallel Phases)}\label{alg:rho_update_MT}
+\begin{algorithmic}[1]
+\Require Status code $MIP_{code}$ returned by the solver; Adjustment step $\Delta_\rho$ for $\rho$; The variable fixing parameter $\rho$; Number of parallel sub-MIPs $num_{MIP}$
+\Ensure Updated value of $\rho$, synchronized across parallel sub-MIPs
+\Function{DynRhoUpdate}{$MIP_{code}$, $\Delta_\rho$, $\rho$, $num_{MIP}$}
+    \State $\hat\Delta_\rho \gets {\Delta_\rho \over{num_{MIP}}}$
+    \State acquire lock
+    \If{$MIP_{code} = OPT \;\lor\; MIP_{code} = OPT_{TOL}$}
+        \State $\rho \gets \rho - \hat\Delta_\rho$
+    \EndIf
+    \If{$MIP_{code} = FEAS_{TL} \;\lor\; MIP_{code} = FEAS_{DET\_TL}$}
+        \State $\rho \gets \rho + \hat\Delta_\rho$
+    \EndIf
+    \State Clap $\rho$ within $[0.01,0.99]$
+    \If{*Tie Case detected*}
+        \State $\rho \gets \rho - \Delta_\rho$
+    \EndIf
+    \State release lock
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+The procedure, described in Algorithm \ref{alg:rho_update_MT}, is applied after each sub-MIP optimization phase in the parallel step. Based on the status returned by the solver, the value of $\rho$ is updated as follows:
+\begin{itemize}
+    \item  If the solver hits the time limit—either the deterministic limit or the global remaining time—while still producing a feasible solution, $\rho$ is increased by $\frac{\Delta_\rho}{num_{MIP}}$. This adjustment suggests fixing more variables in subsequent phases, thereby simplifying the subproblem to be solved. 
+    \item Conversely, if the solver converges to an optimal solution within the tolerance, this indicates that the corresponding region of the search space has already been sufficiently explored. In this case, $\rho$ is decreased by $\frac{\Delta_\rho}{num_{MIP}}$, enlarging the search space and granting the solver greater freedom in the following optimization steps.  
+\end{itemize}
+Since each sub-MIP independently attempts to modify the value of $\rho$, synchronization through locking is required to prevent inconsistencies. The final update is determined as the average of the adjustments proposed by the parallel optimization phases. In case of a tie, a deterministic rule is applied: $\rho$ is decreased by $\Delta_\rho$.  
+\begin{algorithm}[H]
+\caption{Parallel ACS Rho Update (Recombination Phases)}\label{alg:rho_update}
+\begin{algorithmic}[1]
+\Require Status code $MIP_{code}$ returned by the solver; Adjustment step $\Delta_\rho$ for $\rho$; The variable fixing parameter $\rho$; Number of parallel sub-MIPs $num_{MIP}$
+\Ensure Updated value of $\rho$ after recombination adjustment
+\Function{DynRhoUpdate}{$MIP_{code}$, $\Delta_\rho$, $\rho$, $num_{MIP}$}
+    \State $\hat\Delta_\rho \gets {2\Delta_\rho \over{num_{MIP}}}$
+    \If{$MIP_{code} = OPT \;\lor\; MIP_{code} = OPT_{TOL}$}
+        \State $\rho \gets \rho - \hat\Delta_\rho$
+    \EndIf
+    \If{$MIP_{code} = FEAS_{TL} \;\lor\; MIP_{code} = FEAS_{DET\_TL}$}
+        \State $\rho \gets \rho + \hat\Delta_\rho$
+    \EndIf
+    \State Clap $\rho$ within $[0.01,0.99]$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+For the recombination phase, the procedure is slightly modified into Algorithm \ref{alg:rho_update}, where the adjustment step is doubled, i.e. $2\Delta_\rho / num_{MIP}$, in order to resolve potential tie cases.\\
+Finally, although an initial value of $\rho$ must be provided to start the fixing process, experimental results in Section \ref{} show that performance is only marginally affected by this initialization. Consequently, the effectiveness of the method does not critically depend on the initial choice of $\rho$.
+
+\subsection{Determination of Parameter $\theta$}
+For simplicity, the parameter $\theta$ is initially fixed to $0.25$. A more effective initialization strategy will be discussed in the Section \ref{}, where a new heuristic is introduced.  
+
 
