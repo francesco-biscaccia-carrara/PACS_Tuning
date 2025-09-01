@@ -73,9 +73,9 @@ The goal is to remove the need for an explicit calibration phase, while still en
 \subsection{Adaptive Determination of Sub-MIP Time Span}
 To guarantee determinism in the implementation, each sub-MIP is assigned both a time limit equal to the remaining computation time and a deterministic time limit. The latter is defined as the maximum number of instructions that the solver may execute before termination.  
 The deterministic time limit is computed according to the following formula:
-$$
-TL_{DET} = \max\Big(x, \min\Big(\frac{nz}{y}, X\Big)\Big),
-$$
+\begin{equation}
+TL_{DET} = \max\Big(x, \min\Big(\frac{nz}{y}, X\Big)\Big)
+\end{equation}
 which provides a dynamic mechanism for adapting the computational effort of each sub-MIP.  
 In this formulation, $x$ and $X$ denote the minimum and maximum allowable deterministic time limits, respectively, $nz$ represents the number of nonzeros in the constraint matrix $A$ of the MIP problem, and $y$ acts as a scaling factor. The chosen parameter values are:
 \begin{enumerate}
@@ -89,7 +89,6 @@ This dynamic adjustment removes the need to explicitly set a fixed time limit fo
 \subsubsection{Fixed $\rho$ Initialization}
 As discussed in Section \ref{sec:PACS_var_fix}, selecting an appropriate variable fixing scheme is a non-trivial task. In particular, the random fixings scheme presents additional challenges: if the fraction $\rho$ of variables to be fixed is set too high, the procedure may fail to yield meaningful improvements; conversely, if $\rho$ is set too low, the resulting search space may become excessively large, making it computationally intractable within a reasonable time frame. \\
 For this reason, in the first instance, the parameter $\rho$ is selected from a set of predetermined candidate values. Anticipating the results presented in Section \ref{}, it can be observed that certain values of $\rho$ are more effective in terms of solution quality, as they grant the solver greater flexibility during the optimization process.
-
 \subsubsection{Dynamic Adjustment of Parameter $\rho$}
 Since the LNS heuristics in the PACS algorthm restrict the search space by fixing a number of variables according to the value of $\rho$, it is natural to design a mechanism for dynamically adapting this parameter in order to increase the likelihood of discovering high-quality solutions.  
 \begin{algorithm}[H]
@@ -140,7 +139,109 @@ Since each sub-MIP independently attempts to modify the value of $\rho$, synchro
 For the recombination phase, the procedure is slightly modified into Algorithm \ref{alg:rho_update}, where the adjustment step is doubled, i.e. $2\Delta_\rho / num_{MIP}$, in order to resolve potential tie cases.\\
 Finally, although an initial value of $\rho$ must be provided to start the fixing process, experimental results in Section \ref{} show that performance is only marginally affected by this initialization. Consequently, the effectiveness of the method does not critically depend on the initial choice of $\rho$.
 
-\subsection{Determination of Parameter $\theta$}
-For simplicity, the parameter $\theta$ is initially fixed to $0.25$. A more effective initialization strategy will be discussed in the Section \ref{}, where a new heuristic is introduced.  
+\subsection{Parameter-Free Strategy for Initial Solution Construction}
+Another non-trivial challenge concerns the selection of the initial solution vector. The parameter $\theta$, which regulates the trade-off between solution quality and execution time, must be tuned to suit the most general cases. Similar to the fixing strategy, the analysis considers a set of predetermined values for $\theta$, while also introducing a novel initialization strategy for the starting solution vector.  
+The motivation is that using a small value of $\theta$—which corresponds to generating a high-quality initial solution—may waste computation time, since the true strength of PACS lies in its diversification and parallelization capabilities.  
 
+Therefore, Algorithm \ref{alg:max_feasSol} is designed with the following goal: to provide a heuristic starting solution that is deterministic and computationally lightweight, while remaining reasonably feasible for the original MIP problem.  
+\begin{algorithm}[H]
+\caption{Heuristic Initialization of Starting Solution}\label{alg:max_feasSol}
+\begin{algorithmic}[1]
+\Require $MIP$ instance with $n$ variables, objective coefficients $c_i$, bounds $[l_i, u_i]$; zero-tolerance $\epsilon$
+\Ensure Starting solution vector $x \in \bar{\mathbb{R}}^n$
+\Function{StartSolMaxFeas}{$MIP$}
+    \State $x \gets ( +\infty, \ldots, +\infty ) \in \bar{\mathbb{R}}^n$
+    \For{$i = 1 \to n$}
+        \State $(l_i, u_i) \gets$ variable bounds of variable $i$
+        \If{$l_i = -\infty \;\land\; u_i = +\infty$}
+            \State $x_i \gets 0$
+        \ElsIf{$l_i > -\infty \;\land\; u_i = +\infty$}
+            \State $x_i \gets l_i$
+        \ElsIf{$l_i = -\infty \;\land\; u_i < +\infty$}
+            \State $x_i \gets u_i$
+        \Else
+            \If{$c_i \leq -\epsilon$}
+                \State $x_i \gets l_i$
+            \ElsIf{$c_i \geq \epsilon$}
+                \State $x_i \gets u_i$
+            \Else
+                \State $x_i \gets$ \Call{RandomInteger}{$l_i, u_i$}
+            \EndIf
+        \EndIf
+    \EndFor
+    \State \Return $x$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+The initialization procedure in Algorithm \ref{alg:max_feasSol} operates as follows:
+\begin{itemize}
+    \item If a variable has no finite bounds, it is set to $0$.
+    \item If a variable has only one finite bound, it is set to that bound.
+    \item If both bounds are finite:
+    \begin{itemize}
+        \item set the variable to the lower bound if $c_i \leq -\epsilon$,i.e. the coefficient is negative,
+        \item set it to the upper bound if $c_i \geq \epsilon$, i.e.the coefficient is positive,
+        \item choose a random integer within $[l_i, u_i]$ if $-\epsilon \leq c_i \leq \epsilon$, i.e.the coefficient is close to zero.
+    \end{itemize}
+\end{itemize}
+In this way, the solution initialization is almost entirely deterministic and computationally lightweight, although feasibility with respect to the original MIP problem may be partially compromised. Furthermore, the proposed strategy is parameter-free, which makes it particularly well-suited for the purposes of this thesis.
 
+\section{Additional PACS Optimizations}
+While the previous modifications focused on tuning or slightly adjusting specific components of the PACS workflow, the following procedures—analyzed in Section \ref{}—aim to further enhance the quality of the final solution.
+
+\subsection{Slack Upper Bound Enforcement and Budget Constraint Removal}
+The first idea is to exploit the values of the slack variables $\Delta^+$ and $\Delta^-$ obtained in a previous iteration to enforce these values as upper bounds.  
+In the PACS algorithm, this mechanism is already embedded in the budget constraint $\sum_{i=0}^m \Delta_i^{+}+\Delta_i^{-} \le \sum_{i=0}^m \hat\Delta_i^{+}+\hat\Delta_i^{-}$, which provides only a global upper bound. The proposed strategy, instead, aims at fixing the upper bounds of individual slack variables, thereby assisting subsequent FMIP optimizations and improving feasibility.  
+The procedure is implemented as shown in Algorithm \ref{alg:fixing_slackUB}.  
+\begin{algorithm}[H]\label{alg:fixing_slackUB}
+\caption{Fixing Slack Variables to Upper Bound}
+\begin{algorithmic}[1]
+\Require $MIP$ model with $n$ variables; Solution $x$ of length $n+2m$; Zero-tolerance $\epsilon$
+\Ensure Updated model with adjusted upper bounds for slack variables
+\Function{SlackUpperBoundFixing}{$MIP$, $x$}
+    \State $S_{UB} \gets \emptyset$ \Comment Set of variables-upper bound to be updated
+    \For{$i = n \to n+2m$}
+        \State $\hat{u}_i \gets$ upper bound of variable $i$
+        \If{$\hat{u}_i - x_i > \epsilon$}
+            \State $S_{UB} \gets  S_{UB} \cup (i,\hat{u}_i)$
+        \EndIf
+    \EndFor
+    \State \Return $S_{UB}$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+Here, the solution vector $x$ corresponds to the current PACS incumbent---both in the parallel and recombination phases.  
+The set $S_{UB}$ returned by the algorithm is then used to update the upper bounds of the slack variables, modifying the auxiliary FMIP and OMIP formulations as follows.  
+
+\subsubsection{FMIP Reformulation}
+\begin{equation}
+\begin{cases}
+\text{min} \quad & \sum_{i=0}^m \Delta_i^{+}+\Delta_i^{-} \\ 
+\text{s.t.} \quad & Ax + I_m\Delta^+ - I_m\Delta^- = b\\ 
+& x_i = \hat{x_i}, \; \forall i \in F\\ 
+& \Delta^+_i \le \hat{u}_i, \; \forall (i,\hat{u}_i) \in S_{UB}^+\\
+& \Delta^-_i \le \hat{u}_i, \; \forall (i,\hat{u}_i) \in S_{UB}^-\\  
+& l \le x \le u\\ 
+& x_i \in \mathbb{Z}, \; \forall i \in \mathcal{I} \\ 
+& \Delta^+ \ge 0, \; \Delta^- \ge 0
+\end{cases}
+\end{equation}
+
+\subsubsection{OMIP Reformulation}
+\begin{equation}
+\begin{cases}
+\text{min} \quad & c^T x \\ 
+\text{s.t.} \quad & Ax + I_m\Delta^+ - I_m\Delta^- = b\\
+& \cancel{\sum_{i=0}^m \Delta_i^{+}+\Delta_i^{-} \le \sum_{i=0}^m \hat\Delta_i^{+}+\hat\Delta_i^{-}}\\ 
+& x_i = \hat{x}_i, \; \forall i \in F\\ 
+& \Delta^+_i \le \hat{u}_i, \; \forall (i,\hat{u}_i) \in S_{UB}^+\\
+& \Delta^-_i \le \hat{u}_i, \; \forall (i,\hat{u}_i) \in S_{UB}^-\\  
+& l \le x \le u\\ 
+& x_i \in \mathbb{Z}, \; \forall i \in \mathcal{I} \\ 
+& \Delta^+ \ge 0, \; \Delta^- \ge 0 
+\end{cases}
+\end{equation}
+In these formulations, the set $S_{UB}$ is partitioned into $S_{UB}^+$ and $S_{UB}^-$ to remain consistent with the notation used for FMIP and OMIP.  
+It is worth noting that the budget constraint in OMIP can now be removed, since the slack upper bound fixing provides a stronger restriction, as will be further confirmed by the results in Section \ref{}.  
+
+\subsection{WalkMIP: Violated Constraints based Variable Fixing}

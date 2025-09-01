@@ -1,0 +1,449 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.2 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global}
+    \entry{cplex}{manual}{}
+      \name{author}{1}{}{%
+        {{hash=7bb018b160d19c13ef9838e91e53cccf}{%
+           family={{IBM Corporation}},
+           familyi={I\bibinitperiod}}}%
+      }
+      \strng{namehash}{7bb018b160d19c13ef9838e91e53cccf}
+      \strng{fullhash}{7bb018b160d19c13ef9838e91e53cccf}
+      \strng{bibnamehash}{7bb018b160d19c13ef9838e91e53cccf}
+      \strng{authorbibnamehash}{7bb018b160d19c13ef9838e91e53cccf}
+      \strng{authornamehash}{7bb018b160d19c13ef9838e91e53cccf}
+      \strng{authorfullhash}{7bb018b160d19c13ef9838e91e53cccf}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Version 22.1}
+      \field{title}{IBM ILOG CPLEX Optimization Studio}
+      \field{year}{2024}
+      \verb{urlraw}
+      \verb https://www.ibm.com/products/ilog-cplex-optimization-studio
+      \endverb
+      \verb{url}
+      \verb https://www.ibm.com/products/ilog-cplex-optimization-studio
+      \endverb
+    \endentry
+    \entry{gurobi}{manual}{}
+      \name{author}{1}{}{%
+        {{hash=e3fb19cc60482639d6ec88ca136745f1}{%
+           family={{Gurobi Optimization, LLC}},
+           familyi={G\bibinitperiod}}}%
+      }
+      \strng{namehash}{e3fb19cc60482639d6ec88ca136745f1}
+      \strng{fullhash}{e3fb19cc60482639d6ec88ca136745f1}
+      \strng{bibnamehash}{e3fb19cc60482639d6ec88ca136745f1}
+      \strng{authorbibnamehash}{e3fb19cc60482639d6ec88ca136745f1}
+      \strng{authornamehash}{e3fb19cc60482639d6ec88ca136745f1}
+      \strng{authorfullhash}{e3fb19cc60482639d6ec88ca136745f1}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Version 11.0}
+      \field{title}{Gurobi Optimizer Reference Manual}
+      \field{year}{2024}
+      \verb{urlraw}
+      \verb https://www.gurobi.com
+      \endverb
+      \verb{url}
+      \verb https://www.gurobi.com
+      \endverb
+    \endentry
+    \entry{LNS}{inbook}{}
+      \name{author}{2}{}{%
+        {{hash=27c28bde78e62d4964a22364b7887154}{%
+           family={Pisinger},
+           familyi={P\bibinitperiod},
+           given={David},
+           giveni={D\bibinitperiod}}}%
+        {{hash=2938a57825fdb9a5a7f8c36d8fa2e37d}{%
+           family={Ropke},
+           familyi={R\bibinitperiod},
+           given={Stefan},
+           giveni={S\bibinitperiod}}}%
+      }
+      \name{editor}{2}{}{%
+        {{hash=d4ebdd3fdc985c36f68c8295c5664c74}{%
+           family={Gendreau},
+           familyi={G\bibinitperiod},
+           given={Michel},
+           giveni={M\bibinitperiod}}}%
+        {{hash=156d517208f70e145503aa8b5ec9849b}{%
+           family={Potvin},
+           familyi={P\bibinitperiod},
+           given={Jean-Yves},
+           giveni={J\bibinithyphendelim Y\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Boston, MA}%
+      }
+      \list{publisher}{1}{%
+        {Springer US}%
+      }
+      \strng{namehash}{3a80dff6c790eca5a510d0b53c9bd00f}
+      \strng{fullhash}{3a80dff6c790eca5a510d0b53c9bd00f}
+      \strng{bibnamehash}{3a80dff6c790eca5a510d0b53c9bd00f}
+      \strng{authorbibnamehash}{3a80dff6c790eca5a510d0b53c9bd00f}
+      \strng{authornamehash}{3a80dff6c790eca5a510d0b53c9bd00f}
+      \strng{authorfullhash}{3a80dff6c790eca5a510d0b53c9bd00f}
+      \strng{editorbibnamehash}{428631794113b74d16ac1f3a6f241136}
+      \strng{editornamehash}{428631794113b74d16ac1f3a6f241136}
+      \strng{editorfullhash}{428631794113b74d16ac1f3a6f241136}
+      \field{sortinit}{9}
+      \field{sortinithash}{0a5ebc79d83c96b6579069544c73c7d4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{Heuristics based on large neighborhood search have recently shown outstanding results in solving various transportation and scheduling problems. Large neighborhood search methods explore a complex neighborhood by use of heuristics. Using large neighborhoods makes it possible to find better candidate solutions in each iteration and hence traverse a more promising search path. Starting from the large neighborhood search method, we give an overview of very large scale neighborhood search methods and discuss recent variants and extensions like variable depth search and adaptive large neighborhood search.}
+      \field{booktitle}{Handbook of Metaheuristics}
+      \field{isbn}{978-1-4419-1665-5}
+      \field{title}{Large Neighborhood Search}
+      \field{year}{2010}
+      \field{pages}{399\bibrangedash 419}
+      \range{pages}{21}
+      \verb{doi}
+      \verb 10.1007/978-1-4419-1665-5_13
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/978-1-4419-1665-5_13
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/978-1-4419-1665-5_13
+      \endverb
+    \endentry
+    \entry{2opt}{inproceedings}{}
+      \name{author}{3}{}{%
+        {{hash=8db7dd0e00ede95e40ddec0798235baa}{%
+           family={Achterberg},
+           familyi={A\bibinitperiod},
+           given={Tobias},
+           giveni={T\bibinitperiod}}}%
+        {{hash=c2cc9565b6ad012dbbf87779a669c70a}{%
+           family={Berthold},
+           familyi={B\bibinitperiod},
+           given={Timo},
+           giveni={T\bibinitperiod}}}%
+        {{hash=461d491d461a605d9719220b327c2e1e}{%
+           family={Hendel},
+           familyi={H\bibinitperiod},
+           given={Gregor},
+           giveni={G\bibinitperiod}}}%
+      }
+      \strng{namehash}{71f4d95c5afe0f4b388aa88cebbd8354}
+      \strng{fullhash}{71f4d95c5afe0f4b388aa88cebbd8354}
+      \strng{bibnamehash}{71f4d95c5afe0f4b388aa88cebbd8354}
+      \strng{authorbibnamehash}{71f4d95c5afe0f4b388aa88cebbd8354}
+      \strng{authornamehash}{71f4d95c5afe0f4b388aa88cebbd8354}
+      \strng{authorfullhash}{71f4d95c5afe0f4b388aa88cebbd8354}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{month}{01}
+      \field{title}{Rounding and Propagation Heuristics for Mixed Integer Programming}
+      \field{year}{2012}
+    \endentry
+    \entry{ACS}{article}{}
+      \name{author}{5}{}{%
+        {{hash=a35d3f377bb84d49adff1844679716ed}{%
+           family={Munguía},
+           familyi={M\bibinitperiod},
+           given={Lluís-Miquel},
+           giveni={L\bibinithyphendelim M\bibinitperiod}}}%
+        {{hash=f3e9f4082e3ae4e155660e803be71262}{%
+           family={Ahmed},
+           familyi={A\bibinitperiod},
+           given={Shabbir},
+           giveni={S\bibinitperiod}}}%
+        {{hash=76d05393a2b76afd1864e5f8f30c6653}{%
+           family={Bader},
+           familyi={B\bibinitperiod},
+           given={David\bibnamedelima A.},
+           giveni={D\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+        {{hash=151b280703f96e0cfa3f018c0c2ae0f9}{%
+           family={Nemhauser},
+           familyi={N\bibinitperiod},
+           given={George\bibnamedelima L.},
+           giveni={G\bibinitperiod\bibinitdelim L\bibinitperiod}}}%
+        {{hash=0f6a4cdef3006fe56c62f43d4dd42e34}{%
+           family={Shao},
+           familyi={S\bibinitperiod},
+           given={Yufen},
+           giveni={Y\bibinitperiod}}}%
+      }
+      \strng{namehash}{8dceef94a0ca6b1c7c402345763805f2}
+      \strng{fullhash}{739cc0cf0a7ab4779311e44413c8cda2}
+      \strng{bibnamehash}{8dceef94a0ca6b1c7c402345763805f2}
+      \strng{authorbibnamehash}{8dceef94a0ca6b1c7c402345763805f2}
+      \strng{authornamehash}{8dceef94a0ca6b1c7c402345763805f2}
+      \strng{authorfullhash}{739cc0cf0a7ab4779311e44413c8cda2}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{We present a parallel large neighborhood search framework for finding high quality primal solutions for general mixed-integer programs (MIPs). The approach simultaneously solves a large number of sub-MIPs with the dual objective of reducing infeasibility and optimizing with respect to the original objective. Both goals are achieved by solving restricted versions of two auxiliary MIPs, where subsets of the variables are fixed. In contrast to prior approaches, ours does not require a feasible starting solution. We leverage parallelism to perform multiple searches simultaneously, with the objective of increasing the effectiveness of our heuristic. We computationally compare the proposed framework with a state-of-the-art MIP solver in terms of solution quality, scalability, reproducibility, and parallel efficiency. Results show the efficacy of our approach in finding high quality solutions quickly both as a standalone primal heuristic and when used in conjunction with an exact algorithm.}
+      \field{issn}{1573-2894}
+      \field{journaltitle}{Computational Optimization and Applications}
+      \field{month}{1}
+      \field{number}{1}
+      \field{title}{Alternating criteria search: a parallel large neighborhood search algorithm for mixed integer programs}
+      \field{volume}{69}
+      \field{year}{2018}
+      \field{pages}{1\bibrangedash 24}
+      \range{pages}{24}
+      \verb{doi}
+      \verb 10.1007/s10589-017-9934-5
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/s10589-017-9934-5
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/s10589-017-9934-5
+      \endverb
+    \endentry
+    \entry{largeParallel}{article}{}
+      \name{author}{3}{}{%
+        {{hash=52ebb73e351f82fe6d8bdbd3064ba270}{%
+           family={Koch},
+           familyi={K\bibinitperiod},
+           given={Thorsten},
+           giveni={T\bibinitperiod}}}%
+        {{hash=747abee6183ace8aed1ee61915be9631}{%
+           family={Ralphs},
+           familyi={R\bibinitperiod},
+           given={Ted},
+           giveni={T\bibinitperiod}}}%
+        {{hash=2c75f9962bfc70b69d013e7817c1fbfb}{%
+           family={Shinano},
+           familyi={S\bibinitperiod},
+           given={Yuji},
+           giveni={Y\bibinitperiod}}}%
+      }
+      \strng{namehash}{008efa9daea37703d2ad8b5f19ee5035}
+      \strng{fullhash}{008efa9daea37703d2ad8b5f19ee5035}
+      \strng{bibnamehash}{008efa9daea37703d2ad8b5f19ee5035}
+      \strng{authorbibnamehash}{008efa9daea37703d2ad8b5f19ee5035}
+      \strng{authornamehash}{008efa9daea37703d2ad8b5f19ee5035}
+      \strng{authorfullhash}{008efa9daea37703d2ad8b5f19ee5035}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{Given the steady increase in cores per CPU, it is only a matter of time before supercomputers will have a million or more cores. In this article, we investigate the opportunities and challenges that will arise when trying to utilize this vast computing power to solve a single integer linear optimization problem. We also raise the question of whether best practices in sequential solution of ILPs will be effective in massively parallel environments.}
+      \field{issn}{1432-5217}
+      \field{journaltitle}{Mathematical Methods of Operations Research}
+      \field{month}{8}
+      \field{number}{1}
+      \field{title}{Could we use a million cores to solve an integer program?}
+      \field{volume}{76}
+      \field{year}{2012}
+      \field{pages}{67\bibrangedash 93}
+      \range{pages}{27}
+      \verb{doi}
+      \verb 10.1007/s00186-012-0390-9
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/s00186-012-0390-9
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/s00186-012-0390-9
+      \endverb
+    \endentry
+    \entry{RINS}{article}{}
+      \name{author}{3}{}{%
+        {{hash=2673530b98b52377b98330170f098dc9}{%
+           family={Danna},
+           familyi={D\bibinitperiod},
+           given={Emilie},
+           giveni={E\bibinitperiod}}}%
+        {{hash=a38cb1634fcb5a90fbed4279c70b15ed}{%
+           family={Rothberg},
+           familyi={R\bibinitperiod},
+           given={Edward},
+           giveni={E\bibinitperiod}}}%
+        {{hash=74d8250477d4bfd3ad7d07f23a8c0195}{%
+           family={Pape},
+           familyi={P\bibinitperiod},
+           given={Claude\bibnamedelima Le},
+           giveni={C\bibinitperiod\bibinitdelim L\bibinitperiod}}}%
+      }
+      \strng{namehash}{355f824e78ad9697d1766b634ed3c819}
+      \strng{fullhash}{355f824e78ad9697d1766b634ed3c819}
+      \strng{bibnamehash}{355f824e78ad9697d1766b634ed3c819}
+      \strng{authorbibnamehash}{355f824e78ad9697d1766b634ed3c819}
+      \strng{authornamehash}{355f824e78ad9697d1766b634ed3c819}
+      \strng{authorfullhash}{355f824e78ad9697d1766b634ed3c819}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{Given a feasible solution to a Mixed Integer Programming (MIP) model, a natural question is whether that solution can be improved using local search techniques. Local search has been applied very successfully in a variety of other combinatorial optimization domains. Unfortunately, local search relies extensively on the notion of a solution neighborhood, and this neighborhood is almost always tailored to the structure of the particular problem being solved. A MIP model typically conveys little information about the underlying problem structure. This paper considers two new approaches to exploring interesting, domain-independent neighborhoods in MIP. The more effective of the two, which we call Relaxation Induced Neighborhood Search (RINS), constructs a promising neighborhood using information contained in the continuous relaxation of the MIP model. Neighborhood exploration is then formulated as a MIP model itself and solved recursively. The second, which we call guided dives, is a simple modification of the MIP tree traversal order. Loosely speaking, it guides the search towards nodes that are close neighbors of the best known feasible solution. Extensive computational experiments on very difficult MIP models show that both approaches outperform default CPLEX MIP and a previously described approach for exploring MIP neighborhoods (local branching) with respect to several different metrics. The metrics we consider are quality of the best integer solution produced within a time limit, ability to improve a given integer solution (of both good and poor quality), and time required to diversify the search in order to find a new solution.}
+      \field{issn}{1436-4646}
+      \field{journaltitle}{Mathematical Programming}
+      \field{month}{1}
+      \field{number}{1}
+      \field{title}{Exploring relaxation induced neighborhoods to improve MIP solutions}
+      \field{volume}{102}
+      \field{year}{2005}
+      \field{pages}{71\bibrangedash 90}
+      \range{pages}{20}
+      \verb{doi}
+      \verb 10.1007/s10107-004-0518-7
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/s10107-004-0518-7
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/s10107-004-0518-7
+      \endverb
+    \endentry
+    \entry{DINS}{inproceedings}{}
+      \name{author}{1}{}{%
+        {{hash=7ea3998fa2459ca0c83c6f03f2e1e692}{%
+           family={Ghosh},
+           familyi={G\bibinitperiod},
+           given={Shubhashis},
+           giveni={S\bibinitperiod}}}%
+      }
+      \strng{namehash}{7ea3998fa2459ca0c83c6f03f2e1e692}
+      \strng{fullhash}{7ea3998fa2459ca0c83c6f03f2e1e692}
+      \strng{bibnamehash}{7ea3998fa2459ca0c83c6f03f2e1e692}
+      \strng{authorbibnamehash}{7ea3998fa2459ca0c83c6f03f2e1e692}
+      \strng{authornamehash}{7ea3998fa2459ca0c83c6f03f2e1e692}
+      \strng{authorfullhash}{7ea3998fa2459ca0c83c6f03f2e1e692}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{isbn}{978-3-540-72791-0}
+      \field{month}{06}
+      \field{title}{DINS, a MIP Improvement Heuristic}
+      \field{year}{2007}
+      \field{pages}{310\bibrangedash 323}
+      \range{pages}{14}
+      \verb{doi}
+      \verb 10.1007/978-3-540-72792-7_24
+      \endverb
+    \endentry
+    \entry{localBranching}{article}{}
+      \name{author}{2}{}{%
+        {{hash=bb435e1802203c028732fd11795a75a1}{%
+           family={Fischetti},
+           familyi={F\bibinitperiod},
+           given={Matteo},
+           giveni={M\bibinitperiod}}}%
+        {{hash=8f06c522270f9d0be3d58eef6505039b}{%
+           family={Lodi},
+           familyi={L\bibinitperiod},
+           given={Andrea},
+           giveni={A\bibinitperiod}}}%
+      }
+      \strng{namehash}{0999dc2ec29da4248f13290f480253ef}
+      \strng{fullhash}{0999dc2ec29da4248f13290f480253ef}
+      \strng{bibnamehash}{0999dc2ec29da4248f13290f480253ef}
+      \strng{authorbibnamehash}{0999dc2ec29da4248f13290f480253ef}
+      \strng{authornamehash}{0999dc2ec29da4248f13290f480253ef}
+      \strng{authorfullhash}{0999dc2ec29da4248f13290f480253ef}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{The availability of effective exact or heuristic solution methods for general Mixed-Integer Programs (MIPs) is of paramount importance for practical applications. In the present paper we investigate the use of a generic MIP solver as a black-box ``tactical'' tool to explore effectively suitable solution subspaces defined and controlled at a ``strategic'' level by a simple external branching framework. The procedure is in the spirit of well-known local search metaheuristics, but the neighborhoods are obtained through the introduction in the MIP model of completely general linear inequalities called local branching cuts. The new solution strategy is exact in nature, though it is designed to improve the heuristic behavior of the MIP solver at hand. It alternates high-level strategic branchings to define the solution neighborhoods, and low-level tactical branchings to explore them. The result is a completely general scheme aimed at favoring early updatings of the incumbent solution, hence producing high-quality solutions at early stages of the computation. The method is analyzed computationally on a large class of very difficult MIP problems by using the state-of-the-art commercial software ILOG-Cplex 7.0 as the black-box tactical MIP solver. For these instances, most of which cannot be solved to proven optimality in a reasonable time, the new method exhibits consistently an improved heuristic performance: in 23 out of 29 cases, the MIP solver produced significantly better incumbent solutions when driven by the local branching paradigm.}
+      \field{issn}{1436-4646}
+      \field{journaltitle}{Mathematical Programming}
+      \field{month}{9}
+      \field{number}{1}
+      \field{title}{Local branching}
+      \field{volume}{98}
+      \field{year}{2003}
+      \field{pages}{23\bibrangedash 47}
+      \range{pages}{25}
+      \verb{doi}
+      \verb 10.1007/s10107-003-0395-5
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/s10107-003-0395-5
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/s10107-003-0395-5
+      \endverb
+    \endentry
+    \entry{MPI}{article}{}
+      \name{author}{4}{}{%
+        {{hash=232270861ce704a354417bfda0acdb1b}{%
+           family={Gropp},
+           familyi={G\bibinitperiod},
+           given={William},
+           giveni={W\bibinitperiod}}}%
+        {{hash=ae2e171ea0c22f3a6e38ca0ffe481399}{%
+           family={Lusk},
+           familyi={L\bibinitperiod},
+           given={Ewing},
+           giveni={E\bibinitperiod}}}%
+        {{hash=339a13e357803cb2dd7ca4b5301f1cdb}{%
+           family={Doss},
+           familyi={D\bibinitperiod},
+           given={Nathan},
+           giveni={N\bibinitperiod}}}%
+        {{hash=9647a2df682f3a88f0f36dc0c58aa860}{%
+           family={Skjellum},
+           familyi={S\bibinitperiod},
+           given={Anthony},
+           giveni={A\bibinitperiod}}}%
+      }
+      \list{language}{1}{%
+        {English (US)}%
+      }
+      \list{publisher}{1}{%
+        {Elsevier B.V.}%
+      }
+      \strng{namehash}{444767aa63be9b132943aa84269dab26}
+      \strng{fullhash}{d6fb4ab6e0d0ee7caf64ed7e27c4714f}
+      \strng{bibnamehash}{444767aa63be9b132943aa84269dab26}
+      \strng{authorbibnamehash}{444767aa63be9b132943aa84269dab26}
+      \strng{authornamehash}{444767aa63be9b132943aa84269dab26}
+      \strng{authorfullhash}{d6fb4ab6e0d0ee7caf64ed7e27c4714f}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{MPI (Message Passing Interface) is a specification for a standard library for message passing that was defined by the MPI Forum, a broadly based group of parallel computer vendors, library writers, and applications specialists. Multiple implementations of MPI have been developed. In this paper, we describe MPICH, unique among existing implementations in its design goal of combining portability with high performance. We document its portability and performance and describe the architecture by which these features are simultaneously achieved. We also discuss the set of tools that accompany the free distribution of MPICH, which constitute the beginnings of a portable parallel programming environment. A project of this scope inevitably imparts lessons about parallel computing, the specification being followed, the current hardware and software environment for parallel computing, and project management; we describe those we have learned. Finally, we discuss future developments for MPICH, including those necessary to accommodate extensions to the MPI Standard now being contemplated by the MPI Forum.}
+      \field{issn}{0167-8191}
+      \field{journaltitle}{Parallel Computing}
+      \field{month}{9}
+      \field{number}{6}
+      \field{title}{A high-performance, portable implementation of the MPI message passing interface standard}
+      \field{volume}{22}
+      \field{year}{1996}
+      \field{pages}{789\bibrangedash 828}
+      \range{pages}{40}
+      \verb{doi}
+      \verb 10.1016/0167-8191(96)00024-5
+      \endverb
+      \keyw{Benchmark,MPI-2,Message passing interface,Parallel programming environment,Performance,Portability}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

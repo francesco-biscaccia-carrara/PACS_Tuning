@@ -2,12 +2,14 @@
 Mixed Integer Programming (MIP) is a powerful optimization technique used to model complex real-world problems where discrete decisions are essential—such as resource allocation, scheduling, and logistics.
 MIP models aim to find the best solution according to a given objective function, which is either maximized or minimized.
 A generic mixed-integer program (MIP) will be defined as
-\begin{align*}
+\begin{equation}
+\begin{cases}
 \text{min} \quad & c^T x \\
 \text{s.t.} \quad & Ax = b \\
                         & x_i \in \mathbb{Z},\; \forall i \in \mathcal{I} \\
                         & l \le x \le u
-\end{align*}
+\end{cases}
+\end{equation}
 where $c \in \mathbb{R}^n$, $A \in \mathbb{R}^{m \times n}$ and $\mathcal{I}\subseteq\{1\dots n\}$ is the subset of integer variables indices. The solution vector $x$ is bounded by $l \in \bar{\mathbb{R}}^n$ and $u \in \bar{\mathbb{R}}^n$ where $\bar{\mathbb{R}}= \mathbb{R} \cup \{-\infty,\infty\}$.
 Here, some decision variables are constrained to take integer values, which increases the model’s complexity.
 \subsection{Heuristic in MIP solving}
