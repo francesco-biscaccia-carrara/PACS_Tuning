@@ -85,7 +85,7 @@ In this formulation, $x$ and $X$ denote the minimum and maximum allowable determ
 \end{enumerate}
 This dynamic adjustment removes the need to explicitly set a fixed time limit for each subproblem, thereby eliminating the necessity of parameter tuning in this respect.
 
-\subsection{Adaptive Variable Fixing through $\rho$ Adjustment}
+\subsection{Adaptive Variable Fixing through $\rho$ Adjustment}\label{sec:dyn_var_fix}
 \subsubsection{Fixed $\rho$ Initialization}
 As discussed in Section \ref{sec:PACS_var_fix}, selecting an appropriate variable fixing scheme is a non-trivial task. In particular, the random fixings scheme presents additional challenges: if the fraction $\rho$ of variables to be fixed is set too high, the procedure may fail to yield meaningful improvements; conversely, if $\rho$ is set too low, the resulting search space may become excessively large, making it computationally intractable within a reasonable time frame. \\
 For this reason, in the first instance, the parameter $\rho$ is selected from a set of predetermined candidate values. Anticipating the results presented in Section \ref{}, it can be observed that certain values of $\rho$ are more effective in terms of solution quality, as they grant the solver greater flexibility during the optimization process.
@@ -193,25 +193,25 @@ While the previous modifications focused on tuning or slightly adjusting specifi
 The first idea is to exploit the values of the slack variables $\Delta^+$ and $\Delta^-$ obtained in a previous iteration to enforce these values as upper bounds.  
 In the PACS algorithm, this mechanism is already embedded in the budget constraint $\sum_{i=0}^m \Delta_i^{+}+\Delta_i^{-} \le \sum_{i=0}^m \hat\Delta_i^{+}+\hat\Delta_i^{-}$, which provides only a global upper bound. The proposed strategy, instead, aims at fixing the upper bounds of individual slack variables, thereby assisting subsequent FMIP optimizations and improving feasibility.  
 The procedure is implemented as shown in Algorithm \ref{alg:fixing_slackUB}.  
-\begin{algorithm}[H]\label{alg:fixing_slackUB}
-\caption{Fixing Slack Variables to Upper Bound}
+\begin{algorithm}[H]
+\caption{Fixing Slack Variables to Upper Bound}\label{alg:fixing_slackUB}
 \begin{algorithmic}[1]
 \Require $MIP$ model with $n$ variables; Solution $x$ of length $n+2m$; Zero-tolerance $\epsilon$
 \Ensure Updated model with adjusted upper bounds for slack variables
 \Function{SlackUpperBoundFixing}{$MIP$, $x$}
     \State $S_{UB} \gets \emptyset$ \Comment Set of variables-upper bound to be updated
     \For{$i = n \to n+2m$}
-        \State $\hat{u}_i \gets$ upper bound of variable $i$
-        \If{$\hat{u}_i - x_i > \epsilon$}
-            \State $S_{UB} \gets  S_{UB} \cup (i,\hat{u}_i)$
+        \State $u_i \gets$ upper bound of variable $i$
+        \If{$u_i - x_i > \epsilon$}
+            \State $S_{UB} \gets  S_{UB} \cup (i,x_i)$
         \EndIf
     \EndFor
     \State \Return $S_{UB}$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
-Here, the solution vector $x$ corresponds to the current PACS incumbent---both in the parallel and recombination phases.  
-The set $S_{UB}$ returned by the algorithm is then used to update the upper bounds of the slack variables, modifying the auxiliary FMIP and OMIP formulations as follows.  
+Here, the solution vector $x$ corresponds to the current PACS incumbent—valid in both the parallel and recombination phases—and each slack variable is compared with its respective upper bound. If the variable value is smaller than the existing upper bound, the variable index together with its solution value is added to $S_{UB}$ as a pair $(i, x_i)$.
+The resulting set $S_{UB}$ is subsequently employed to update the upper bounds of the slack variables, thereby modifying the auxiliary FMIP and OMIP formulations as follows.
 
 \subsubsection{FMIP Reformulation}
 \begin{equation}
@@ -244,4 +244,63 @@ The set $S_{UB}$ returned by the algorithm is then used to update the upper boun
 In these formulations, the set $S_{UB}$ is partitioned into $S_{UB}^+$ and $S_{UB}^-$ to remain consistent with the notation used for FMIP and OMIP.  
 It is worth noting that the budget constraint in OMIP can now be removed, since the slack upper bound fixing provides a stronger restriction, as will be further confirmed by the results in Section \ref{}.  
 
-\subsection{WalkMIP: Violated Constraints based Variable Fixing}
+\subsection{WalkMIP: Violated Constraints Based Variable Fixing}
+It's worth to investigate a more sophisticated and hopefully efficient way to fix the variables values, enriching the diversification and consequently increasing the chances of find high-quality solution in a relative tiny time span. For this purpose, the WalkMIP strategy takes the strategy from the WalkSAT$^\text{\cite{WalkSAT}}$ strategy and implement it to directly target the variables that cause the infeasibility of a partially feasible solution. 
+The Algorithm \ref{alg:walkMIP} is the suiting of WalkMIP algorithm to cover constraint satisfability problem.
+\begin{algorithm}[H]
+\caption{Walk-based Repair Heuristic for MIP}\label{alg:walkMIP}
+\begin{algorithmic}[1]
+\Require $MIP$ model with $n+2m$ variables (FMIP or OMIP); Initial solution $x$; Fixing parameter $\rho$; Random walk probability $p \in (0,1)$; Solution kick probability $p_{HUGE\_KICK}$
+\Ensure Updated model with improved feasible solution
+\Function{WalkMIP}{$MIP$, $x$, $\rho$, $p$,$p_{HUGE\_KICK}$}
+    \State $violConstr \gets$ Set of indices of violated constraints, under $x$
+    \If{*First Execution*} $numInitialConstr \gets |violConstr|$\EndIf
+    \If{$violConstr = \emptyset$ } \Return \EndIf
+    \If{with probability $p_{HUGE\_KICK}$} { \Call{RandomFixings}{$\rho$}}
+    \EndIf
+    \State $k \gets $\Call{NumVarToFix}{$numInitialConstr$,$|violConstr|$}
+    \Repeat
+        \State $c \gets $ Random violated constraint, $c \in violConstr$
+        \State $(i_{best}, val_{best}, minDMG) \gets$ \Call{MinDamageMove}{$c, x$}
+        \If{$minDMG \leq -\epsilon$}
+            \State $x \gets \Call{UpdateSol}{x,i_{best},val_{best}}$\Comment Apply best move to $x$
+        \ElsIf{with probability $1-p \land i_{best} \neq -1$}
+             \State $x \gets \Call{UpdateSol}{x,i_{best},val_{best}}$\Comment Apply min-damage move to $x$
+        \Else 
+            \State $x \gets $ Fix a random var in $x$
+        \EndIf
+        \State $violConstr \gets$ Set of indices of violated constraints, under $x$
+        \If{$violConstr = \emptyset$} \textbf{break} \EndIf
+    \Until $k$ times
+
+    \If{$k < \rho \cdot n$}
+        \State Fix remaining variables (up to $\rho \cdot n_{\text{mip}}$) from original $x$
+    \EndIf
+\EndFunction
+
+\Function{MinDamageMove}{$c, x$}
+    \State $minDMG \gets +\infty$, $i_{best} \gets -1$, $val_{best} \gets +\infty$
+    \For{\textbf{each} variable $i$ in $c$}
+        \If{$i$.type = BIN} $\hat{x}_i \gets \neg x_i$
+        \ElsIf{$i$.type = INT} $\hat{x}_i \gets x_i + \Call{RandomInteger}{-1,1}$
+        \ElsIf{$i$.type = DOUBLE} $\hat{x}_i \gets x_i + \Call{RandomDouble}{-0.5,0.5}$
+        \EndIf
+        \State Clamp $\hat{x}_i$ within its bounds $[l_i,u_i]$
+        \State $\delta \gets \Call{ComputeViolation}{x,\hat{x}_i}$
+        \If{$\delta < minDMG$}
+            \State $i_{best} \gets i$, $minDMG \gets \delta$, $val_{best} \gets \hat{x}_i$
+        \EndIf
+    \EndFor
+    \State \Return $(i_{best}, val_{best}, minDMG)$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+
+
+
+
+It's important to notice that this procedure itself could only be used in a context in which the slack variable are different from zero and therefore, the original random fixing strategy, presented in the Section \ref{sec:dyn_var_fix}, must be still utilized in the OMIP optimization phases in which the slack sum is equal to zero.
+
+
+%UNfortunetely 
