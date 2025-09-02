@@ -443,6 +443,48 @@
       \endverb
       \keyw{Benchmark,MPI-2,Message passing interface,Parallel programming environment,Performance,Portability}
     \endentry
+    \entry{WalkSAT}{inproceedings}{}
+      \name{author}{3}{}{%
+        {{hash=0ff75e71f593b1e7ef8dc99e4a1ff418}{%
+           family={Selman},
+           familyi={S\bibinitperiod},
+           given={Bart},
+           giveni={B\bibinitperiod}}}%
+        {{hash=0e4b0970ec35035b160339ca69796393}{%
+           family={Kautz},
+           familyi={K\bibinitperiod},
+           given={Henry\bibnamedelima A.},
+           giveni={H\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+        {{hash=d73904174d3247735403ad5762d6f44a}{%
+           family={Cohen},
+           familyi={C\bibinitperiod},
+           given={Brain},
+           giveni={B\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Seattle, Washington}%
+      }
+      \list{publisher}{1}{%
+        {AAAI Press}%
+      }
+      \strng{namehash}{39ad938edd0f32d24c2e0e5d0af7a0e0}
+      \strng{fullhash}{39ad938edd0f32d24c2e0e5d0af7a0e0}
+      \strng{bibnamehash}{39ad938edd0f32d24c2e0e5d0af7a0e0}
+      \strng{authorbibnamehash}{39ad938edd0f32d24c2e0e5d0af7a0e0}
+      \strng{authornamehash}{39ad938edd0f32d24c2e0e5d0af7a0e0}
+      \strng{authorfullhash}{39ad938edd0f32d24c2e0e5d0af7a0e0}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{It has recently been shown that local search is surprisingly good at finding satisfying assignments for certain computationally hard classes of CNF formulas. The performance of basic local search methods can be further enhanced by introducing mechanisms for escaping from local minima in the search space. We will compare three such mechanisms: simulated annealing, random noise, and a strategy called "mixed random walk". We show that mixed random walk is the superior strategy. We also present results demonstrating the effectiveness of local search with walk for solving circuit synthesis and circuit diagnosis problems. Finally, we demonstrate that mixed random walk improves upon the best known methods for solving MAX-SAT problems.}
+      \field{booktitle}{Proceedings of the Twelfth AAAI National Conference on Artificial Intelligence}
+      \field{series}{AAAI'94}
+      \field{title}{Noise strategies for improving local search}
+      \field{year}{1994}
+      \field{pages}{337\bibrangedash 343}
+      \range{pages}{7}
+    \endentry
   \enddatalist
 \endrefsection
 \endinput
