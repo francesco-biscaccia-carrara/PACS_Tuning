@@ -485,6 +485,150 @@
       \field{pages}{337\bibrangedash 343}
       \range{pages}{7}
     \endentry
+    \entry{MIPLIB}{article}{}
+      \name{author}{16}{}{%
+        {{hash=84097f2d6128ad7cca9b7618c7f35b3b}{%
+           family={Gleixner},
+           familyi={G\bibinitperiod},
+           given={Ambros},
+           giveni={A\bibinitperiod}}}%
+        {{hash=461d491d461a605d9719220b327c2e1e}{%
+           family={Hendel},
+           familyi={H\bibinitperiod},
+           given={Gregor},
+           giveni={G\bibinitperiod}}}%
+        {{hash=ccfbef5a6ac473e4660174d24b475c13}{%
+           family={Gamrath},
+           familyi={G\bibinitperiod},
+           given={Gerald},
+           giveni={G\bibinitperiod}}}%
+        {{hash=8db7dd0e00ede95e40ddec0798235baa}{%
+           family={Achterberg},
+           familyi={A\bibinitperiod},
+           given={Tobias},
+           giveni={T\bibinitperiod}}}%
+        {{hash=9541438a57d4f8856300d1ef6621e8f9}{%
+           family={Bastubbe},
+           familyi={B\bibinitperiod},
+           given={Michael},
+           giveni={M\bibinitperiod}}}%
+        {{hash=c2cc9565b6ad012dbbf87779a669c70a}{%
+           family={Berthold},
+           familyi={B\bibinitperiod},
+           given={Timo},
+           giveni={T\bibinitperiod}}}%
+        {{hash=63fef99bf49df9110fd055197e7109e0}{%
+           family={Christophel},
+           familyi={C\bibinitperiod},
+           given={Philipp\bibnamedelima M.},
+           giveni={P\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=048fc81448e6c21938465dd530d5f3e9}{%
+           family={Jarck},
+           familyi={J\bibinitperiod},
+           given={Kati},
+           giveni={K\bibinitperiod}}}%
+        {{hash=52ebb73e351f82fe6d8bdbd3064ba270}{%
+           family={Koch},
+           familyi={K\bibinitperiod},
+           given={Thorsten},
+           giveni={T\bibinitperiod}}}%
+        {{hash=db43052701422d8fde84b5ccb1dfb1cc}{%
+           family={Linderoth},
+           familyi={L\bibinitperiod},
+           given={Jeff},
+           giveni={J\bibinitperiod}}}%
+        {{hash=728d0ae29faca15964ab6edef12d51f8}{%
+           family={Lübbecke},
+           familyi={L\bibinitperiod},
+           given={Marco},
+           giveni={M\bibinitperiod}}}%
+        {{hash=d04450219b32a1fea1616afce44cb129}{%
+           family={Mittelmann},
+           familyi={M\bibinitperiod},
+           given={Hans\bibnamedelima D.},
+           giveni={H\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+        {{hash=3a75066f66eb3343850e0276aae10761}{%
+           family={Ozyurt},
+           familyi={O\bibinitperiod},
+           given={Derya},
+           giveni={D\bibinitperiod}}}%
+        {{hash=ffb87c7ca20307e58dc86739f0e85b92}{%
+           family={Ralphs},
+           familyi={R\bibinitperiod},
+           given={Ted\bibnamedelima K.},
+           giveni={T\bibinitperiod\bibinitdelim K\bibinitperiod}}}%
+        {{hash=f879aa9aa25e4a84cf8786f72d4dd732}{%
+           family={Salvagnin},
+           familyi={S\bibinitperiod},
+           given={Domenico},
+           giveni={D\bibinitperiod}}}%
+        {{hash=2c75f9962bfc70b69d013e7817c1fbfb}{%
+           family={Shinano},
+           familyi={S\bibinitperiod},
+           given={Yuji},
+           giveni={Y\bibinitperiod}}}%
+      }
+      \strng{namehash}{9f69d3ca833f09d66c683139b4fce450}
+      \strng{fullhash}{40fc946b65c7dfe3483695c00e84da2d}
+      \strng{bibnamehash}{9f69d3ca833f09d66c683139b4fce450}
+      \strng{authorbibnamehash}{9f69d3ca833f09d66c683139b4fce450}
+      \strng{authornamehash}{9f69d3ca833f09d66c683139b4fce450}
+      \strng{authorfullhash}{40fc946b65c7dfe3483695c00e84da2d}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Mathematical Programming Computation}
+      \field{title}{{MIPLIB 2017: Data-Driven Compilation of the 6th Mixed-Integer Programming Library}}
+      \field{year}{2021}
+      \verb{doi}
+      \verb 10.1007/s12532-020-00194-3
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.1007/s12532-020-00194-3
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.1007/s12532-020-00194-3
+      \endverb
+    \endentry
+    \entry{MIPGAP}{article}{}
+      \name{author}{1}{}{%
+        {{hash=c2cc9565b6ad012dbbf87779a669c70a}{%
+           family={Berthold},
+           familyi={B\bibinitperiod},
+           given={Timo},
+           giveni={T\bibinitperiod}}}%
+      }
+      \strng{namehash}{c2cc9565b6ad012dbbf87779a669c70a}
+      \strng{fullhash}{c2cc9565b6ad012dbbf87779a669c70a}
+      \strng{bibnamehash}{c2cc9565b6ad012dbbf87779a669c70a}
+      \strng{authorbibnamehash}{c2cc9565b6ad012dbbf87779a669c70a}
+      \strng{authornamehash}{c2cc9565b6ad012dbbf87779a669c70a}
+      \strng{authorfullhash}{c2cc9565b6ad012dbbf87779a669c70a}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{In modern MIP solvers, primal heuristics play a key role in finding high-quality solutions. However, classical performance measures reflect the impact of primal heuristics on the overall solving process badly. In this article, we introduce a new performance measure, the “primal integral”, which depends on the quality of solutions and on the time when they are found. We compare five state-of-the-art MIP solvers w.r.t. the newly proposed measure, and show that heuristics improve their performance by up to 80%.}
+      \field{issn}{0167-6377}
+      \field{journaltitle}{Operations Research Letters}
+      \field{number}{6}
+      \field{title}{Measuring the impact of primal heuristics}
+      \field{volume}{41}
+      \field{year}{2013}
+      \field{pages}{611\bibrangedash 614}
+      \range{pages}{4}
+      \verb{doi}
+      \verb https://doi.org/10.1016/j.orl.2013.08.007
+      \endverb
+      \verb{urlraw}
+      \verb https://www.sciencedirect.com/science/article/pii/S0167637713001181
+      \endverb
+      \verb{url}
+      \verb https://www.sciencedirect.com/science/article/pii/S0167637713001181
+      \endverb
+      \keyw{Mixed integer programming,Primal heuristic,Performance measure,Primal integral}
+    \endentry
   \enddatalist
 \endrefsection
 \endinput

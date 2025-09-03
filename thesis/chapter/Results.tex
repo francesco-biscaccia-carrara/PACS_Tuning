@@ -1,0 +1,20 @@
+%intro%
+\section{Enviromental Setup}
+The experiments basically aim to compare the PACS framework against the standalone IBM ILOG CPLEX Optimization Studio at version 22.1.
+The PACS framework has been implemented in C++ due to its performace and utilize C API to talk to the sovler. The actual code is available with an non-commercial MIP license at the link \textbf{link repo}. 
+All experiments were conducted on a section of UniPD DEI Blade, a cluster of Linux machines running Rocky Linux 8.10, each equipped with Intel(R) Xeon(R) CPU E5-2623 v3 processors featuring 4 cores at 3.00 GHz and 16GB of RAM.
+Although it's a cluster architecture, the overall computational power can be easily compared with a general purpose laptop, or even less.
+To be fair in the comparison, an execution of PACS utilize 4 logical threads, which are implemented as standard threads in C++, each one executing the CPLEX solver with only 1 core and the counterpart consist of the standard CPLEX solver, constrained to have only 4 cores.
+\subsection{Dataset}
+As anticipated in the previous sections, the instances utilized in this comparison must be MIP hard-instances. In order to do so, the hard-instances in the MIPLIB2017$^\text{\cite{MIPLIB}}$ have been utilized as test bed. Only the instance \textit{tpl-tub-ss16} has been skipped since the execution has been interrupted by the limited amount of resources.
+\subsection{Metrics}
+Both PACS and plain CPLEX terminate whenever an incumbent, so an heuristic, is found within the time limit, which has been set to 5 minutes.
+To determin which one between the two strategy has lead to a higher-quality solution, the MIPGap$^\text{\cite{MIPGAP}}$ metrics has been utilized.
+\subsection{Tolerance Parameters}
+
+
+\section{Results}
+%
+%\subsection for the single experiments
+%
+%
