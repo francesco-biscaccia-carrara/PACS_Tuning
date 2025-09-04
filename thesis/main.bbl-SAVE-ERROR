@@ -609,7 +609,6 @@
       \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
-      \field{abstract}{In modern MIP solvers, primal heuristics play a key role in finding high-quality solutions. However, classical performance measures reflect the impact of primal heuristics on the overall solving process badly. In this article, we introduce a new performance measure, the “primal integral”, which depends on the quality of solutions and on the time when they are found. We compare five state-of-the-art MIP solvers w.r.t. the newly proposed measure, and show that heuristics improve their performance by up to 80%.}
       \field{issn}{0167-6377}
       \field{journaltitle}{Operations Research Letters}
       \field{number}{6}

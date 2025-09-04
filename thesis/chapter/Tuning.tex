@@ -346,5 +346,5 @@ The WalkMIP algorithm is executed independently by each processor, replacing the
 \end{algorithmic}
 \end{algorithm}
 
-Notice that any modifications of $\rho$ via the dynamic adjustment routine are incorporated in subsequent WalkMIP iterations. It is important to emphasize that WalkMIP can only be applied when the slack variables are nonzero. Consequently, the original random fixing strategy, described in Section \ref{sec:dyn_var_fix}, remains necessary during OMIP optimization phases in which the slack sum is zero.
+Notice that any modifications of $\rho$ via the dynamic adjustment routine are incorporated in subsequent WalkMIP iterations. It is important to emphasize that WalkMIP can only be applied when the slack variables are nonzero. Consequently, the original random fixing strategy, described in Section \ref{sec:dyn_var_fix}, remains necessary during OMIP optimization phases where the slack sum is below the zero-tolerance threshold $\epsilon$.
 Although the results in Section \ref{} indicate that this strategy is less effective than the simpler, more straightforward variable fixing approach, it offers valuable insights and suggests a potential direction for future research.
