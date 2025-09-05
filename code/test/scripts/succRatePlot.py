@@ -1,6 +1,8 @@
 import sys, os, numpy as np, json, matplotlib.pyplot as plt #type: ignore
-from dotenv import load_dotenv # type: ignore
-
+#from dotenv import load_dotenv # type: ignore
+plt.rcParams.update({ 
+    "font.family": "serif",     
+})
 sys.dont_write_bytecode = True
 
 #EDITABLE PARS
@@ -17,9 +19,9 @@ def createDict(filename, dataDict, numRanges):
 
 def main(pipeline):
 
-    load_dotenv("../../.ACSenv")
-    filename = os.environ.get('ACS_JSOUT_FILENAME')
-    outputfile = os.environ.get('ACS_SUCCRATE_PP')
+    #load_dotenv("../../.ACSenv")
+    filename = "data/1_ACS_DYN_Res_v1.2.6/ACS_DYN.json"
+    outputfile = "data/1_ACS_DYN_Res_v1.2.6/PACS_DYN-MIPSuccRatePlot.pgf"
 
     TL = 300
     DISCR_FACT = TL/NUM_RANGES
@@ -52,17 +54,21 @@ def main(pipeline):
         plt.plot(x_values, succ_array, label=algo, linewidth=2)
         integralValues.append([np.trapezoid(succ_array,x_values),algo])    
 
-    plt.xlabel('Time Steps')
+    plt.xlabel('Computation Time (sec)')
     plt.ylabel('Success Rate')
-    plt.title('ACS vs CPLEX Success Rate')
+
     plt.grid(True, linestyle='--', alpha=0.5)
     plt.legend()
 
     plt.xlim(DISCR_FACT, x_values[-1])
 
     plt.tight_layout()
+    plt.savefig(outputfile, backend="pgf")
+    plt.legend(loc='lower right')
+    plt.savefig(outputfile[:-4]+".pdf", backend="pdf")
 
-    integralValues.sort(reverse=True)
+    #integralValues.sort(reverse=True)
+    colors = plt.cm.tab10.colors
     txtOut = outputfile[:-4]+".txt"
     with open(txtOut, 'w') as f:
         f.write("--------------------INTEGRAL VALUES--------------------\n")
@@ -70,13 +76,20 @@ def main(pipeline):
             f.write(f"{line[1]}: {line[0]}\n")
         f.write("-------------------------------------------------------\n")
     print(f"Integral values saved on {txtOut}")
-    
+     
+    algos = [line[1] for line in integralValues]
+    values = [line[0] for line in integralValues]
 
-    if not pipeline :
-        if input(f"Do you want to collect and save the succes-rate plot on {outputfile} file [y/n]? ") != "y":
-            exit(0)
+    plt.figure(figsize=(8, 5))
+    plt.bar(algos, values, color = colors)
+    plt.ylabel("Integral Value")
+    plt.grid(axis="y", linestyle="--", alpha=0.5)
 
-    plt.savefig(outputfile, dpi=300)
+    barOut = outputfile[:-4] + "_integrals.pgf"
+    plt.tight_layout()
+    plt.savefig(barOut, backend="pgf")
+    plt.savefig(barOut[:-4]+".pdf", backend="pdf")
+    print(f"Bar chart saved on {barOut}")
     
 if __name__ == "__main__":
     if len(sys.argv) == 1:

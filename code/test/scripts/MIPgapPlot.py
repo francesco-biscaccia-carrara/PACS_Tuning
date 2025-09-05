@@ -1,6 +1,9 @@
-import sys, os, numpy as np, json, matplotlib.pyplot as plt, math #type: ignore
-from dotenv import load_dotenv # type: ignore
 
+import sys, os, numpy as np, json, matplotlib.pyplot as plt, math #type: ignore
+#from dotenv import load_dotenv # type: ignore
+plt.rcParams.update({ 
+    "font.family": "serif",     
+})
 sys.dont_write_bytecode = True
 
 #EDITABLE PARS
@@ -23,13 +26,13 @@ def createDict(filename, dataDict, numRanges):
                 for algo in JSdata[inst]:
                     if algo == "_obj": continue
                     dataDict.update({ algo : np.zeros(numRanges+1)})
-                break;
+                break
 
 def main(pipeline):
 
-    load_dotenv("../../.ACSenv")
-    filename = os.environ.get('ACS_JSOUT_FILENAME')
-    outputfile = os.environ.get('ACS_MIP_PP')
+    #load_dotenv("../../.ACSenv")
+    filename = "data/1_ACS_DYN_Res_v1.2.6/ACS_DYN.json"
+    outputfile = "data/1_ACS_DYN_Res_v1.2.6/PACS_DYN-MIPGapPlot.pgf"
 
     instances = 0
 
@@ -62,20 +65,21 @@ def main(pipeline):
     integralValues = []
     for algo, succ_array in succDict.items():
         plt.plot(x_values, succ_array, label=algo, linewidth=2)
-        integralValues.append([np.trapezoid(succ_array,x_values),algo])
+        integralValues.append([np.trapezoid(succ_array, x_values), algo])
 
-    plt.xlabel('MIG Gap (%)')
+    plt.xlabel('MIP Gap (%)')
     plt.ylabel('Success Rate')
-    plt.title('ACS VS CPLEX MIP Gap Success Rate')
     plt.grid(True, linestyle='--', alpha=0.5)
-    plt.legend()
-
+    plt.legend(loc='upper left')
     plt.xlim(1, x_values[-1])
-
     plt.tight_layout()
-    
-    integralValues.sort(reverse=True)
-    txtOut = outputfile[:-4]+".txt"
+    plt.savefig(outputfile, backend="pgf")
+    plt.savefig(outputfile[:-4]+".pdf", backend="pdf")
+
+    # --- Save integral values to file ---
+    colors = plt.cm.tab10.colors
+    #integralValues.sort(reverse=True)
+    txtOut = outputfile[:-4] + ".txt"
     with open(txtOut, 'w') as f:
         f.write("--------------------INTEGRAL VALUES--------------------\n")
         for line in integralValues:
@@ -83,14 +87,22 @@ def main(pipeline):
         f.write("-------------------------------------------------------\n")
     print(f"Integral values saved on {txtOut}")
 
-    if not pipeline :
-        if input(f"Do you want to collect and save the succes-rate plot on {outputfile} file [y/n]? ") != "y":
-            exit(0)
+    # --- Create a bar chart of integrals ---
+    algos = [line[1] for line in integralValues]
+    values = [line[0] for line in integralValues]
 
-    plt.savefig(outputfile, dpi=300)
+    plt.figure(figsize=(8, 5))
+    plt.bar(algos, values, color = colors)
+    plt.ylabel("Integral Value")
+    plt.grid(axis="y", linestyle="--", alpha=0.5)
 
-   
-    
+    barOut = outputfile[:-4] + "_integrals.pgf"
+    plt.tight_layout()
+    plt.savefig(barOut, backend="pgf")
+    plt.savefig(barOut[:-4]+".pdf", backend="pdf")
+    print(f"Bar chart saved on {barOut}")
+
+
 if __name__ == "__main__":
     if len(sys.argv) == 1:
         main(False)

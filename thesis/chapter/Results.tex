@@ -1,4 +1,4 @@
-%intro%
+%intro
 \section{Experimental Setup}
 The experiments are designed to compare the PACS framework with the standalone IBM ILOG CPLEX Optimization Studio (version 22.1).  
 The PACS framework is implemented in C++ for performance reasons, interfacing with the solver through the C API. The source code is available under a non-commercial MIP license at \textbf{[repository link]}.  
@@ -39,6 +39,7 @@ For each test, two types of plots are produced to summarize and compare performa
     \item \textbf{Success Rate vs. MIP Gap:}  
     The $x$-axis represents the MIP gap, and the $y$-axis reports the cumulative number of instances solved with a gap less than or equal to the given value. Consistently, curves closer to the top-left corner indicate better performance 
 \end{enumerate}
+To provide a more compact quantitative comparison, the integral of each curve has been computed and reported in a corresponding bar chart, one for each plot.
 
 \subsection{Tolerance Parameters}
 Because both algorithms involve floating-point computations and comparisons, PACS employs a set of tolerance parameters. In these experiments, the parameters were selected to be reasonable relative to the defaults used by CPLEX:
@@ -51,7 +52,78 @@ Because both algorithms involve floating-point computations and comparisons, PAC
 In the latter three cases, if the corresponding tolerance is exceeded, the algorithm terminates with an error and the run is recorded as unsolved.  
 
 \section{Results}
-%
-%\subsection for the single experiments
-%
-%
+This section presents the experimental evaluation and details the progressive tuning of PACS parameters. Each test builds upon the outcomes of the previous one, providing a stepwise refinement of the algorithm.
+
+\subsection{Fixed $\rho$ Initialization Test}\label{sec:test_fix_rho}
+
+\begin{figure}[thpb]
+    \centering
+    \begin{minipage}{0.6\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD/ACS_STD-SuccRate.pgf}}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.4\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD/ACS_STD-SuccRate_integrals.pgf}}
+    \end{minipage}
+    \caption{Success Rate vs. Computation Time for Fixed $\rho$ Initialization Test}
+    \label{fig:PACS_STD_SuccRate}
+\end{figure}
+
+
+\begin{figure}[thpb]
+    \centering
+    \begin{minipage}{0.6\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD/ACS_STD-MIPGapPlot.pgf}}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.4\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD/ACS_STD-MIPGapPlot_integrals.pgf}}
+    \end{minipage}
+    \caption{Success Rate vs. MIP Gap Plot for Fixed $\rho$ Initialization Test}
+    \label{fig:PACS_STD_MGAP_Int}
+\end{figure}
+
+\subsection{Dynamic Adjustment of Parameter $\rho$}\label{sec:test_dyn_rho}
+\subsection{Fixed vs. Dynamically Adjusted $\rho$ Test}\label{sec:test_fixvsdyn_rho}
+\subsection{Initial Solution Construction Test}\label{sec:test_init_sol}
+\subsection{Slack Upper Bound Enforcement Test}\label{sec:test_slack_UB}
+\subsection{Budget Constraint Removal Test}\label{sec:test_bdg_constr}
+\subsection{WalkMIP Strategy Test}\label{sec:test_walkMIP}
+
+
+
+% ----- TEMPLATE -----
+% \begin{figure}[thpb]
+%     \centering
+%     \begin{minipage}{0.6\columnwidth}
+%         \centering
+%         \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD/ACS_STD-SuccRate.pgf}}
+%     \end{minipage}%
+%     \hfill
+%     \begin{minipage}{0.4\columnwidth} 
+%         \centering
+%         \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD/ACS_STD-SuccRate_integrals.pgf}}
+%     \end{minipage}
+%     \caption{Success Rate vs. Computation Time for **}
+%     \label{fig:}
+% \end{figure}
+
+
+% \begin{figure}[thpb]
+%     \centering
+%     \begin{minipage}{0.6\columnwidth}
+%         \centering
+%         \resizebox{\linewidth}{!}{\input{chapter/img/}}
+%     \end{minipage}%
+%     \hfill
+%     \begin{minipage}{0.4\columnwidth}
+%         \centering
+%         \resizebox{\linewidth}{!}{\input{chapter/img/}}
+%     \end{minipage}
+%     \caption{Success Rate vs. MIP Gap Plot for **}
+%     \label{fig:}
+% \end{figure}
