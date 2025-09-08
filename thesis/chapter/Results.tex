@@ -84,36 +84,222 @@ This section presents the experimental evaluation and details the progressive tu
         \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD/ACS_STD-MIPGapPlot_integrals.pgf}}
     \end{minipage}
     \caption{Success Rate vs. MIP Gap Plot for Fixed $\rho$ Initialization Test}
-    \label{fig:PACS_STD_MGAP_Int}
+    \label{fig:PACS_STD_MGAP}
 \end{figure}
 
 \subsection{Dynamic Adjustment of Parameter $\rho$}\label{sec:test_dyn_rho}
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.6\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_DYN/PACS_DYN-MIPSuccRatePlot.pgf}}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.4\columnwidth} 
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_DYN/PACS_DYN-MIPSuccRatePlot_integrals.pgf}}
+    \end{minipage}
+    \caption{Success Rate vs. Computation Time for Dynamic Adjustment of Parameter $\rho$}
+    \label{fig:PACS_DYN_SuccRate}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.6\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_DYN/PACS_DYN-MIPGapPlot.pgf}}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.4\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_DYN/PACS_DYN-MIPGapPlot_integrals.pgf}}
+    \end{minipage}
+    \caption{Success Rate vs. MIP Gap Plot for Dynamic Adjustment of Parameter $\rho$}
+    \label{fig:PACS_DYN_MGAP}
+\end{figure}
+
 \subsection{Fixed vs. Dynamically Adjusted $\rho$ Test}\label{sec:test_fixvsdyn_rho}
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.6\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD_VS_DYN/PACS_STD_DYN-SuccRate.pgf}}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.4\columnwidth} 
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD_VS_DYN/PACS_STD_DYN-MIPGapPlot_integrals.pgf}}
+    \end{minipage}
+    \caption{Success Rate vs. Computation Time for Fixed vs. Dynamically Adjusted $\rho$ Test}
+    \label{fig:PACS_STD_DYN_SuccRate}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.6\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD_VS_DYN/PACS_STD_DYN-MIPGapPlot.pgf}}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.4\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD_VS_DYN/PACS_STD_DYN-MIPGapPlot_integrals.pgf}}
+    \end{minipage}
+    \caption{Success Rate vs. MIP Gap Plot forFixed vs. Dynamically Adjusted $\rho$ Test}
+    \label{fig:PACS_STD_DYN_MGAP}
+\end{figure}
+
 \subsection{Initial Solution Construction Test}\label{sec:test_init_sol}
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.6\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_IN_SOL/PACS_InitSol-SuccRate.pgf}}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.4\columnwidth} 
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_IN_SOL/PACS_InitSol-SuccRate_integrals.pgf}}
+    \end{minipage}
+    \caption{Success Rate vs. Computation Time for Initial Solution Construction Test}
+    \label{fig:PACS_InitSol_SuccRate}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.6\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_IN_SOL/PACS_InitSol-MIPGapPlot.pgf}}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.4\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_IN_SOL/PACS_InitSol-MIPGapPlot_integrals.pgf}}
+    \end{minipage}
+    \caption{Success Rate vs. MIP Gap Plot for Initial Solution Construction Test}
+    \label{fig:PACS_InitSol_MGAP}
+\end{figure}
+
 \subsection{Slack Upper Bound Enforcement Test}\label{sec:test_slack_UB}
+ \begin{figure}[H]
+    \centering
+    \begin{minipage}{0.6\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_FIX_UB/PACS_FixSlackUB-SuccRatePlot.pgf}}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.4\columnwidth} 
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_FIX_UB/PACS_FixSlackUB-SuccRatePlot_integrals.pgf}}
+    \end{minipage}
+    \caption{Success Rate vs. Computation Time for Slack Upper Bound Enforcement Test}
+    \label{fig:PACS_FixSlack_SuccRate}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.6\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_FIX_UB/PACS_FixSlackUB-MIPGapPlot.pgf}}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.4\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_FIX_UB/PACS_FixSlackUB-MIPGapPlot_integrals.pgf}}
+    \end{minipage}
+    \caption{Success Rate vs. MIP Gap Plot for Slack Upper Bound Enforcement Test}
+    \label{fig:PACS_FixSlack_MGAP}
+\end{figure}
+
 \subsection{Budget Constraint Removal Test}\label{sec:test_bdg_constr}
+ \begin{figure}[H]
+    \centering
+    \begin{minipage}{0.6\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_BDG_CONSTR/ACS_BudgetCnstr-SuccRatePlot.pgf}}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.4\columnwidth} 
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_BDG_CONSTR/ACS_BudgetCnstr-SuccRatePlot_integrals.pgf}}
+    \end{minipage}
+    \caption{Success Rate vs. Computation Time for Budget Constraint Removal Test}
+    \label{fig:PACS_BDGRem_SuccRate}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.6\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_BDG_CONSTR/ACS_BudgetCnstr-MIPGapPlot.pgf}}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.4\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_BDG_CONSTR/ACS_BudgetCnstr-MIPGapPlot_integrals.pgf}}
+    \end{minipage}
+    \caption{Success Rate vs. MIP Gap Plot for Budget Constraint Removal Test}
+    \label{fig:PACS_BDGRem_MGAP}
+\end{figure}
+
 \subsection{WalkMIP Strategy Test}\label{sec:test_walkMIP}
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.6\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_WALKMIP/PACS_WalkMIP-SuccRatePlot.pgf}}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.4\columnwidth} 
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_WALKMIP/PACS_WalkMIP-SuccRatePlot_integrals.pgf}}
+    \end{minipage}
+    \caption{Success Rate vs. Computation Time for WalkMIP Strategy Test}
+    \label{fig:PACS_WalkMIP_SuccRate}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.6\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_WALKMIP/PACS_WalkMIP-MIPGapPlot.pgf}}
+    \end{minipage}%
+    \hfill
+    \begin{minipage}{0.4\columnwidth}
+        \centering
+        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_WALKMIP/PACS_WalkMIP-MIPGapPlot_integrals.pgf}}
+    \end{minipage}
+    \caption{Success Rate vs. MIP Gap Plot for WalkMIP Strategy Test}
+    \label{fig:PACS_WalkMIP_MGAP}
+\end{figure}
 
 
 
 % ----- TEMPLATE -----
-% \begin{figure}[thpb]
+% \begin{figure}[H]
 %     \centering
 %     \begin{minipage}{0.6\columnwidth}
 %         \centering
-%         \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD/ACS_STD-SuccRate.pgf}}
+%         \resizebox{\linewidth}{!}{\input{chapter/img/}}
 %     \end{minipage}%
 %     \hfill
 %     \begin{minipage}{0.4\columnwidth} 
 %         \centering
-%         \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD/ACS_STD-SuccRate_integrals.pgf}}
+%         \resizebox{\linewidth}{!}{\input{chapter/img/}}
 %     \end{minipage}
 %     \caption{Success Rate vs. Computation Time for **}
 %     \label{fig:}
 % \end{figure}
 
 
-% \begin{figure}[thpb]
+% \begin{figure}[H]
 %     \centering
 %     \begin{minipage}{0.6\columnwidth}
 %         \centering
