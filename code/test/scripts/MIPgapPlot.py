@@ -31,8 +31,8 @@ def createDict(filename, dataDict, numRanges):
 def main(pipeline):
 
     #load_dotenv("../../.ACSenv")
-    filename = "data/1_ACS_DYN_Res_v1.2.6/ACS_DYN.json"
-    outputfile = "data/1_ACS_DYN_Res_v1.2.6/PACS_DYN-MIPGapPlot.pgf"
+    filename = "data/6_ACS_WalkMIP_Res_v1.2.11/ACS_WalkMIP.json"
+    outputfile = "data/6_ACS_WalkMIP_Res_v1.2.11/PACS_WalkMIP-MIPGapPlot.pgf"
 
     instances = 0
 
