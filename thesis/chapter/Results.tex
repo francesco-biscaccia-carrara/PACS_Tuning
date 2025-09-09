@@ -55,8 +55,14 @@ In the latter three cases, if the corresponding tolerance is exceeded, the algor
 This section presents the experimental evaluation and details the progressive tuning of PACS parameters. Each test builds upon the outcomes of the previous one, providing a stepwise refinement of the algorithm.
 
 \subsection{Fixed $\rho$ Initialization Test}\label{sec:test_fix_rho}
+The first experiment focuses on the choice of the parameter $\rho$ in the variable-fixing strategy.  
+In this experiment, PACS was employed with generalized fixing strategies under an architecture-agnostic parallelization scheme
+The predefined values of $\rho$ considered are $\{.1, .25, .5, .75, .9\}$.  
+It is worth noting that smaller values of $\rho$ leave greater freedom to the MIP solver.  
 
-\begin{figure}[thpb]
+Since the PACS algorithm also requires the parameter $\theta$ for the initial solution construction strategy, it was fixed to $\theta = .25$ for this test.  
+
+\begin{figure}[H]
     \centering
     \begin{minipage}{0.6\columnwidth}
         \centering
@@ -71,8 +77,7 @@ This section presents the experimental evaluation and details the progressive tu
     \label{fig:PACS_STD_SuccRate}
 \end{figure}
 
-
-\begin{figure}[thpb]
+\begin{figure}[H]
     \centering
     \begin{minipage}{0.6\columnwidth}
         \centering
@@ -83,76 +88,92 @@ This section presents the experimental evaluation and details the progressive tu
         \centering
         \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD/ACS_STD-MIPGapPlot_integrals.pgf}}
     \end{minipage}
-    \caption{Success Rate vs. MIP Gap Plot for Fixed $\rho$ Initialization Test}
+    \caption{Success Rate vs. MIP Gap for Fixed $\rho$ Initialization Test}
     \label{fig:PACS_STD_MGAP}
 \end{figure}
+From Figure \ref{fig:PACS_STD_SuccRate}, it is evident that standalone CPLEX consistently outperforms PACS in terms of success rate across all values of $\rho$.  
+However, Figure \ref{fig:PACS_STD_MGAP} reveals a different picture: PACS with $\rho = .1$ outperforms all other settings of $\rho$, and even surpasses CPLEX in terms of solution quality, providing higher-quality solutions approximately $1.72\times$ more frequently than the solver alone.
+This result may be attributed to the fact that greater freedom allows CPLEX to optimize more effectively, whereas PACS primarily benefits from enhanced diversification through its parallelization strategy.
 
-\subsection{Dynamic Adjustment of Parameter $\rho$}\label{sec:test_dyn_rho}
+Based on these observations, the baseline PACS configuration under the static fixing scenario is set to $\theta = .25$ and $\rho = .1$.
+
+\subsection{Dynamic $\rho$ Adjustment Test}\label{sec:test_dyn_rho}
+This experiment investigates the dynamic adjustment strategy\footnote{In the plots, the PACS algorithm with dynamically adjusted $\rho$ is denoted as DACS for brevity.} for the variable-fixing parameter $\rho$, as introduced in Section \ref{sec:dyn_var_fix}. Although PACS requires an initial $\rho$ value, it is automatically updated during execution. In this test, the candidate values for $\rho$ are ${.1, .25, .5}$, while the starting solution parameter $\theta$ is set to $.25$, consistent with the previous experiment.
 \begin{figure}[H]
-    \centering
-    \begin{minipage}{0.6\columnwidth}
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_DYN/PACS_DYN-MIPSuccRatePlot.pgf}}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}{0.4\columnwidth} 
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_DYN/PACS_DYN-MIPSuccRatePlot_integrals.pgf}}
-    \end{minipage}
-    \caption{Success Rate vs. Computation Time for Dynamic Adjustment of Parameter $\rho$}
-    \label{fig:PACS_DYN_SuccRate}
+\centering
+\begin{minipage}{0.6\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_DYN/PACS_DYN-MIPSuccRatePlot.pgf}}
+\end{minipage}%
+\hfill
+\begin{minipage}{0.4\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_DYN/PACS_DYN-MIPSuccRatePlot_integrals.pgf}}
+\end{minipage}
+\caption{Success Rate vs. Computation Time for Dynamic $\rho$ Adjustment Test}
+\label{fig:PACS_DYN_SuccRate}
 \end{figure}
 
-
 \begin{figure}[H]
-    \centering
-    \begin{minipage}{0.6\columnwidth}
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_DYN/PACS_DYN-MIPGapPlot.pgf}}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}{0.4\columnwidth}
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_DYN/PACS_DYN-MIPGapPlot_integrals.pgf}}
-    \end{minipage}
-    \caption{Success Rate vs. MIP Gap Plot for Dynamic Adjustment of Parameter $\rho$}
-    \label{fig:PACS_DYN_MGAP}
+\centering
+\begin{minipage}{0.6\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_DYN/PACS_DYN-MIPGapPlot.pgf}}
+\end{minipage}%
+\hfill
+\begin{minipage}{0.4\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_DYN/PACS_DYN-MIPGapPlot_integrals.pgf}}
+\end{minipage}
+\caption{Success Rate vs. MIP Gap Plot for Dynamic $\rho$ Adjustment Test}
+\label{fig:PACS_DYN_MGAP}
 \end{figure}
+
+As in the static case, Figure \ref{fig:PACS_DYN_SuccRate} shows that CPLEX consistently outperforms PACS in terms of success rate. However, Figure \ref{fig:PACS_DYN_MGAP} demonstrates that dynamic adjustment of $\rho$ improves solution quality: selecting $\rho = .1$ produces higher-quality solutions roughly $1.73\times$ more frequently than CPLEX alone.
+
+The key observation from this experiment is that, unlike the fixed $\rho$ strategy—where the choice of $\rho$ significantly affects PACS performance—the dynamic adjustment greatly reduces sensitivity to the initial parameter. Regardless of the starting $\rho$, PACS achieves comparable results in both success rate and solution quality, providing consistently reliable outcomes.
+
+Based on these results, the baseline PACS configuration under the dynamic fixing scenario is set to $\theta = .25$ and initial $\rho = .1$.
 
 \subsection{Fixed vs. Dynamically Adjusted $\rho$ Test}\label{sec:test_fixvsdyn_rho}
+This experiment compares the fixed and dynamically adjusted strategies for selecting the variable-fixing parameter $\rho$, aiming to identify the most effective approach for the final PACS algorithm. Since $\theta$ is consistent across the previous experiments, a direct comparison is possible.
 
 \begin{figure}[H]
-    \centering
-    \begin{minipage}{0.6\columnwidth}
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD_VS_DYN/PACS_STD_DYN-SuccRate.pgf}}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}{0.4\columnwidth} 
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD_VS_DYN/PACS_STD_DYN-MIPGapPlot_integrals.pgf}}
-    \end{minipage}
-    \caption{Success Rate vs. Computation Time for Fixed vs. Dynamically Adjusted $\rho$ Test}
-    \label{fig:PACS_STD_DYN_SuccRate}
+\centering
+\begin{minipage}{0.6\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD_VS_DYN/PACS_STD_DYN-SuccRate.pgf}}
+\end{minipage}%
+\hfill
+\begin{minipage}{0.4\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD_VS_DYN/PACS_STD_DYN-SuccRate_integrals.pgf}}
+\end{minipage}
+\caption{Success Rate vs. Computation Time for Fixed vs. Dynamically Adjusted $\rho$ Test}
+\label{fig:PACS_STD_DYN_SuccRate}
 \end{figure}
-
 
 \begin{figure}[H]
-    \centering
-    \begin{minipage}{0.6\columnwidth}
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD_VS_DYN/PACS_STD_DYN-MIPGapPlot.pgf}}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}{0.4\columnwidth}
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD_VS_DYN/PACS_STD_DYN-MIPGapPlot_integrals.pgf}}
-    \end{minipage}
-    \caption{Success Rate vs. MIP Gap Plot forFixed vs. Dynamically Adjusted $\rho$ Test}
-    \label{fig:PACS_STD_DYN_MGAP}
+\centering
+\begin{minipage}{0.6\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD_VS_DYN/PACS_STD_DYN-MIPGapPlot.pgf}}
+\end{minipage}%
+\hfill
+\begin{minipage}{0.4\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_STD_VS_DYN/PACS_STD_DYN-MIPGapPlot_integrals.pgf}}
+\end{minipage}
+\caption{Success Rate vs. MIP Gap Plot for Fixed vs. Dynamically Adjusted $\rho$ Test}
+\label{fig:PACS_STD_DYN_MGAP}
 \end{figure}
+
+As evident from Figures \ref{fig:PACS_STD_DYN_SuccRate} and \ref{fig:PACS_STD_DYN_MGAP}, there is no significant difference in performance between the two strategies, both in terms of success rate and solution quality.
+
+Considering the results from the previous experiment, the dynamic adjustment strategy for $\rho$ is preferred due to its reduced sensitivity to the initial parameter choice. Consequently, the final PACS framework adopts dynamic variable fixing with an initial $\rho = .1$ and $\theta = .25$.
 
 \subsection{Initial Solution Construction Test}\label{sec:test_init_sol}
+
 \begin{figure}[H]
     \centering
     \begin{minipage}{0.6\columnwidth}
