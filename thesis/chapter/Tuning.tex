@@ -11,7 +11,7 @@ This section presents enhancements aimed at overcoming these limitations:
 
 These improvements increase PACS’s robustness, efficiency, and applicability while preserving its strengths in diversification and parallelism.
 
-\section{PACS with Generalized Fixing}
+\section{PACS with Generalized Fixing}\label{sec:gen_fixing}
 The baseline PACS algorithm enforces both the starting vector construction and the fixing scheme to operate exclusively on the set $\mathcal{I}$ of integer variables. While this restriction may appear efficient and straightforward, it can, in fact, be limiting. In particular, if the MIP instance contains only a small fraction of integer variables relative to the total, focusing solely on them may reduce diversification and cause the algorithm to converge prematurely to a local minimum, which is undesirable in an optimization process.
 To overcome this issue, Algorithm \ref{alg:starting_vector} and Algorithm \ref{alg:variable_fixing} are generalized into Algorithm \ref{alg:gen_starting_vector} and Algorithm \ref{alg:gen_variable_fixing}, respectively, thereby allowing both integer and continuous variables to be considered.
 \begin{algorithm}[H]
@@ -149,7 +149,7 @@ Since each sub-MIP independently attempts to modify the value of $\rho$, synchro
 For the recombination phase, the procedure is slightly modified into Algorithm \ref{alg:rho_update}, where the adjustment step is doubled, i.e. $2\Delta_\rho / num_{MIP}$, in order to resolve potential tie cases.\\
 Finally, although an initial value of $\rho$ must be provided to start the fixing process, experimental results in Section \ref{sec:test_dyn_rho} show that performance is only marginally affected by this initialization. Consequently, the effectiveness of the method does not critically depend on the initial choice of $\rho$.
 
-\subsection{Parameter-Free Strategy for Initial Solution Construction}
+\subsection{Parameter-Free Strategy for Initial Solution Construction}\label{sec:init_sol_maxFeas}
 Another non-trivial challenge concerns the selection of the initial solution vector. The parameter $\theta$, which regulates the trade-off between solution quality and execution time, must be tuned to suit the most general cases. Similar to the fixing strategy, the analysis considers a set of predetermined values for $\theta$, while also introducing a novel initialization strategy for the starting solution vector.  
 The motivation is that using a small value of $\theta$---which corresponds to generating a high-quality initial solution---may waste computation time, since the true strength of PACS lies in its diversification and parallelization capabilities.  
 
@@ -199,7 +199,7 @@ In this way, the solution initialization is almost entirely deterministic and co
 \section{Additional PACS Optimizations}
 While the previous modifications focused on tuning or slightly adjusting specific components of the PACS workflow, the following procedures—analyzed in Section \ref{sec:test_slack_UB}, \ref{sec:test_bdg_constr}, \ref{sec:test_walkMIP}—aim to further enhance the quality of the final solution.
 
-\subsection{Slack Upper Bound Enforcement and Budget Constraint Removal}
+\subsection{Slack Upper Bound Enforcement and Budget Constraint Removal}\label{sec:slack_UB_BDG_constr}
 The first idea is to exploit the values of the slack variables $\Delta^+$ and $\Delta^-$ obtained in a previous iteration to enforce these values as upper bounds.  
 In the PACS algorithm, this mechanism is already embedded in the budget constraint $\sum_{i=0}^m \Delta_i^{+}+\Delta_i^{-} \le \sum_{i=0}^m \hat\Delta_i^{+}+\hat\Delta_i^{-}$, which provides only a global upper bound. The proposed strategy, instead, aims at fixing the upper bounds of individual slack variables, thereby assisting subsequent FMIP optimizations and improving feasibility.  
 The procedure is implemented as shown in Algorithm \ref{alg:fixing_slackUB}.  

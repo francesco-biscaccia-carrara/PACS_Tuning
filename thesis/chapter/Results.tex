@@ -173,7 +173,7 @@ As evident from Figures \ref{fig:PACS_STD_DYN_SuccRate} and \ref{fig:PACS_STD_DY
 Considering the results from the previous experiment, the dynamic adjustment strategy for $\rho$ is preferred due to its reduced sensitivity to the initial parameter choice. Consequently, the final PACS framework adopts dynamic variable fixing with an initial $\rho = .1$ and $\theta = .25$.
 
 \subsection{Initial Solution Construction Test}\label{sec:test_init_sol}
-
+This experiment evaluates different strategies for constructing the initial solution, with the dual objectives of identifying the most effective parameter settings and, if possible, reducing parameter dependence. Specifically, the initialization strategy described in Section \ref{sec:gen_fixing} is analyzed with $\theta \in \{.25, 1\}$. The choice $\theta = .25$ encourages the algorithm to produce solutions of higher quality with respect to the original MIP objective, whereas $\theta = 1$ corresponds to constructing a solution by randomly fixing variables within their bounds. These two strategies are compared with the parameter-free approach introduced in Section \ref{sec:init_sol_maxFeas}.  
 \begin{figure}[H]
     \centering
     \begin{minipage}{0.6\columnwidth}
@@ -189,7 +189,6 @@ Considering the results from the previous experiment, the dynamic adjustment str
     \label{fig:PACS_InitSol_SuccRate}
 \end{figure}
 
-
 \begin{figure}[H]
     \centering
     \begin{minipage}{0.6\columnwidth}
@@ -204,38 +203,48 @@ Considering the results from the previous experiment, the dynamic adjustment str
     \caption{Success Rate vs. MIP Gap Plot for Initial Solution Construction Test}
     \label{fig:PACS_InitSol_MGAP}
 \end{figure}
+Figures \ref{fig:PACS_InitSol_SuccRate} and \ref{fig:PACS_InitSol_MGAP} indicate that overall performance is broadly comparable across all strategies. However, a closer inspection of the integral values reveals that the parameter-free strategy achieves the best results: 173.66 vs.\ 169.98 in terms of success rate, and 33.63 vs.\ 33.40 in terms of MIP gap integrals (MaxFeas vs.\ $\theta=.25$). Moreover, since the parameter-free approach eliminates the need to tune $\theta$, it represents a more robust and practical choice.
+
+Consequently, based on this test, the best configuration of PACS employs a variable-fixing strategy with dynamic adjustment of $\rho$ initialized at $\rho = .1$, combined with a parameter-free initial solution construction strategy that maximizes feasibility.
 
 \subsection{Slack Upper Bound Enforcement Test}\label{sec:test_slack_UB}
- \begin{figure}[H]
-    \centering
-    \begin{minipage}{0.6\columnwidth}
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_FIX_UB/PACS_FixSlackUB-SuccRatePlot.pgf}}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}{0.4\columnwidth} 
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_FIX_UB/PACS_FixSlackUB-SuccRatePlot_integrals.pgf}}
-    \end{minipage}
-    \caption{Success Rate vs. Computation Time for Slack Upper Bound Enforcement Test}
-    \label{fig:PACS_FixSlack_SuccRate}
-\end{figure}
-
+In this experiment, the PACS algorithm—tuned with the best strategies and parameters identified in the previous tests—was evaluated to assess the effectiveness of the slack upper bound enforcement described in Section \ref{sec:slack_UB_BDG_constr}.
 
 \begin{figure}[H]
-    \centering
-    \begin{minipage}{0.6\columnwidth}
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_FIX_UB/PACS_FixSlackUB-MIPGapPlot.pgf}}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}{0.4\columnwidth}
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_FIX_UB/PACS_FixSlackUB-MIPGapPlot_integrals.pgf}}
-    \end{minipage}
-    \caption{Success Rate vs. MIP Gap Plot for Slack Upper Bound Enforcement Test}
-    \label{fig:PACS_FixSlack_MGAP}
+\centering
+\begin{minipage}{0.6\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_FIX_UB/PACS_FixSlackUB-SuccRatePlot.pgf}}
+\end{minipage}%
+\hfill
+\begin{minipage}{0.4\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_FIX_UB/PACS_FixSlackUB-SuccRatePlot_integrals.pgf}}
+\end{minipage}
+\caption{Success Rate vs. Computation Time for Slack Upper Bound Enforcement Test}
+\label{fig:PACS_FixSlack_SuccRate}
 \end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{0.6\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_FIX_UB/PACS_FixSlackUB-MIPGapPlot.pgf}}
+\end{minipage}%
+\hfill
+\begin{minipage}{0.4\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_FIX_UB/PACS_FixSlackUB-MIPGapPlot_integrals.pgf}}
+\end{minipage}
+\caption{Success Rate vs. MIP Gap for Slack Upper Bound Enforcement Test}
+\label{fig:PACS_FixSlack_MGAP}
+\end{figure}
+
+As shown in Figure \ref{fig:PACS_FixSlack_SuccRate}, this strategy narrows the gap between PACS and standalone CPLEX in terms of success rate. It is worth noting, however, that CPLEX solves around 60\% of the instances within the very first seconds, whereas PACS requires between 75 and 125 seconds to reach the same level of solved instances.
+
+On the other hand, Figure \ref{fig:PACS_FixSlack_MGAP} indicates that this modification leads to a noticeable improvement in solution quality. Compared with the previously tuned PACS configuration, the enforced slack upper bound yields consistently better-quality solutions.
+
+Therefore, the final PACS configuration integrates slack upper bound enforcement, as it enhances both efficiency and solution quality.
 
 \subsection{Budget Constraint Removal Test}\label{sec:test_bdg_constr}
  \begin{figure}[H]
