@@ -1,2 +1,19 @@
+In this thesis, several techniques have been explored to refine and tune the original PACS algorithm into a more general-purpose and largely parameter-free strategy suitable for integration into modern MIP solvers. The experimental evaluation presented in Section~\ref{sec:result} demonstrated that the tuned algorithm consistently improves both success rate and solution quality over the baseline PACS.
+
+Key contributions include:
+\begin{enumerate}
+    \item the introduction of a dynamic adjustment mechanism for the fixing parameter $\rho$, which reduces sensitivity to the initial parameter choice;
+    \item the adoption of a parameter-free initialization strategy that maximizes feasibility while eliminating the need to tune $\theta$;
+    \item the incorporation of slack enforcement and budget constraint removal, which simplify the formulation while further improving performance.
+\end{enumerate}
+Together, these refinements yield a lightweight and standalone algorithm that can be deployed in the early stages of MIP optimization, helping to speed up computation and reduce dependence on manual parameter tuning. In this sense, PACS provides both robustness and efficiency, making it a valuable addition to the toolbox of modern MIP solvers.
 
 \section{Future Work}
+Building on these results, several promising directions remain open for further research:
+\begin{itemize}
+    \item \textbf{Refined fixing strategies}: While WalkMIP did not outperform the simpler PACS strategy in this study, exploring refined or hybrid versions could lead to more effective diversification without sacrificing efficiency.
+    \item \textbf{Solver generalization}: The present experiments focused on CPLEX, but evaluating PACS within other state-of-the-art solvers such as Gurobi would provide a broader assessment of its robustness and portability.
+    \item \textbf{Lightweight optimization of partial solutions}: The current approach relies on the OMIP formulation to refine partial feasible solutions, which may introduce computational overhead. Investigating more efficient or lightweight refinement mechanisms could further accelerate the overall framework.
+\end{itemize}
+
+Pursuing these directions would not only deepen the understanding of PACS but also help to position it as a general-purpose, solver-agnostic, and practical strategy for modern mixed-integer programming.
