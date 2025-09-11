@@ -1,7 +1,8 @@
 %intro
 \section{Experimental Setup}
 The experiments are designed to compare the PACS framework with the standalone IBM ILOG CPLEX Optimization Studio (version 22.1).  
-The PACS framework is implemented in C++ for performance reasons, interfacing with the solver through the C API. The source code is available under a non-commercial MIP license at \textbf{[repository link]}.  
+The PACS framework is implemented in C++ for performance reasons, interfacing with the solver through the C API. The source code is available under a non-commercial MIT license at \url{https://github.com/francesco-biscaccia-carrara/PACS_Tuning}. 
+
 All experiments were conducted on a cluster within the UniPD DEI Blade infrastructure, running Rocky Linux 8.10. Each node is equipped with an Intel(R) Xeon(R) E5-2623 v3 processor (4 cores, 3.00 GHz) and 16 GB of RAM. Although the infrastructure is cluster-based, the computational power of a single node is comparable to that of a general-purpose laptop, or even lower.  
 For fairness in comparison, PACS executions use 4 logical threads, implemented as C++ standard threads, each running a CPLEX instance restricted to a single core. The baseline counterpart is a standalone CPLEX execution restricted to 4 cores.
 
@@ -247,99 +248,75 @@ On the other hand, Figure \ref{fig:PACS_FixSlack_MGAP} indicates that this modif
 Therefore, the final PACS configuration integrates slack upper bound enforcement, as it enhances both efficiency and solution quality.
 
 \subsection{Budget Constraint Removal Test}\label{sec:test_bdg_constr}
- \begin{figure}[H]
-    \centering
-    \begin{minipage}{0.6\columnwidth}
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_BDG_CONSTR/ACS_BudgetCnstr-SuccRatePlot.pgf}}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}{0.4\columnwidth} 
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_BDG_CONSTR/ACS_BudgetCnstr-SuccRatePlot_integrals.pgf}}
-    \end{minipage}
-    \caption{Success Rate vs. Computation Time for Budget Constraint Removal Test}
-    \label{fig:PACS_BDGRem_SuccRate}
-\end{figure}
-
+This experiment evaluates the impact of removing the budget constraint from the OMIP formulation. Intuitively, since the slack upper bound enforcement already fulfills the role of the budget constraint, its explicit inclusion should be unnecessary and potentially redundant.
 
 \begin{figure}[H]
-    \centering
-    \begin{minipage}{0.6\columnwidth}
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_BDG_CONSTR/ACS_BudgetCnstr-MIPGapPlot.pgf}}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}{0.4\columnwidth}
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_BDG_CONSTR/ACS_BudgetCnstr-MIPGapPlot_integrals.pgf}}
-    \end{minipage}
-    \caption{Success Rate vs. MIP Gap Plot for Budget Constraint Removal Test}
-    \label{fig:PACS_BDGRem_MGAP}
+\centering
+\begin{minipage}{0.6\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_BDG_CONSTR/ACS_BudgetCnstr-SuccRatePlot.pgf}}
+\end{minipage}%
+\hfill
+\begin{minipage}{0.4\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_BDG_CONSTR/ACS_BudgetCnstr-SuccRatePlot_integrals.pgf}}
+\end{minipage}
+\caption{Success Rate vs. Computation Time for Budget Constraint Removal Test}
+\label{fig:PACS_BDGRem_SuccRate}
 \end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{0.6\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_BDG_CONSTR/ACS_BudgetCnstr-MIPGapPlot.pgf}}
+\end{minipage}%
+\hfill
+\begin{minipage}{0.4\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_BDG_CONSTR/ACS_BudgetCnstr-MIPGapPlot_integrals.pgf}}
+\end{minipage}
+\caption{Success Rate vs. MIP Gap for Budget Constraint Removal Test}
+\label{fig:PACS_BDGRem_MGAP}
+\end{figure}
+
+As shown in Figures \ref{fig:PACS_BDGRem_SuccRate} and \ref{fig:PACS_BDGRem_MGAP}, removing the budget constraint slightly improves both success rate and solution quality. Beyond this performance gain, the simplification also reduces model complexity.
+
+Therefore, the budget constraint is omitted in the final PACS framework, as its enforcement through slack upper bounds proves both sufficient and more efficient.
 
 \subsection{WalkMIP Strategy Test}\label{sec:test_walkMIP}
+The final experiment evaluates the performance of the WalkMIP strategy, a more sophisticated variable-fixing approach compared to the original PACS method. The key parameter here is the probability $p$, which governs the likelihood of selecting a minimum-damage move rather than a random move. In practice, higher values of $p$ increase the chance of random moves being chosen. To investigate this effect, $p$ was tested with values $\{.6, .7, .8\}$.
 \begin{figure}[H]
-    \centering
-    \begin{minipage}{0.6\columnwidth}
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_WALKMIP/PACS_WalkMIP-SuccRatePlot.pgf}}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}{0.4\columnwidth} 
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_WALKMIP/PACS_WalkMIP-SuccRatePlot_integrals.pgf}}
-    \end{minipage}
-    \caption{Success Rate vs. Computation Time for WalkMIP Strategy Test}
-    \label{fig:PACS_WalkMIP_SuccRate}
+\centering
+\begin{minipage}{0.6\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_WALKMIP/PACS_WalkMIP-SuccRatePlot.pgf}}
+\end{minipage}%
+\hfill
+\begin{minipage}{0.4\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_WALKMIP/PACS_WalkMIP-SuccRatePlot_integrals.pgf}}
+\end{minipage}
+\caption{Success Rate vs. Computation Time for WalkMIP Strategy Test}
+\label{fig:PACS_WalkMIP_SuccRate}
 \end{figure}
 
-
 \begin{figure}[H]
-    \centering
-    \begin{minipage}{0.6\columnwidth}
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_WALKMIP/PACS_WalkMIP-MIPGapPlot.pgf}}
-    \end{minipage}%
-    \hfill
-    \begin{minipage}{0.4\columnwidth}
-        \centering
-        \resizebox{\linewidth}{!}{\input{chapter/img/PACS_WALKMIP/PACS_WalkMIP-MIPGapPlot_integrals.pgf}}
-    \end{minipage}
-    \caption{Success Rate vs. MIP Gap Plot for WalkMIP Strategy Test}
-    \label{fig:PACS_WalkMIP_MGAP}
+\centering
+\begin{minipage}{0.6\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_WALKMIP/PACS_WalkMIP-MIPGapPlot.pgf}}
+\end{minipage}%
+\hfill
+\begin{minipage}{0.4\columnwidth}
+\centering
+\resizebox{\linewidth}{!}{\input{chapter/img/PACS_WALKMIP/PACS_WalkMIP-MIPGapPlot_integrals.pgf}}
+\end{minipage}
+\caption{Success Rate vs. MIP Gap for WalkMIP Strategy Test}
+\label{fig:PACS_WalkMIP_MGAP}
 \end{figure}
 
+As shown in Figures \ref{fig:PACS_WalkMIP_SuccRate} and \ref{fig:PACS_WalkMIP_MGAP}, the simpler and more direct variable-fixing strategy consistently outperforms WalkMIP in both success rate and solution quality.
 
+For this reason, WalkMIP was not included in the final PACS framework. The final configuration of PACS therefore incorporates all modifications validated up to the budget constraint removal test, with parameters set as follows: dynamic adjustment of $\rho$, initialized at $\rho=.1$, parameter-free initial solution construction, slack upper bound enforcement, and removal of the budget constraint.
 
-% ----- TEMPLATE -----
-% \begin{figure}[H]
-%     \centering
-%     \begin{minipage}{0.6\columnwidth}
-%         \centering
-%         \resizebox{\linewidth}{!}{\input{chapter/img/}}
-%     \end{minipage}%
-%     \hfill
-%     \begin{minipage}{0.4\columnwidth} 
-%         \centering
-%         \resizebox{\linewidth}{!}{\input{chapter/img/}}
-%     \end{minipage}
-%     \caption{Success Rate vs. Computation Time for **}
-%     \label{fig:}
-% \end{figure}
-
-
-% \begin{figure}[H]
-%     \centering
-%     \begin{minipage}{0.6\columnwidth}
-%         \centering
-%         \resizebox{\linewidth}{!}{\input{chapter/img/}}
-%     \end{minipage}%
-%     \hfill
-%     \begin{minipage}{0.4\columnwidth}
-%         \centering
-%         \resizebox{\linewidth}{!}{\input{chapter/img/}}
-%     \end{minipage}
-%     \caption{Success Rate vs. MIP Gap Plot for **}
-%     \label{fig:}
-% \end{figure}
