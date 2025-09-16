@@ -82,7 +82,7 @@ The goal is to remove the need for an explicit calibration phase, while still en
 
 \subsection{Adaptive Determination of Sub-MIP Time Span}
 To guarantee determinism in the implementation, each sub-MIP is assigned both a time limit equal to the remaining computation time and a deterministic time limit. The latter is defined as the maximum number of instructions that the solver may execute before termination.  
-The deterministic time limit is computed according to the following formula:
+The deterministic time limit is computed according to the following formula$^\text{\cite{Piai}}$:
 \begin{equation}
 TL_{DET} = \max\Big(x, \min\Big(\frac{nz}{y}, X\Big)\Big)
 \end{equation}

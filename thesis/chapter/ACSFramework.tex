@@ -1,5 +1,49 @@
 The Alternating Criteria Search (ACS) heuristic is designed to pursue a twofold objective: to identify a feasible solution and to subsequently enhance its quality with respect to the objective function $c^T x$. To this end, ACS employs a Large Neighborhood Search (LNS) strategy, which iteratively solves two auxiliary mixed-integer programming (MIP) subproblems in order to address both objectives.
-The heuristic requires an initial vector, which is not mandated to be a feasible solution for the original MIP. This vector is progressively refined by solving sub-MIPs in which a subset of variables is fixed to the values of the initial input.
+The heuristic requires an initial vector, which is not mandated to be a feasible solution for the original MIP. As illustrated in Figure \ref{fig:ACS_heu_workflow}, this vector is iteratively refined by solving sub-MIPs, where a subset of variables is fixed to the values defined in the initial input.
+\begin{figure}[h]
+\centering
+\resizebox{\columnwidth}{!}{
+\begin{tikzpicture}[
+    rect/.style={rectangle, draw=black, align=center, font=\footnotesize},
+    dashed-rect/.style={rectangle, draw=black, dashed, align=center, font=\footnotesize, fill=white},
+    oval/.style={ellipse, draw=black, align=center, font=\footnotesize, fill=white},
+    arrow/.style={->, >=Stealth},
+    big-box/.style={rectangle, draw=black, dash pattern=on 5pt off 3pt, inner sep=12pt, fill=gray!50, fill opacity=0.3},
+    label/.style={font=\footnotesize\bfseries}
+]
+% Initial Solution box - moved further left
+\node[rect] (initial) at (-3,0) {Initial\\Solution};
+% Variable Fixing 1 (dotted box)
+\node[dashed-rect] (var-fix1) at (0,1) {Variable Fixing};
+% Reduce Infeasibility oval
+\node[oval] (reduce) at (2.5,0) {Reduce\\Infeasibility};
+% Improved Feasible Solution
+\node[rect] (improved-feas) at (6,0) {Improved\\Feasibility\\Solution};
+% Infeasibility LNS dashed box
+\node[big-box, fit=(var-fix1)(reduce)] (infeas-box) {};
+\node[label, anchor=south west] at ([xshift=3pt]infeas-box.north west) {Infeasibility LNS};
+% Variable Fixing 2 (dotted box)
+\node[dashed-rect] (var-fix2) at (9,1) {Variable Fixing};
+% Minimize Objective oval  
+\node[oval] (minimize) at (12.5,0) {Minimize\\Objective};
+% Improved Quality Solution
+\node[rect] (improved-qual) at (15.5,0) {Improved\\Quality\\Solution};
+% Objective LNS dashed box
+\node[big-box, fit=(var-fix2)(minimize)] (obj-box) {};
+\node[label, anchor=south west] at ([xshift=3pt]obj-box.north west) {Objective LNS};
+% Horizontal arrows
+\draw[arrow] (initial.east) -- (reduce.west);
+\draw[arrow] (var-fix1.south) -- (reduce.west);
+\draw[arrow] (reduce.east) -- (improved-feas.west);
+\draw[arrow] (improved-feas.east) -- (minimize.west);
+\draw[arrow] (var-fix2.south) -- (minimize.west);
+\draw[arrow] (minimize.east) -- (improved-qual.west);
+% Bottom feedback arrow
+\draw[arrow] (improved-qual.south) -- ++(0,-1) -| (initial.south);
+\end{tikzpicture}}
+\caption{ACS Heuristic Workflow Diagram}\label{fig:ACS_heu_workflow}
+\end{figure}
+
 \section{Feasibility-MIP (FMIP)}
 In linear programming theory, it is well established that the feasibility problem can be addressed using the two-phase Simplex method, in which an auxiliary optimization problem is solved to obtain a feasible starting basis, and hence a feasible solution.
 In a similar manner, the following auxiliary MIP problem, denoted as the Feasibility-MIP (FMIP), is formulated to identify a feasible starting solution:
@@ -21,12 +65,12 @@ Analogous to the FMIP, the OMIP represents a reformulation of the original MIP m
 
 By iteratively solving subproblems of both auxiliary MIPs, the ACS heuristic is designed to converge—although convergence is not formally guaranteed—to a high-quality feasible solution. By construction, infeasibility decreases monotonically after each iteration. However, the quality of the solution with respect to the original objective function may fluctuate.
 
-\section{Parallelization of ACS}
+\section{Parallelization of ACS (PACS)}
 The parallelization of ACS exploits parallelism by generating a diversified set of large neighborhood searches, which are solved simultaneously. Exploring multiple search neighborhoods in parallel is expected to increase the likelihood of identifying high-quality solutions.
 Following this parallelization step, the improvements obtained in parallel must be combined efficiently. To this end, an additional search subproblem is generated in which variables with identical values across different solutions are fixed. Consequently, the recombination phase constitutes a crucial step in PACS: by merging the improvements achieved during the parallel phase, the subsequent phase can explore a newly diversified set of large neighborhood searches based on the recombined solution, thereby enhancing the probability of further improvements.
-The pseudocode[\ref{alg:PACS}] illustrates the overall workflow.
+The Algorithm \ref{alg:PACS} illustrates the overall workflow.
 \begin{algorithm}[h]
-\caption{Parallel Alternating Criteria Search}\label{alg:PACS}
+\caption{Parallel Alternating Criteria Search (PACS)}\label{alg:PACS}
 \begin{algorithmic}
 \Function{FMIP\_LNS}{$\mathcal{F}, \hat{x}$}
     \State \Return $\min\{\sum_i \Delta^+_i + \Delta^-_i \mid A x + I_m \Delta^+ - I_m \Delta^- = b, \; x_j = \hat{x}_j \; \forall j \in F, \; x_j \in \mathbb{Z} \; \forall j \in \mathcal{I}\}$
@@ -35,33 +79,34 @@ The pseudocode[\ref{alg:PACS}] illustrates the overall workflow.
 \vspace{1em}
 \begin{algorithmic}
 \Function{OMIP\_LNS}{$\mathcal{F}, \hat{x}, \hat{\Delta}$}
-    \State \Return $\min\{c^t x \mid A x + I_m \Delta^+ - I_m \Delta^- = b, \; \sum_i \Delta^+_i + \Delta^-_i \leq \hat{\Delta}, \; x_j = \hat{x}_j \; \forall j \in F, \; x_j \in \mathbb{Z} \; \forall j \in \mathcal{I}\}$
+    \State \Return $\min\{c^T x \mid A x + I_m \Delta^+ - I_m \Delta^- = b, \; \sum_i \Delta^+_i + \Delta^-_i \leq \hat{\Delta}, \; x_j = \hat{x}_j \; \forall j \in F, \; x_j \in \mathbb{Z} \; \forall j \in \mathcal{I}\}$
 \EndFunction
 \end{algorithmic}
 \vspace{1em}
 \begin{algorithmic}[1]
+\Require{PACS Execution time limit $TL_{PACS}$; Number of threads $T$; Initial Solution Parameter $\theta, 0 < \theta \le 100$; Variable Fixing Paramter $\rho, 0 < \rho < 1$}
 \Ensure{Feasible solution $\hat{x}$ if found}
-\State Initialize $[\hat{x}, \Delta^+, \Delta^-]$ as an integer solution
-\State $T := numThreads()$
-\While{$timeElapsed()\le $ timeLimit}
+\Function{PACS}{$TL_{PACS}$, $T$, $\theta$, $\rho$}
+\State $[\hat{x}, \Delta^+, \Delta^-] \gets \Call{InitThetaSolution}{\theta,10^6}$
+\While{\Call{TimeElapsed} $\le TL_{PACS}$ }
     \If{$\sum_i \Delta_i^+ + \Delta_i^- > 0$}
-        \ForAll{threads $t_i \in \{0, T-1\}$ \textbf{in parallel}}
-            \State $F_{t_i} :=$ randomized variable index subset, $F_{t_i} \subseteq \mathcal{I}$ 
-            \State $[x^{t_i}, \Delta^{+t_i}, \Delta^{-t_i}] :=$ FMIP\_LNS$(F_{t_i}, \hat{x})$
+        \ForAll{threads $t_i:  i \in \{0,T-1\}$ \textbf{in parallel}}
+            \State $F_{t_i} \gets \Call{RandomFixings}{\rho}$
+            \State $[x^{t_i}, \Delta^{+t_i}, \Delta^{-t_i}] \gets \Call{FMIP\_LNS}{F_{t_i}, \hat{x}}$
         \EndFor
-        \State $U := \{ j \in \mathcal{I} | x^{t_i}_j = x^{t_k}_j, \; 0 \leq i < k < T\}$
-        \State $[\hat{x}, \Delta^+, \Delta^-] :=$ FMIP\_LNS$(U, x^{t_0})$
+        \State $U \gets \{ j \in \mathcal{I} | x^{t_i}_j = x^{t_k}_j, \; 0 \leq i < k < T\}$
+        \State $[\hat{x}, \Delta^+, \Delta^-] \gets \Call{FMIP\_LNS}{U, x^{t_0}}$
     \EndIf
-    \State $\Delta^{UB} := \sum_i \Delta^+_i + \Delta^-_i$
-    \ForAll{threads $t_i \in \{0, T-1\}$ \textbf{in parallel}}
-            \State $F_{t_i} :=$ randomized variable index subset, $F_{t_i} \subseteq \mathcal{I}$
-            \State $[x^{t_i}, \Delta^{+t_i}, \Delta^{-t_i}] :=$ OMIP\_LNS$(F_{t_i}, \hat{x}, \Delta^{UB})$
+    \State $\Delta^{UB} \gets \sum_i \Delta^+_i + \Delta^-_i$
+    \ForAll{threads $t_i:  i \in \{0,T-1\}$ \textbf{in parallel}}
+            \State $F_{t_i} \gets \Call{RandomFixings}{\rho}$
+            \State $[x^{t_i}, \Delta^{+t_i}, \Delta^{-t_i}] \gets \Call{OMIP\_LNS}{F_{t_i}, \hat{x}, \Delta^{UB}}$
     \EndFor
-    \State $U := \{ j \in \mathcal{I} | x^{t_i}_j = x^{t_k}_j, \; 0 \leq i < k < T\}$
-    \State $[\hat{x}, \Delta^+, \Delta^-] :=$ OMIP\_LNS$(U, x^{t_0}, \Delta^{UB})$
-    
+    \State $U \gets \{ j \in \mathcal{I} | x^{t_i}_j = x^{t_k}_j, \; 0 \leq i < k < T\}$
+    \State $[\hat{x}, \Delta^+, \Delta^-] \gets \Call{OMIP\_LNS}{U, x^{t_0}, \Delta^{UB}}$
 \EndWhile
 \State \Return $[\hat{x}, \Delta^+, \Delta^-]$
+\EndFunction
 \end{algorithmic}
 \end{algorithm}
 Each processor generates a set of randomized variable fixings and solves the associated sub-MIP—either FMIP or OMIP—until the allotted time limit is reached.
@@ -71,47 +116,55 @@ Processor synchronization and memory communication are handled via the Message P
 
 \section{Initialization of ACS}
 As introduced earlier in this chapter, ACS only requires a starting vector that is integer feasible and within the variable bounds. However, a stronger starting point is a solution that is as feasible as possible with respect to the objective function of the FMIP.
-The proposed algorithm provides a lightweight heuristic that seeks to minimize the infeasibility of the initial solution. This algorithm can be described by the pseudocode[\ref{alg:starting_vector}].
+The proposed algorithm provides a lightweight heuristic that seeks to minimize the infeasibility of the initial solution.
 \begin{algorithm}
 \caption{Starting vector heuristic}\label{alg:starting_vector}
+\begin{algorithmic}
+\Function{RELAXED\_MIP}{$F, \hat{x}$}
+    \State \Return $\min\{\sum_i \Delta_i^+ + \Delta_i^- \mid A x + I_m \Delta^+ - I_m \Delta^- = b, \; x_j = \hat{x}_j \;\; \forall j \in F\}$
+\EndFunction
+\end{algorithmic}
+\vspace{1em}
 \begin{algorithmic}[1]
 \Require{Percentage of variables to fix $\theta$, $0 < \theta \leq 100$, Fixed bound constant $c_b$}
 \Ensure{Starting integer-feasible vector $\hat{x}$}
-\State $V :=$ list of integer variables sorted by increasing bound range $u-l$
-\State $F := \emptyset$
-\While{$\hat{x}$ is not integer feasible \textbf{AND} $F \neq \mathcal{I}$}
-    \State $\mathcal{K} :=$ top $\theta \%$ of unfixed variables from $V$
+\Function{InitThetaSolution}{$\theta$, $c_b$}
+\State $V \gets \text{sort}_\uparrow(\{x \in \mathcal{I}\}, (u_x-l_x))$
+\State $F \gets \emptyset$
+\While{$\lnot \Call{IsIntegerFeasible}{\hat{x}} \land F \neq \mathcal{I}$}
+    \State $\mathcal{K} \gets$ top $\theta \%$ of unfixed variables from $V$
     \For{$k \in \mathcal{K}$}
-        \State $\hat{x}_k :=$ random integer value between $[\max(l_k, -c_b), \min(u_k, c_b)]$
+        \State $\hat{x}_k \gets \Call{RandomInteger}{\max(l_k, -c_b), \min(u_k, c_b)}$
     \EndFor
-    \State $F := F \cup \mathcal{K}$
-    \State $[x, \Delta^+, \Delta^-] := \min\{\sum_i \Delta_i^+ + \Delta_i^- \mid A x + I_m \Delta^+ - I_m \Delta^- = b, \; x_j = \hat{x}_j \;\; \forall j \in F\}$
-    \State $Q :=$ index set of integer variables of $x$ with integer value
-    \State $\hat{x}_q = x_q, \;\; \forall q \in Q$
-    \State $F := F \cup Q$
+    \State $F \gets F \cup \mathcal{K}$
+    \State $[x, \Delta^+, \Delta^-] \gets \Call{RELAXED\_MIP}{F,\hat{x}}$
+    \State $Q \gets \{i \;|\; x_i \in x,\; x_i \in \mathbb{Z}\}$
+    \State $\hat{x}_q \gets x_q, \; \forall q \in Q$
+    \State $F \gets F \cup Q$
 \EndWhile
 \State \Return $\hat{x}$
+\EndFunction
 \end{algorithmic}
 \end{algorithm}
-The algorithm first sorts the list of integer variables in order of increasing bound range. It then fixes the top $\theta$\% of variables to random integer values within their respective bounds. The input parameter $\theta$ controls the trade-off between the difficulty of the LP relaxation and the quality of the resulting starting solution. In cases where the bounds are infinite, a constant value of $10^6$ is used to clamp the bounds.
+The Algorithm \ref{alg:starting_vector} first sorts the list of integer variables in order of increasing bound range. It then fixes the top $\theta$\% of variables to random integer values within their respective bounds. The input parameter $\theta$ controls the trade-off between the difficulty of the LP relaxation and the quality of the resulting starting solution. In cases where the bounds are infinite, a constant value $c_b = 10^6$ is used to clamp the bounds.
 The rationale behind the sorting step is to prioritize binary variables first, followed by the remaining integer variables.
 Until all integer variables are fixed, the LP relaxation of the FMIP is solved to optimize the unfixed variables. Any variables that attain integer values in this process are then fixed.
 Since at least $\theta$\% of the variables are fixed at each iteration, the algorithm is guaranteed to terminate after at most $\lceil 100 / \theta \rceil$ iterations.
 \section{Variable Fixing Strategy}\label{sec:PACS_var_fix}
 Selecting an appropriate variable fixing scheme is a challenging task: an overly restrictive strategy may fail to yield improvements, whereas an excessively loose strategy can lead to a search space that is too large to explore efficiently within a reasonable timespan.
-The proposed algorithm constitutes a simple yet intuitive variable fixing method. It incorporates randomness to promote diversification and allows for controlling the number of variables to be fixed through an adjustable parameter.
-The algorithm is described in the  pseudocode[\ref{alg:variable_fixing}].
+The proposed algorithm constitutes a simple yet intuitive variable fixing method: it incorporates randomness to promote diversification and allows for controlling the number of variables to be fixed through an adjustable parameter.
 \begin{algorithm}
 \caption{Variable Fixing Selection Algorithm}\label{alg:variable_fixing}
 \begin{algorithmic}[1]
 \Require{Fraction of variables to fix $\rho$, $0 < \rho < 1$}
 \Ensure{Set of integer indices $F$}
 \Function{RandomFixings}{$\rho$}
-    \State $i :=$ random element in $\mathcal{I}$
-    \State $F :=$ first $\rho \cdot |\mathcal{I}|$ consecutive integer variable indices starting from $i$ in a circular fashion
+    \State $i \gets \Call{UniformFrom}{\mathcal{I}}$
+    \State $F \gets \big[(i,i+1,\dots,i+\rho\cdot|\mathcal{I}| -1) \mod |\mathcal{I}|\big]$
     \State \Return $F$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
-The fixings are determined by selecting a random integer variable $x'$ and fixing a consecutive sequence of integer variables starting from $x'$ up to a cap determined by $\rho$, an input parameter that specifies the number of variables to be fixed. The fixing is performed in a circular fashion: if the end of the set $\mathcal{I}$ is reached before the required number of variables are fixed, the algorithm continues from the beginning of $\mathcal{I}$.
+In the Algorithm \ref{alg:variable_fixing}, the fixings are determined by selecting a random integer variable $x'$ and fixing a consecutive sequence of integer variables starting from $x'$ up to a cap determined by $\rho$, an input parameter that specifies the number of variables to be fixed.
+The fixing is performed in a circular fashion: if the end of the set $\mathcal{I}$ is reached before the required number of variables are fixed, the algorithm continues from the beginning of $\mathcal{I}$.
 The effectiveness of this strategy relies on the fact that, for many problems—such as network flow and routing—the variables are arranged consecutively, often defining a cohesive substructure within the problem.
