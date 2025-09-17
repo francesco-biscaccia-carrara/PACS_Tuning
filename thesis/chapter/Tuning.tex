@@ -1,4 +1,4 @@
-Although the baseline PACS algorithm performs well on many MIP instances, its focus on integer variables and reliance on fixed parameters can limit diversification and lead to premature convergence.
+According to the original study, while the baseline PACS algorithm performs well on many MIP instances, its focus on integer variables and reliance on fixed parameters limit diversification and may lead to premature convergence.
 
 This section presents enhancements aimed at overcoming these limitations:
 \begin{enumerate}
@@ -17,32 +17,43 @@ To overcome this issue, Algorithm \ref{alg:starting_vector} and Algorithm \ref{a
 \begin{algorithm}[H]
 \caption{Generalized Starting vector heuristic}\label{alg:gen_starting_vector}
 \begin{algorithmic}[1]
-\Require{Percentage of variables to fix $\theta$, $0 < \theta \leq 100$, Fixed bound constant $c_b$}
+\Require{Percentage of variables to fix $\theta$, $0 < \theta \leq 100$; Fixed bound constant $c_b$}
 \Ensure{Starting integer-feasible vector $\hat{x}$}
-\State $V :=$ list of \cancel{integer} variables sorted by increasing bound range $u-l$
-\State $F := \emptyset$
-\While{$\hat{x}$ is not integer feasible \textbf{AND} $F \neq V$}
-    \State $\mathcal{K} :=$ top $\theta \%$ of unfixed variables from $V$
+\Function{InitThetaSolution}{$\theta$, $c_b$}
+\State $V \gets \text{sort}_\uparrow(\big \{x \in \{x_1,\dots,x_n\}\big\}, (u_x-l_x))$
+\State $F \gets \emptyset$
+\While{$\lnot \Call{IsIntegerFeasible}{\hat{x}} \land |F| \neq |V|$}
+    \State $\mathcal{K} \gets$ top $\theta \%$ of unfixed variables from $V$
     \For{$k \in \mathcal{K}$}
-        \State $\hat{x}_k :=$ random integer value between $[\max(l_k, -c_b), \min(u_k, c_b)]$
+        \State $\hat{x}_k \gets \Call{RandomInteger}{\max(l_k, -c_b), \min(u_k, c_b)}$
     \EndFor
-    \State $F := F \cup \mathcal{K}$
-    \State $[x, \Delta^+, \Delta^-] := \min\{\sum_i \Delta_i^+ + \Delta_i^- \mid A x + I_m \Delta^+ - I_m \Delta^- = b, \; x_j = \hat{x}_j \;\; \forall j \in F\}$
-    \State $Q :=$ index set of \cancel{integer} variables of $x$ with integer value
-    \State $\hat{x}_q = x_q, \;\; \forall q \in Q$
-    \State $F := F \cup Q$
+    \State $F \gets F \cup \mathcal{K}$
+    \State $[x, \Delta^+, \Delta^-] \gets \Call{RELAXED\_MIP}{F,\hat{x}}$
+    \State $Q \gets \{i \;|\; x_i \in x, x_i \in \mathbb{Z},\cancel{x_i \in \mathcal{I}}\}$
+    \State $\hat{x}_q \gets x_q, \; \forall q \in Q$
+    \State $F \gets F \cup Q$
 \EndWhile
 \State \Return $\hat{x}$
+\EndFunction
 \end{algorithmic}
 \end{algorithm}
 \begin{algorithm}[H]
 \caption{Generalized Variable Fixing Selection Algorithm}\label{alg:gen_variable_fixing}
+% \begin{algorithmic}[1]
+% \Require{Fraction of variables to fix $\rho$, $0 < \rho < 1$}
+% \Ensure{Set of integer indices $F$}
+% \Function{RandomFixings}{$\rho$}
+%     \State $i :=$ random element in $\{1\dots n\}$ \Comment $n$: number of variables in the original MIP 
+%     \State $F :=$ first $\rho \cdot n$ consecutive \cancel{integer} variable indices starting from $i$ in a circular fashion
+%     \State \Return $F$
+% \EndFunction
+% \end{algorithmic}
 \begin{algorithmic}[1]
 \Require{Fraction of variables to fix $\rho$, $0 < \rho < 1$}
 \Ensure{Set of integer indices $F$}
 \Function{RandomFixings}{$\rho$}
-    \State $i :=$ random element in $\{1\dots n\}$ \Comment $n$: number of variables in the original MIP 
-    \State $F :=$ first $\rho \cdot n$ consecutive \cancel{integer} variable indices starting from $i$ in a circular fashion
+    \State $i \gets \Call{UniformFrom}{\{1,\dots,n\}}$ \Comment $n$: number of variables in the original MIP 
+    \State $F \gets \big[(i,i+1,\dots,i+\rho\cdot n -1) \mod |n|\big]$
     \State \Return $F$
 \EndFunction
 \end{algorithmic}
@@ -57,14 +68,14 @@ More specifically, during the coordination phase, either the most feasible or th
 \begin{algorithm}[H]
 \caption{Parallel ACS Incumbent Update Procedure}\label{alg:inc_update}
 \begin{algorithmic}[1]
-\Require Candidate solution $x$ with slack sum $S(x)$ and objective value $C(x)$; Incumbent $\tilde{x}$; Zero-tolerance $\epsilon$
+\Require Candidate solution $\hat{x}$ with slack sum $S(\hat{x})$ and objective value $C(\hat{x})$; Incumbent $x_{ACS}$; Zero-tolerance $\epsilon$
 \Ensure Updated incumbent $\tilde{x}$ in a thread-safe manner
-\Function{UpdateIncumbent}{$x$}
-    \State acquire lock
-    \If{$(|S(x)| < |S(\tilde{x})|) \;\;\lor\;\; (|S(x)| < \epsilon \;\land\; C(x) < C(\tilde{x}))$}
-        \State $\tilde{x} \gets x$
+\Function{UpdateIncumbent}{$\hat{x}$}
+    \State \textbf{acquire lock}
+    \If{$(|S(\hat{x})| < |S(x_{ACS})|) \;\;\lor\;\; (|S(\hat{x})| < \epsilon \;\land\; C(\hat{x}) < C(x_{ACS}))$}
+        \State $x_{ACS} \gets \hat{x}$
     \EndIf
-    \State release lock
+    \State \textbf{release lock}
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -75,7 +86,7 @@ This mechanism is crucial to ensure that the algorithm consistently improves and
 After adapting the PACS algorithm to a more general-purpose environment, another important challenge arises: parameter selection. Since PACS must be applicable to a wide range of hard MIP instances, it is necessary to identify parameter settings that generally perform well, both in terms of computational efficiency and heuristic solution quality.  
 The goal is to remove the need for an explicit calibration phase, while still ensuring reliable performance. The tuning process specifically concerns the following parameters:
 \begin{enumerate}
-    \item The time span assigned to each sub-MIP, either FMIP\_LNS or OMIP\_LNS
+    \item The time span assigned to each sub-MIP, either \textsc{FMIP\_LNS} or \textsc{OMIP\_LNS}
     \item The parameter $\rho$ governing the fixing strategy 
     \item The parameter $\theta$ governing the starting vector
 \end{enumerate}
@@ -108,7 +119,7 @@ Since the LNS heuristics in the PACS algorthm restrict the search space by fixin
 \Ensure Updated value of $\rho$, synchronized across parallel sub-MIPs
 \Function{DynRhoUpdate}{$MIP_{code}$, $\Delta_\rho$, $\rho$, $num_{MIP}$}
     \State $\hat\Delta_\rho \gets {\Delta_\rho \over{num_{MIP}}}$
-    \State acquire lock
+    \State \textbf{acquire lock}
     \If{$MIP_{code} = OPT \;\lor\; MIP_{code} = OPT_{TOL}$}
         \State $\rho \gets \rho - \hat\Delta_\rho$
     \EndIf
@@ -119,7 +130,7 @@ Since the LNS heuristics in the PACS algorthm restrict the search space by fixin
     \If{*Tie Case detected*}
         \State $\rho \gets \rho - \Delta_\rho$
     \EndIf
-    \State release lock
+    \State \textbf{release lock}
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -157,29 +168,29 @@ Therefore, Algorithm \ref{alg:max_feasSol} is designed with the following goal: 
 \begin{algorithm}[H]
 \caption{Heuristic Initialization of Starting Solution}\label{alg:max_feasSol}
 \begin{algorithmic}[1]
-\Require $MIP$ instance with $n$ variables, objective coefficients $c_i$, bounds $[l_i, u_i]$; zero-tolerance $\epsilon$
-\Ensure Starting solution vector $x \in \bar{\mathbb{R}}^n$
+\Require $MIP$ instance with $n$ variables, objective coefficients $c_i$, bounds $[l_i, u_i]$; Zero-tolerance $\epsilon$
+\Ensure Starting solution vector $\hat{x} \in \bar{\mathbb{R}}^n$
 \Function{StartSolMaxFeas}{$MIP$}
-    \State $x \gets ( +\infty, \ldots, +\infty ) \in \bar{\mathbb{R}}^n$
+    \State $\hat{x} \gets ( +\infty, \ldots, +\infty ) \in \bar{\mathbb{R}}^n$
     \For{$i = 1 \to n$}
         \State $(l_i, u_i) \gets$ variable bounds of variable $i$
         \If{$l_i = -\infty \;\land\; u_i = +\infty$}
-            \State $x_i \gets 0$
+            \State $\hat{x}_i \gets 0$
         \ElsIf{$l_i > -\infty \;\land\; u_i = +\infty$}
-            \State $x_i \gets l_i$
+            \State $\hat{x}_i \gets l_i$
         \ElsIf{$l_i = -\infty \;\land\; u_i < +\infty$}
-            \State $x_i \gets u_i$
+            \State $\hat{x}_i \gets u_i$
         \Else
             \If{$c_i \leq -\epsilon$}
-                \State $x_i \gets l_i$
+                \State $\hat{x}_i \gets l_i$
             \ElsIf{$c_i \geq \epsilon$}
-                \State $x_i \gets u_i$
+                \State $\hat{x}_i \gets u_i$
             \Else
-                \State $x_i \gets$ \Call{RandomInteger}{$l_i, u_i$}
+                \State $\hat{x}_i \gets$ \Call{RandomInteger}{$l_i, u_i$}
             \EndIf
         \EndIf
     \EndFor
-    \State \Return $x$
+    \State \Return $\hat{x}$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -206,23 +217,22 @@ The procedure is implemented as shown in Algorithm \ref{alg:fixing_slackUB}.
 \begin{algorithm}[H]
 \caption{Fixing Slack Variables to Upper Bound}\label{alg:fixing_slackUB}
 \begin{algorithmic}[1]
-\Require $MIP$ model with $n$ variables; Solution $x$ of length $n+2m$; Zero-tolerance $\epsilon$
+\Require $MIP$ model with $n$ variables; Solution $\hat{x}$ of length $n+2m$; Zero-tolerance $\epsilon$
 \Ensure Updated model with adjusted upper bounds for slack variables
-\Function{SlackUpperBoundFixing}{$MIP$, $x$}
+\Function{SlackUpperBoundFixing}{$MIP$, $\hat{x}$}
     \State $S_{UB} \gets \emptyset$ \Comment Set of variables-upper bound to be updated
     \For{$i = n \to n+2m$}
         \State $u_i \gets$ upper bound of variable $i$
-        \If{$u_i - x_i > \epsilon$}
-            \State $S_{UB} \gets  S_{UB} \cup (i,x_i)$
+        \If{$u_i - \hat{x}_i > \epsilon$}
+            \State $S_{UB} \gets  S_{UB} \cup (i,\hat{x}_i)$
         \EndIf
     \EndFor
     \State \Return $S_{UB}$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
-Here, the solution vector $x$ corresponds to the current PACS incumbent—valid in both the parallel and recombination phases—and each slack variable is compared with its respective upper bound. If the variable value is smaller than the existing upper bound, the variable index together with its solution value is added to $S_{UB}$ as a pair $(i, x_i)$.
+Here, the solution vector $\hat{x}$ corresponds to the current PACS incumbent—valid in both the parallel and recombination phases—and each slack variable is compared with its respective upper bound. If the variable value is smaller than the existing upper bound, the variable index together with its solution value is added to $S_{UB}$ as a pair $(i, \hat{x}_i)$.
 The resulting set $S_{UB}$ is subsequently employed to update the upper bounds of the slack variables, thereby modifying the auxiliary FMIP and OMIP formulations as follows.
-
 \subsubsection{FMIP Reformulation}
 \begin{equation}
 \begin{cases}
@@ -299,7 +309,7 @@ Algorithm \ref{alg:walkMIP} presents the WalkMIP procedure adapted for MIP const
 The WalkMIP algorithm is executed independently by each processor, replacing the standard random fixing procedure. The strategy can be decomposed into three main phases:
 
 \begin{enumerate}
-    \item \textbf{Initialization and Huge-Kick Phase (lines 1-9 in Algorithm \ref{alg:walkMIP})}: If this is the first execution of the routine, the algorithm records the number of violated constraints under the current solution $x$, which is later used to determine the number of iterations for the main loop. To enhance diversification and escape local minima, a probability $p_{HUGE\_KICK}$ is introduced to randomly fix variables according to $\rho$. In our implementation, this parameter is set to $1/16$.
+    \item \textbf{Initialization and Huge-Kick Phase (lines 1-9 in Algorithm \ref{alg:walkMIP})}: If this is the first execution of the routine, the algorithm records the number of violated constraints under the current solution $x$, which is later used to determine the number of iterations for the main loop. To enhance diversification and escape local minima, a probability $p_{HUGE\_KICK}$ is introduced to randomly fix variables according to $\rho$. In the implementation, this parameter is set to $1/16$.
     
     \item \textbf{Constraint Selection and Optimization Loop (lines 10-25 in Algorithm \ref{alg:walkMIP})}: The number of constraints to target is determined by the function:
     $$
@@ -313,22 +323,22 @@ The WalkMIP algorithm is executed independently by each processor, replacing the
     $$
     \hat{r} = \min\!\left(1, \max\!\left(0, \frac{v}{\max(1, v_0)}\right)\right),\quad k_{\min}=32,\; k_{\max}=1024,\; \beta=\frac{\sqrt{5}-1}{2}.
     $$
-    This ensures that the number of touched constraints is bounded by $k_{\max}$ while accounting for constraints that have become feasible since the algorithm started. Only one variable per constraint is modified, imitating the WalkSAT strategy. The main loop iterates over $k$ randomly chosen violated constraints---updated at each iteration---, selecting the "minimum damage move" for each constraint. The function \textsc{MinDamageMove}, the Algorithm \ref{alg:min_DMG_WalkMIP}, evaluates potential moves:  
+    This ensures that the number of touched constraints is bounded by $k_{\max}$ while accounting for constraints that have become feasible since the algorithm started. Only one variable per constraint is modified, imitating the WalkSAT strategy. The main loop iterates over $k$ randomly chosen violated constraints---updated at each iteration---selecting the ``minimum damage move'' for each constraint. The function \textsc{MinDamageMove}, the Algorithm \ref{alg:min_DMG_WalkMIP}, evaluates potential moves:  
         \begin{itemize}
             \item If a variable fixing reduces infeasibility, the best move is applied.
             \item Otherwise, with probability $1-p$, the minimal-damage move is applied.
             \item Otherwise, with probability $p$, a random variable is fixed using its current solution value $x_{i_{rnd}}$.
         \end{itemize}
     
-    \item \textbf{Fixing Remaining Variables (lines 26-29 in Algorithm \ref{alg:min_DMG_WalkMIP})}: To maintain consistency with the original variable fixing strategy, the total number of fixed variables is set to $\rho \cdot n$. If the previous phases fixed fewer variables, the remaining variables are fixed according to the standard strategy.
+    \item \textbf{Fixing Remaining Variables (lines 26-29 in Algorithm \ref{alg:walkMIP})}: To maintain consistency with the original variable fixing strategy, the total number of fixed variables is set to $\rho \cdot n$. If the previous phases fixed fewer variables, the remaining variables are fixed according to the standard strategy.
 \end{enumerate}
 
 \begin{algorithm}[H]
-\caption{Minimum Damage Move Selection for a Violated Constraint in WalkMIP}
+\caption{Minimum Damage Move Selection for a Violated Constraint in WalkMIP}\label{alg:min_DMG_WalkMIP}
 \begin{algorithmic}
 \Require Violated constraint $c$, current solution vector $x$
 \Ensure Tuple $(i_{best}, val_{best}, minDMG)$, where $i_{best}$ is the index of the variable to modify, $val_{best}$ is the new value for that variable, and $minDMG$ is the resulting minimum change in constraint violation
-\Function{MinDamageMove}{$c, x$}\label{alg:min_DMG_WalkMIP}
+\Function{MinDamageMove}{$c, x$}
     \State $minDMG \gets +\infty$, $i_{best} \gets -1$, $val_{best} \gets +\infty$
     \For{\textbf{each} variable $i$ in $c$}
         \If{$i$.type = BIN} $\hat{x}_i \gets \neg x_i$

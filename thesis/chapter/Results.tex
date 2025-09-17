@@ -7,7 +7,7 @@ All experiments were conducted on a cluster within the UniPD DEI Blade infrastru
 For fairness in comparison, PACS executions use 4 logical threads, implemented as C++ standard threads, each running a CPLEX instance restricted to a single core. The baseline counterpart is a standalone CPLEX execution restricted to 4 cores.
 
 \subsection{Dataset}
-As anticipated in the previous sections, the benchmark for this comparison must consist of hard MIP instances. To this end, the set of hard instances from MIPLIB2017$^\text{\cite{MIPLIB}}$ has been used as the test bed.\footnote{The instance \textit{tpl-tub-ss16} was excluded, as its execution was terminated due to insufficient computational resources.}  
+As anticipated in the previous sections, the benchmark for this comparison must consist of hard MIP instances. To this end, the set of hard instances from MIPLIB 2017$^\text{\cite{MIPLIB}}$ has been used as the test bed.\footnote{The instance \textit{tpl-tub-ss16} was excluded, as its execution was terminated due to insufficient computational resources.}  
 While CPLEX directly processes each MIP instance, the PACS framework additionally requires a random seed in order to reproduce the same randomized choices across different runs. For this purpose, PACS was evaluated on each instance using the seeds $\{38472910, 56473829, 27384910, 91827364, 8374659\}$. This setup increases statistical reliability and can be considered representative of the algorithm’s standard behavior.  
 Consequently, for each instance, five independent PACS runs and one CPLEX run were executed.
 

@@ -4,44 +4,60 @@ The heuristic requires an initial vector, which is not mandated to be a feasible
 \centering
 \resizebox{\columnwidth}{!}{
 \begin{tikzpicture}[
-    rect/.style={rectangle, draw=black, align=center, font=\footnotesize},
-    dashed-rect/.style={rectangle, draw=black, dashed, align=center, font=\footnotesize, fill=white},
+    rect/.style={rectangle, draw=black, align=center, font=\footnotesize,fill=white},
     oval/.style={ellipse, draw=black, align=center, font=\footnotesize, fill=white},
     arrow/.style={->, >=Stealth},
-    big-box/.style={rectangle, draw=black, dash pattern=on 5pt off 3pt, inner sep=12pt, fill=gray!50, fill opacity=0.3},
+    big-box/.style={rectangle, draw=black, dash pattern=on 5pt off 3pt,
+                    inner sep=12pt, fill=gray!20, rounded corners=2pt},
     label/.style={font=\footnotesize\bfseries}
 ]
-% Initial Solution box - moved further left
+
+% ----------- Nodes (drawn first) -----------
+% Initial Solution box
 \node[rect] (initial) at (-3,0) {Initial\\Solution};
-% Variable Fixing 1 (dotted box)
-\node[dashed-rect] (var-fix1) at (0,1) {Variable Fixing};
-% Reduce Infeasibility oval
+
+% Variable Fixing 1
+\node[rect] (var-fix1) at (0,1) {Variable Fixing};
+
+% Reduce Infeasibility
 \node[oval] (reduce) at (2.5,0) {Reduce\\Infeasibility};
+
 % Improved Feasible Solution
 \node[rect] (improved-feas) at (6,0) {Improved\\Feasibility\\Solution};
-% Infeasibility LNS dashed box
-\node[big-box, fit=(var-fix1)(reduce)] (infeas-box) {};
-\node[label, anchor=south west] at ([xshift=3pt]infeas-box.north west) {Infeasibility LNS};
-% Variable Fixing 2 (dotted box)
-\node[dashed-rect] (var-fix2) at (9,1) {Variable Fixing};
-% Minimize Objective oval  
-\node[oval] (minimize) at (12.5,0) {Minimize\\Objective};
+
+% Variable Fixing 2
+\node[rect] (var-fix2) at (9,1) {Variable Fixing};
+
+% Minimize Objective
+\node[oval] (minimize) at (11.5,0) {Minimize\\Objective};
+
 % Improved Quality Solution
-\node[rect] (improved-qual) at (15.5,0) {Improved\\Quality\\Solution};
-% Objective LNS dashed box
-\node[big-box, fit=(var-fix2)(minimize)] (obj-box) {};
+\node[rect] (improved-qual) at (15,0) {Improved\\Quality\\Solution};
+
+% ----------- Background grouping boxes -----------
+\begin{pgfonlayer}{background}
+  \node[big-box, fit=(var-fix1)(reduce)] (infeas-box) {};
+  \node[big-box, fit=(var-fix2)(minimize)] (obj-box) {};
+\end{pgfonlayer}
+
+% ----------- Labels (on top) -----------
+\node[label, anchor=south west] at ([xshift=3pt]infeas-box.north west) {Infeasibility LNS};
 \node[label, anchor=south west] at ([xshift=3pt]obj-box.north west) {Objective LNS};
-% Horizontal arrows
+
+% ----------- Arrows -----------
 \draw[arrow] (initial.east) -- (reduce.west);
-\draw[arrow] (var-fix1.south) -- (reduce.west);
+\draw[arrow] (var-fix1) to[out=-90,in=-180] (reduce);
 \draw[arrow] (reduce.east) -- (improved-feas.west);
 \draw[arrow] (improved-feas.east) -- (minimize.west);
-\draw[arrow] (var-fix2.south) -- (minimize.west);
+\draw[arrow] (var-fix2) to[out=-90,in=-180] (minimize);
 \draw[arrow] (minimize.east) -- (improved-qual.west);
-% Bottom feedback arrow
+
+% Feedback arrow
 \draw[arrow] (improved-qual.south) -- ++(0,-1) -| (initial.south);
+
 \end{tikzpicture}}
-\caption{ACS Heuristic Workflow Diagram}\label{fig:ACS_heu_workflow}
+\caption{ACS Heuristic Workflow Diagram}
+\label{fig:ACS_heu_workflow}
 \end{figure}
 
 \section{Feasibility-MIP (FMIP)}
@@ -68,8 +84,7 @@ By iteratively solving subproblems of both auxiliary MIPs, the ACS heuristic is 
 \section{Parallelization of ACS (PACS)}
 The parallelization of ACS exploits parallelism by generating a diversified set of large neighborhood searches, which are solved simultaneously. Exploring multiple search neighborhoods in parallel is expected to increase the likelihood of identifying high-quality solutions.
 Following this parallelization step, the improvements obtained in parallel must be combined efficiently. To this end, an additional search subproblem is generated in which variables with identical values across different solutions are fixed. Consequently, the recombination phase constitutes a crucial step in PACS: by merging the improvements achieved during the parallel phase, the subsequent phase can explore a newly diversified set of large neighborhood searches based on the recombined solution, thereby enhancing the probability of further improvements.
-The Algorithm \ref{alg:PACS} illustrates the overall workflow.
-\begin{algorithm}[h]
+\begin{algorithm}[htbp]
 \caption{Parallel Alternating Criteria Search (PACS)}\label{alg:PACS}
 \begin{algorithmic}
 \Function{FMIP\_LNS}{$\mathcal{F}, \hat{x}$}
@@ -109,10 +124,110 @@ The Algorithm \ref{alg:PACS} illustrates the overall workflow.
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
-Each processor generates a set of randomized variable fixings and solves the associated sub-MIP—either FMIP or OMIP—until the allotted time limit is reached.
+The Algorithm \ref{alg:PACS} illustrates the overall workflow. In this process, each processor generates a set of randomized variable fixings and then solves the corresponding sub-MIP—either FMIP or OMIP—until the allotted time limit is reached.
 Subsequently, the solutions are exchanged, and the set $U$, containing the indices of variables common across solutions, is constructed. The recombination MIP then consists of a subproblem, again associated with either FMIP or OMIP, in which the variables in $U$ are fixed.
 The best solution obtained will be either the most feasible or the most optimal, depending on whether a recombination FMIP or OMIP is employed. Moreover, every solution used as input can be incorporated as a MIP start, as it remains feasible under any variable-fixing strategy.
 Processor synchronization and memory communication are handled via the Message Passing Interface (MPI)$^\text{\cite{MPI}}$, owing to its efficient all-to-all collective communication primitives in distributed large-scale architectures.
+To better illustrate the framework, Figure \ref{fig:PACS_heu_workflow} presents a schematic overview of the ACS heuristic, with an emphasis on its parallelization.
+\begin{figure}[hbtp]
+\centering
+\resizebox{\columnwidth}{!}{
+\begin{tikzpicture}[
+    rect/.style={rectangle, draw=black, align=center, font=\footnotesize, fill=white},
+    oval/.style={ellipse, draw=black, align=center, font=\footnotesize, fill=white},
+    arrow/.style={->, >=Stealth},
+    big-box/.style={rectangle, draw=black, dash pattern=on 5pt off 3pt,
+                    inner sep=12pt, fill=gray!20, rounded corners=2pt},
+    label/.style={font=\footnotesize\bfseries}
+]
+
+\node[rect] at (4,1) (initial) {Initial\\Solution};
+
+\node[rect] at (-2,-2) (var_fix1) {Variable Fixing};
+\node[rect] at (10,-2) (var_fixT) {Variable Fixing};
+\node[oval] at (-1,-3.5) (reduce_infeas1) {Reduce \\ Infeasibility};
+\node[oval] at (9,-3.5)  (reduce_infeasT) {Reduce \\ Infeasibility};
+
+\node at (4,-3) (tmp){\large\textbf{\dots}};
+
+\node[rect] at (-1,-6) (improved_feas1) {Improved\\Feasibility\\Solution $0$};
+\node[rect] at (9,-6)  (improved_feasT) {Improved\\Feasibility\\Solution $T-1$};
+
+\node[rect] at (1.5,-8.5) (var_fix_rFMIP) {Variable Fixing};
+\node[oval] at (4,-10)  (infeas_rFMIP) {Reduce\\Infeasibility};
+\node[rect] at (4,-12.5) (improved_rFMIP) {Improved\\Feasibility\\Solution};
+
+\node[rect] at (-2,-15.5) (var_fix3) {Variable Fixing};
+\node[rect] at (10,-15.5) (var_fixT2) {Variable Fixing};
+\node[oval] at (-1,-17) (min_obj1) {Minimize\\Objective};
+\node[oval] at (9,-17)  (min_objT) {Minimize\\Objective};
+
+\node at (4,-16.5) (tmp2){\large\textbf{\dots}};
+
+\node[rect] at (-1,-19.5) (improved_obj3) {Improved\\Quality\\Solution 1};
+\node[rect] at (9,-19.5)  (improved_objT2) {Improved\\Quality\\Solution T};
+
+\node[rect] at (1.5,-22) (var_fix_rOMIP) {Variable Fixing};
+\node[oval] at (4,-23.5)  (min_obj_rOMIP) {Minimize\\Objective};
+\node[rect] at (4,-26)  (improved_rOMIP) {Improved\\Quality\\Solution};
+
+\begin{pgfonlayer}{background}
+
+  \node[big-box, fit=(var_fix1)(reduce_infeas1)]  (infeas-box1) {};
+  \node[big-box, fit=(var_fixT)(reduce_infeasT)]  (infeas-boxT) {};
+
+  \node[big-box, fit=(var_fix_rFMIP)(infeas_rFMIP)] (rFMIP-box) {};
+
+  \node[big-box, fit=(var_fix3)(min_obj1)]         (min_box_1) {};
+
+  \node[big-box, fit=(var_fixT2)(min_objT)]        (min_box_T) {};
+
+  \node[big-box, fit=(var_fix_rOMIP)(min_obj_rOMIP)] (rOMIP-box) {};
+\end{pgfonlayer}
+
+\node[label, anchor=south west] at ([xshift=3pt]infeas-box1.north west) {Infeasibility LNS $0$};
+
+\node[label, anchor=south west] at ([xshift=3pt]infeas-boxT.north west) {Infeasibility LNS $T-1$};
+
+\node[label, anchor=south west] at ([xshift=1pt]rFMIP-box.north west) {Recombination Inf. LNS};
+
+\node[label, anchor=south west] at ([xshift=3pt]min_box_1.north west) {Objective LNS  $0$};
+\node[label, anchor=south west] at ([xshift=3pt]min_box_T.north west) {Objective LNS $T-1$};
+
+\node[label, anchor=south west] at ([xshift=1pt]rOMIP-box.north west) {Recombination Obj. LNS};
+
+\draw[arrow] (var_fix1) -- (reduce_infeas1);
+\draw[arrow] (initial) to[out=-90,in=75](reduce_infeas1);
+\draw[arrow] (reduce_infeas1) -- (improved_feas1);
+
+
+\draw[arrow] (var_fixT) -- (reduce_infeasT);
+\draw[arrow] (initial) to[out=-90,in=115] (reduce_infeasT);
+\draw[arrow] (reduce_infeasT) -- (improved_feasT);
+
+\draw[arrow] (var_fix3) -- (min_obj1);
+\draw[arrow] (min_obj1) -- (improved_obj3);
+\draw[arrow] (improved_rFMIP) to[out=-90,in=80] (min_obj1);
+
+\draw[arrow] (var_fixT2) -- (min_objT);
+\draw[arrow] (min_objT) -- (improved_objT2);
+\draw[arrow] (improved_rFMIP)  to[out=-90,in=110] (min_objT);
+
+\draw[arrow] (improved_feas1) to[out=-90,in=90] (infeas_rFMIP);
+\draw[arrow] (improved_feasT) to[out=-90,in=90] (infeas_rFMIP);
+\draw[arrow] (var_fix_rFMIP) -- (infeas_rFMIP);
+\draw[arrow] (infeas_rFMIP) -- (improved_rFMIP);
+
+\draw[arrow] (improved_obj3)to[out=-90,in=90](min_obj_rOMIP);
+\draw[arrow] (improved_objT2) to[out=-90,in=90] (min_obj_rOMIP);
+\draw[arrow] (var_fix_rOMIP) -- (min_obj_rOMIP);
+\draw[arrow] (min_obj_rOMIP) -- (improved_rOMIP);
+
+\draw[arrow] (improved_rOMIP.west) -- (-6,-26) --(-6,1) -- (initial.west);
+
+\end{tikzpicture}}
+\caption{PACS Heuristic Workflow Diagram}\label{fig:PACS_heu_workflow}
+\end{figure}
 
 \section{Initialization of ACS}
 As introduced earlier in this chapter, ACS only requires a starting vector that is integer feasible and within the variable bounds. However, a stronger starting point is a solution that is as feasible as possible with respect to the objective function of the FMIP.
@@ -126,7 +241,7 @@ The proposed algorithm provides a lightweight heuristic that seeks to minimize t
 \end{algorithmic}
 \vspace{1em}
 \begin{algorithmic}[1]
-\Require{Percentage of variables to fix $\theta$, $0 < \theta \leq 100$, Fixed bound constant $c_b$}
+\Require{Percentage of variables to fix $\theta$, $0 < \theta \leq 100$; Fixed bound constant $c_b$}
 \Ensure{Starting integer-feasible vector $\hat{x}$}
 \Function{InitThetaSolution}{$\theta$, $c_b$}
 \State $V \gets \text{sort}_\uparrow(\{x \in \mathcal{I}\}, (u_x-l_x))$
@@ -138,7 +253,7 @@ The proposed algorithm provides a lightweight heuristic that seeks to minimize t
     \EndFor
     \State $F \gets F \cup \mathcal{K}$
     \State $[x, \Delta^+, \Delta^-] \gets \Call{RELAXED\_MIP}{F,\hat{x}}$
-    \State $Q \gets \{i \;|\; x_i \in x,\; x_i \in \mathbb{Z}\}$
+    \State $Q \gets \{i \;|\; x_i \in x,\; x_i \in \mathbb{Z},\; x_i \in \mathcal{I}\}$
     \State $\hat{x}_q \gets x_q, \; \forall q \in Q$
     \State $F \gets F \cup Q$
 \EndWhile
