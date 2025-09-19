@@ -126,7 +126,7 @@ Since the LNS heuristics in the PACS algorthm restrict the search space by fixin
     \If{$MIP_{code} = FEAS_{TL} \;\lor\; MIP_{code} = FEAS_{DET\_TL}$}
         \State $\rho \gets \rho + \hat\Delta_\rho$
     \EndIf
-    \State Clap $\rho$ within $[0.01,0.99]$
+    \State $\rho \gets \Call{Clamp}{\rho,0.01,0.99}$
     \If{*Tie Case detected*}
         \State $\rho \gets \rho - \Delta_\rho$
     \EndIf
@@ -153,7 +153,7 @@ Since each sub-MIP independently attempts to modify the value of $\rho$, synchro
     \If{$MIP_{code} = FEAS_{TL} \;\lor\; MIP_{code} = FEAS_{DET\_TL}$}
         \State $\rho \gets \rho + \hat\Delta_\rho$
     \EndIf
-    \State Clap $\rho$ within $[0.01,0.99]$
+    \State $\rho \gets \Call{Clamp}{\rho,0.01,0.99}$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -218,7 +218,7 @@ The procedure is implemented as shown in Algorithm \ref{alg:fixing_slackUB}.
 \caption{Fixing Slack Variables to Upper Bound}\label{alg:fixing_slackUB}
 \begin{algorithmic}[1]
 \Require $MIP$ model with $n$ variables; Solution $\hat{x}$ of length $n+2m$; Zero-tolerance $\epsilon$
-\Ensure Updated model with adjusted upper bounds for slack variables
+\Ensure Set of variables-upper bound pair $S_{UB}$ to fix
 \Function{SlackUpperBoundFixing}{$MIP$, $\hat{x}$}
     \State $S_{UB} \gets \emptyset$ \Comment Set of variables-upper bound to be updated
     \For{$i = n \to n+2m$}
@@ -274,34 +274,38 @@ Algorithm \ref{alg:walkMIP} presents the WalkMIP procedure adapted for MIP const
 \caption{Walk-based Repair Heuristic for MIP}\label{alg:walkMIP}
 \begin{algorithmic}[1]
 \Require $MIP$ model with $n+2m$ variables (FMIP or OMIP); Initial solution $x$; Fixing parameter $\rho$; Random walk probability $p \in (0,1)$; Solution kick probability $p_{HUGE\_KICK}$
-\Ensure Updated model with improved feasible solution
-\Function{WalkMIP}{$MIP$, $x$, $\rho$, $p$,$p_{HUGE\_KICK}$}
-    \State $violConstr \gets$ Set of indices of violated constraints, under $x$
+\Ensure {Updated solution $\hat{x}$; Set of integer indices $F$}
+\Function{WalkMIP}{$MIP$, $\hat{x}$, $\rho$, $p$, $p_{HUGE\_KICK}$}
+    \State $violConstr \gets$ Set of indices of violated constraints, under $\hat{x}$
+    \State $F \gets \emptyset$
     \If{*First Execution*} $numInitialConstr \gets |violConstr|$\EndIf
     \If{$violConstr = \emptyset$ } \Return \EndIf
-    \If{with probability $p_{HUGE\_KICK}$} 
-        \State \Call{RandomFixings}{$\rho$}
+    \If{with $\mathbb{P} = p_{HUGE\_KICK}$} 
+        \State \Return \Call{RandomFixings}{$\rho$}
     \EndIf
     \State $k \gets $\Call{NumConstrToFix}{$numInitialConstr$,$|violConstr|$}
     \Repeat
-        \State $c \gets $ Random violated constraint, $c \in violConstr$
-        \State $(i_{best}, val_{best}, minDMG) \gets$ \Call{MinDamageMove}{$c, x$}
+        \State $c \gets \Call{UniformFrom}{violConstr}$
+        \State $(i_{best}, val_{best}, minDMG) \gets$ \Call{MinDamageMove}{$c, \hat{x}$}
         \If{$minDMG \leq -\epsilon$}
-            \State $\hat{x} \gets \Call{UpdateSol}{x,i_{best},val_{best}}$\Comment Apply best move to $x$
-        \ElsIf{with probability $1-p \land i_{best} \neq -1$}
-             \State $\hat{x} \gets \Call{UpdateSol}{x,i_{best},val_{best}}$\Comment Apply min-damage move to $x$
+            \State $F \gets F \cup i_{best}$
+            \State $\hat{x} \gets \Call{UpdateSol}{\hat{x},i_{best},val_{best}}$\Comment Apply best move to $\hat{x}$
+        \ElsIf{with $\mathbb{P} = 1-p \land i_{best} \neq -1$}
+            \State $F \gets F \cup i_{best}$
+            \State $\hat{x} \gets \Call{UpdateSol}{\hat{x},i_{best},val_{best}}$\Comment Apply min-damage move to $\hat{x}$
         \Else 
             \State $i_{rnd} \gets \Call{RandomInteger}{0,n-1}$
-            \State $\hat{x} \gets \Call{UpdateSol}{x, i_{rnd},x_{i_{rnd}}}$ \Comment Randomly fixing a var in $x$
+            \State $F \gets F \cup i_{rnd}$
+            \State $\hat{x} \gets \Call{UpdateSol}{\hat{x}, i_{rnd},x_{i_{rnd}}}$ \Comment Randomly fixing a var in $\hat{x}$
         \EndIf
         \State $violConstr \gets$ Set of indices of violated constraints, under $\hat{x}$
         \If{$violConstr = \emptyset$} \textbf{break} \EndIf
     \Until $k$ times
 
     \If{$k < \rho \cdot n$}
-        \State $\hat{x} \gets$Fix remaining variables (up to $\rho \cdot n$) from original $x$
+        \State $F \gets  \Call{RandomFixings}{\rho- {k\over{n}}}$ \Comment Fix remaining vars (up to $\rho \cdot n$) from $\hat{x}$
     \EndIf
-    \Return $\hat{x}$
+    \State \Return $F$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -336,19 +340,19 @@ The WalkMIP algorithm is executed independently by each processor, replacing the
 \begin{algorithm}[H]
 \caption{Minimum Damage Move Selection for a Violated Constraint in WalkMIP}\label{alg:min_DMG_WalkMIP}
 \begin{algorithmic}
-\Require Violated constraint $c$, current solution vector $x$
+\Require Violated constraint $c$, current solution vector $\hat{x}$
 \Ensure Tuple $(i_{best}, val_{best}, minDMG)$, where $i_{best}$ is the index of the variable to modify, $val_{best}$ is the new value for that variable, and $minDMG$ is the resulting minimum change in constraint violation
 \Function{MinDamageMove}{$c, x$}
     \State $minDMG \gets +\infty$, $i_{best} \gets -1$, $val_{best} \gets +\infty$
     \For{\textbf{each} variable $i$ in $c$}
-        \If{$i$.type = BIN} $\hat{x}_i \gets \neg x_i$
-        \ElsIf{$i$.type = INT} $\hat{x}_i \gets x_i + \Call{RandomInteger}{-1,1}$
-        \ElsIf{$i$.type = DOUBLE} $\hat{x}_i \gets x_i + \Call{RandomDouble}{-0.5,0.5}$
+        \If{$i$.type = BIN} $\bar{x}_i \gets \neg \hat{x}_i$
+        \ElsIf{$i$.type = INT} $\bar{x}_i \gets \hat{x}_i + \Call{RandomInteger}{-1,1}$
+        \ElsIf{$i$.type = DOUBLE} $\bar{x}_i \gets \hat{x}_i + \Call{RandomDouble}{-0.5,0.5}$
         \EndIf
-        \State Clamp $\hat{x}_i$ within its bounds $[l_i,u_i]$
-        \State $\delta \gets \Call{ComputeViolation}{x,\hat{x}_i}$
+        \State $\bar{x}_i \gets \Call{Clamp}{\bar{x}_i,l_i,u_i}$
+        \State $\delta \gets \Call{ComputeViolation}{\hat{x},\bar{x}_i}$
         \If{$\delta < minDMG$}
-            \State $i_{best} \gets i$, $minDMG \gets \delta$, $val_{best} \gets \hat{x}_i$
+            \State $i_{best} \gets i$, $minDMG \gets \delta$, $val_{best} \gets \bar{x}_i$
         \EndIf
     \EndFor
     \State \Return $(i_{best}, val_{best}, minDMG)$

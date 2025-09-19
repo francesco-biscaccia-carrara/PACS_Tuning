@@ -12,7 +12,7 @@ While CPLEX directly processes each MIP instance, the PACS framework additionall
 Consequently, for each instance, five independent PACS runs and one CPLEX run were executed.
 
 \subsection{Metrics}
-Both PACS and plain CPLEX terminate as soon as an incumbent solution (i.e., a feasible solution) is identified, subject to a global time limit of five minutes.
+Both PACS and plain CPLEX terminate as soon as an a feasible solution is identified, subject to a global time limit of $5$ minutes.
 Since the PACS framework was executed five times for each instance, the reported solution quality and computation time are given as the mean across all runs.
 Moreover, if the majority of PACS executions for a given instance---at least three out of five seeds---fail to produce a solution, the instance is recorded as unsolved.
 Instead of directly comparing the objective values of the solutions returned by the two approaches, the MIP gap metric$^\text{\cite{MIPGAP}}$ has been adopted. The MIP gap is defined as follows: given a solution $\hat{x}$ for a MIP with an optimal solution $x$, the primal gap $\gamma(\hat{x}) \in [0,1]$ is
@@ -56,7 +56,7 @@ In the latter three cases, if the corresponding tolerance is exceeded, the algor
 This section presents the experimental evaluation and details the progressive tuning of PACS parameters. Each test builds upon the outcomes of the previous one, providing a stepwise refinement of the algorithm.
 
 \subsection{Fixed $\rho$ Initialization Test}\label{sec:test_fix_rho}
-The first experiment focuses on the choice of the parameter $\rho$ in the variable-fixing strategy.  
+The first experiment focuses on the choice of the parameter $\rho$ in the variable fixing strategy.  
 In this experiment, PACS was employed with generalized fixing strategies under an architecture-agnostic parallelization scheme
 The predefined values of $\rho$ considered are $\{.1, .25, .5, .75, .9\}$.  
 It is worth noting that smaller values of $\rho$ leave greater freedom to the MIP solver.  
@@ -99,7 +99,7 @@ This result may be attributed to the fact that greater freedom allows CPLEX to o
 Based on these observations, the baseline PACS configuration under the static fixing scenario is set to $\theta = .25$ and $\rho = .1$.
 
 \subsection{Dynamic $\rho$ Adjustment Test}\label{sec:test_dyn_rho}
-This experiment investigates the dynamic adjustment strategy\footnote{In the plots, the PACS algorithm with dynamically adjusted $\rho$ is denoted as DACS for brevity.} for the variable-fixing parameter $\rho$, as introduced in Section \ref{sec:dyn_var_fix}. Although PACS requires an initial $\rho$ value, it is automatically updated during execution. In this test, the candidate values for $\rho$ are ${.1, .25, .5}$, while the starting solution parameter $\theta$ is set to $.25$, consistent with the previous experiment.
+This experiment investigates the dynamic adjustment strategy\footnote{In the plots, the PACS algorithm with dynamically adjusted $\rho$ is denoted as DACS for brevity.} for the variable fixing parameter $\rho$, as introduced in Section \ref{sec:dyn_var_fix}. Although PACS requires an initial $\rho$ value, it is automatically updated during execution. In this test, the candidate values for $\rho$ are ${.1, .25, .5}$, while the starting solution parameter $\theta$ is set to $.25$, consistent with the previous experiment.
 \begin{figure}[H]
 \centering
 \begin{minipage}{0.6\columnwidth}
@@ -137,7 +137,7 @@ The key observation from this experiment is that, unlike the fixed $\rho$ strate
 Based on these results, the baseline PACS configuration under the dynamic fixing scenario is set to $\theta = .25$ and initial $\rho = .1$.
 
 \subsection{Fixed vs. Dynamically Adjusted $\rho$ Test}\label{sec:test_fixvsdyn_rho}
-This experiment compares the fixed and dynamically adjusted strategies for selecting the variable-fixing parameter $\rho$, aiming to identify the most effective approach for the final PACS algorithm. Since $\theta$ is consistent across the previous experiments, a direct comparison is possible.
+This experiment compares the fixed and dynamically adjusted strategies for selecting the variable fixing parameter $\rho$, aiming to identify the most effective approach for the final PACS algorithm. Since $\theta$ is consistent across the previous experiments, a direct comparison is possible.
 
 \begin{figure}[H]
 \centering
@@ -204,9 +204,9 @@ This experiment evaluates different strategies for constructing the initial solu
     \caption{Success Rate vs. MIP Gap Plot for Initial Solution Construction Test}
     \label{fig:PACS_InitSol_MGAP}
 \end{figure}
-Figures \ref{fig:PACS_InitSol_SuccRate} and \ref{fig:PACS_InitSol_MGAP} indicate that overall performance is broadly comparable across all strategies. However, a closer inspection of the integral values reveals that the parameter-free strategy achieves the best results: 173.66 vs.\ 169.98 in terms of success rate, and 33.63 vs.\ 33.40 in terms of MIP gap integrals (MaxFeas vs.\ $\theta=.25$). Moreover, since the parameter-free approach eliminates the need to tune $\theta$, it represents a more robust and practical choice.
+Figures \ref{fig:PACS_InitSol_SuccRate} and \ref{fig:PACS_InitSol_MGAP} indicate that overall performance is broadly comparable across all strategies. However, a closer inspection of the integral values reveals that the parameter-free strategy achieves the best results: 173.66 vs.\ 169.98 in terms of success rate, and 33.63 vs.\ 33.40 in terms of MIP gap integrals (MaxFeas vs. DACS, $\theta=.25$). Moreover, since the parameter-free approach eliminates the need to tune $\theta$, it represents a more robust and practical choice.
 
-Consequently, based on this test, the best configuration of PACS employs a variable-fixing strategy with dynamic adjustment of $\rho$ initialized at $\rho = .1$, combined with a parameter-free initial solution construction strategy that maximizes feasibility.
+Consequently, based on this test, the best configuration of PACS employs a variable fixing strategy with dynamic adjustment of $\rho$ initialized at $\rho = .1$, combined with a parameter-free initial solution construction strategy that maximizes feasibility.
 
 \subsection{Slack Upper Bound Enforcement Test}\label{sec:test_slack_UB}
 In this experiment, the PACS algorithm—tuned with the best strategies and parameters identified in the previous tests—was evaluated to assess the effectiveness of the slack upper bound enforcement described in Section \ref{sec:slack_UB_BDG_constr}.
@@ -285,7 +285,7 @@ As shown in Figures \ref{fig:PACS_BDGRem_SuccRate} and \ref{fig:PACS_BDGRem_MGAP
 Therefore, the budget constraint is omitted in the final PACS framework, as its enforcement through slack upper bounds proves both sufficient and more efficient.
 
 \subsection{WalkMIP Strategy Test}\label{sec:test_walkMIP}
-The final experiment evaluates the performance of the WalkMIP strategy, a more sophisticated variable-fixing approach compared to the original PACS method. The key parameter here is the probability $p$, which governs the likelihood of selecting a minimum-damage move rather than a random move. In practice, higher values of $p$ increase the chance of random moves being chosen. To investigate this effect, $p$ was tested with values $\{.6, .7, .8\}$.
+The final experiment evaluates the performance of the WalkMIP strategy, a more sophisticated variable fixing approach compared to the original PACS method. The key parameter here is the probability $p$, which governs the likelihood of selecting a minimum-damage move rather than a random move. In practice, higher values of $p$ increase the chance of random moves being chosen. To investigate this effect, $p$ was tested with values $\{.6, .7, .8\}$.
 \begin{figure}[H]
 \centering
 \begin{minipage}{0.6\columnwidth}
@@ -316,7 +316,7 @@ The final experiment evaluates the performance of the WalkMIP strategy, a more s
 \label{fig:PACS_WalkMIP_MGAP}
 \end{figure}
 
-As shown in Figures \ref{fig:PACS_WalkMIP_SuccRate} and \ref{fig:PACS_WalkMIP_MGAP}, the simpler and more direct variable-fixing strategy consistently outperforms WalkMIP in both success rate and solution quality.
+As shown in Figures \ref{fig:PACS_WalkMIP_SuccRate} and \ref{fig:PACS_WalkMIP_MGAP}, the simpler and more direct variable fixing strategy consistently outperforms WalkMIP in both success rate and solution quality.
 
 For this reason, WalkMIP was not included in the final PACS framework. The final configuration of PACS therefore incorporates all modifications validated up to the budget constraint removal test, with parameters set as follows: dynamic adjustment of $\rho$, initialized at $\rho=.1$, parameter-free initial solution construction, slack upper bound enforcement, and removal of the budget constraint.
 
