@@ -74,7 +74,7 @@ Analogous to the two-phase Simplex method, a vector $x$ is feasible for the orig
 Rather than executing the FMIP until convergence to a feasible solution vector, the following auxiliary MIP problem, denoted as Optimality-MIP (OMIP), is designed to improve a partially feasible solution $[\hat{x}, \hat{\Delta}^+, \hat{\Delta}^-]$, which satisfies $\sum_{i=1}^m (\hat{\Delta}_i^+ + \hat{\Delta}_i^-) \neq 0$, with respect to the original objective $c^T x$:
 \begin{equation}
 \begin{cases}
-\text{min} \quad & c^T x \\ \text{s.t.} \quad & Ax + I_m\Delta^+ - I_m\Delta^- = b\\ & \sum_{i=0}^m \Delta_i^{+}+\Delta_i^{-} \le \sum_{i=0}^m \hat\Delta_i^{+}+\hat\Delta_i^{-}\\ & x_i = \hat{x}_i, \; \forall i \in F\\ & l \le x \le u\\ & x_i \in \mathbb{Z} \quad \forall i \in \mathcal{I} \\ & \Delta^+ \ge 0, \; \Delta^- \ge 0 
+\text{min} \quad & c^T x \\ \text{s.t.} \quad & Ax + I_m\Delta^+ - I_m\Delta^- = b\\ & \sum_{i=0}^m \Delta_i^{+}+\Delta_i^{-} \le \sum_{i=0}^m \hat\Delta_i^{+}+\hat\Delta_i^{-}\\ & x_i = \hat{x}_i, \; \forall i \in F\\ & l \le x \le u\\ & x_i \in \mathbb{Z},\; \forall i \in \mathcal{I} \\ & \Delta^+ \ge 0, \; \Delta^- \ge 0 
 \end{cases}
 \end{equation}
 Analogous to the FMIP, the OMIP represents a reformulation of the original MIP model in which auxiliary slack variables are introduced for each constraint. This formulation enables the OMIP to enhance a solution even if it is not feasible for the original MIP. Moreover, to ensure that the optimal solution of the OMIP does not exceed the infeasibility of the input solution $\hat{x}$, an additional budget constraint is imposed, limiting the total slack to $\sum_{i=0}^m \hat\Delta_i^{+}+\hat\Delta_i^{-}$.
@@ -87,40 +87,40 @@ Following this parallelization step, the improvements obtained in parallel must 
 \begin{algorithm}[htbp]
 \caption{Parallel Alternating Criteria Search (PACS)}\label{alg:PACS}
 \begin{algorithmic}
-\Function{FMIP\_LNS}{$\mathcal{F}, \hat{x}$}
+\Function{FMIP\_LNS}{$MIP$, $F$, $\hat{x}$}
     \State \Return $\min\{\sum_i \Delta^+_i + \Delta^-_i \mid A x + I_m \Delta^+ - I_m \Delta^- = b, \; x_j = \hat{x}_j \; \forall j \in F, \; x_j \in \mathbb{Z} \; \forall j \in \mathcal{I}\}$
 \EndFunction
 \end{algorithmic}
 \vspace{1em}
 \begin{algorithmic}
-\Function{OMIP\_LNS}{$\mathcal{F}, \hat{x}, \hat{\Delta}$}
-    \State \Return $\min\{c^T x \mid A x + I_m \Delta^+ - I_m \Delta^- = b, \; \sum_i \Delta^+_i + \Delta^-_i \leq \hat{\Delta}, \; x_j = \hat{x}_j \; \forall j \in F, \; x_j \in \mathbb{Z} \; \forall j \in \mathcal{I}\}$
+\Function{OMIP\_LNS}{$MIP$, $F$, $\hat{x}$, $\hat{\Delta}$}
+    \State \Return $\min\{c^T x \mid A x + I_m \Delta^+ - I_m \Delta^- = b, \; \sum_i^m \Delta^+_i + \Delta^-_i \leq \hat{\Delta}, \; x_j = \hat{x}_j \; \forall j \in F, \; x_j \in \mathbb{Z} \; \forall j \in \mathcal{I}\}$
 \EndFunction
 \end{algorithmic}
 \vspace{1em}
 \begin{algorithmic}[1]
-\Require{PACS Execution time limit $TL_{PACS}$; Number of threads $T$; Initial Solution Parameter $\theta, 0 < \theta \le 100$; Variable Fixing Paramter $\rho, 0 < \rho < 1$}
+\Require{Original $MIP$ formulation; PACS Execution time limit $TL_{PACS}$; Number of threads $T$; Initial solution parameter $\theta \in (0,100]$; Variable fixing parameter $\rho \in (0,1)$}
 \Ensure{Feasible solution $\hat{x}$ if found}
-\Function{PACS}{$TL_{PACS}$, $T$, $\theta$, $\rho$}
-\State $[\hat{x}, \Delta^+, \Delta^-] \gets \Call{InitThetaSolution}{\theta,10^6}$
+\Function{PACS}{$MIP$, $TL_{PACS}$, $T$, $\theta$, $\rho$}
+\State $[\hat{x}, \hat{\Delta}^+, \hat{\Delta}^-] \gets \Call{InitThetaSolution}{MIP,\theta,10^6}$
 \While{\Call{TimeElapsed} $\le TL_{PACS}$ }
     \If{$\sum_i \Delta_i^+ + \Delta_i^- > 0$}
         \ForAll{threads $t_i:  i \in \{0,T-1\}$ \textbf{in parallel}}
-            \State $F_{t_i} \gets \Call{RandomFixings}{\rho}$
-            \State $[x^{t_i}, \Delta^{+t_i}, \Delta^{-t_i}] \gets \Call{FMIP\_LNS}{F_{t_i}, \hat{x}}$
+            \State $F_{t_i} \gets \Call{RandomFixings}{MIP,\rho}$
+            \State $[x^{t_i}, \Delta^{+t_i}, \Delta^{-t_i}] \gets \Call{FMIP\_LNS}{MIP,F_{t_i}, \hat{x}}$
         \EndFor
         \State $U \gets \{ j \in \mathcal{I} | x^{t_i}_j = x^{t_k}_j, \; 0 \leq i < k < T\}$
-        \State $[\hat{x}, \Delta^+, \Delta^-] \gets \Call{FMIP\_LNS}{U, x^{t_0}}$
+        \State $[\hat{x}, \hat{\Delta}^+, \hat{\Delta}^-] \gets \Call{FMIP\_LNS}{MIP,U, x^{t_0}}$
     \EndIf
-    \State $\Delta^{UB} \gets \sum_i \Delta^+_i + \Delta^-_i$
+    \State $\Delta^{UB} \gets \sum_i^m \hat{\Delta}_i^+ + \hat{\Delta}_i^-$
     \ForAll{threads $t_i:  i \in \{0,T-1\}$ \textbf{in parallel}}
-            \State $F_{t_i} \gets \Call{RandomFixings}{\rho}$
-            \State $[x^{t_i}, \Delta^{+t_i}, \Delta^{-t_i}] \gets \Call{OMIP\_LNS}{F_{t_i}, \hat{x}, \Delta^{UB}}$
+            \State $F_{t_i} \gets \Call{RandomFixings}{MIP,\rho}$
+            \State $[x^{t_i}, \Delta^{+t_i}, \Delta^{-t_i}] \gets \Call{OMIP\_LNS}{MIP,F_{t_i}, \hat{x}, \Delta^{UB}}$
     \EndFor
     \State $U \gets \{ j \in \mathcal{I} | x^{t_i}_j = x^{t_k}_j, \; 0 \leq i < k < T\}$
-    \State $[\hat{x}, \Delta^+, \Delta^-] \gets \Call{OMIP\_LNS}{U, x^{t_0}, \Delta^{UB}}$
+    \State $[\hat{x}, \hat{\Delta}^+, \hat{\Delta}^-] \gets \Call{OMIP\_LNS}{MIP,U, x^{t_0}, \Delta^{UB}}$
 \EndWhile
-\State \Return $[\hat{x}, \Delta^+, \Delta^-]$
+\State \Return $[\hat{x}, \hat{\Delta}^+, \hat{\Delta}^-]$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -128,7 +128,7 @@ The Algorithm \ref{alg:PACS} illustrates the overall workflow. In this process, 
 Subsequently, the solutions are exchanged, and the set $U$, containing the indices of variables common across solutions, is constructed. The recombination MIP then consists of a subproblem, again associated with either FMIP or OMIP, in which the variables in $U$ are fixed.
 The best solution obtained will be either the most feasible or the most optimal, depending on whether a recombination FMIP or OMIP is employed. Moreover, every solution used as input can be incorporated as a MIP start, as it remains feasible under any variable-fixing strategy.
 Processor synchronization and memory communication are handled via the Message Passing Interface (MPI)$^\text{\cite{MPI}}$, owing to its efficient all-to-all collective communication primitives in distributed large-scale architectures.
-To better illustrate the framework, Figure \ref{fig:PACS_heu_workflow} presents a schematic overview of the ACS heuristic, with an emphasis on its parallelization.
+To better illustrate the framework, Figure \ref{fig:PACS_heu_workflow} presents a schematic overview of the PACS heuristic, with an emphasis on its parallelization.
 \begin{figure}[hbtp]
 \centering
 \resizebox{\columnwidth}{!}{
@@ -235,15 +235,15 @@ The proposed algorithm provides a lightweight heuristic that seeks to minimize t
 \begin{algorithm}
 \caption{Starting vector heuristic}\label{alg:starting_vector}
 \begin{algorithmic}
-\Function{RELAXED\_MIP}{$F, \hat{x}$}
+\Function{RELAXED\_MIP}{$MIP$, $F$, $\hat{x}$}
     \State \Return $\min\{\sum_i \Delta_i^+ + \Delta_i^- \mid A x + I_m \Delta^+ - I_m \Delta^- = b, \; x_j = \hat{x}_j \;\; \forall j \in F\}$
 \EndFunction
 \end{algorithmic}
 \vspace{1em}
 \begin{algorithmic}[1]
-\Require{Percentage of variables to fix $\theta$, $0 < \theta \leq 100$; Fixed bound constant $c_b$}
+\Require{Original $MIP$ formulation; Percentage of variables to fix $\theta \in (0,100]$; Fixed bound constant $c_b$}
 \Ensure{Starting integer-feasible vector $\hat{x}$}
-\Function{InitThetaSolution}{$\theta$, $c_b$}
+\Function{InitThetaSolution}{$MIP$, $\theta$, $c_b$}
 \State $V \gets \text{sort}_\uparrow(\{x \in \mathcal{I}\}, (u_x-l_x))$
 \State $F \gets \emptyset$
 \While{$\lnot \Call{IsIntegerFeasible}{\hat{x}} \land F \neq \mathcal{I}$}
@@ -252,7 +252,7 @@ The proposed algorithm provides a lightweight heuristic that seeks to minimize t
         \State $\hat{x}_k \gets \Call{RandomInteger}{\max(l_k, -c_b), \min(u_k, c_b)}$
     \EndFor
     \State $F \gets F \cup \mathcal{K}$
-    \State $[x, \Delta^+, \Delta^-] \gets \Call{RELAXED\_MIP}{F,\hat{x}}$
+    \State $[x, \Delta^+, \Delta^-] \gets \Call{RELAXED\_MIP}{MIP,F,\hat{x}}$
     \State $Q \gets \{i \;|\; x_i \in x,\; x_i \in \mathbb{Z},\; x_i \in \mathcal{I}\}$
     \State $\hat{x}_q \gets x_q, \; \forall q \in Q$
     \State $F \gets F \cup Q$
@@ -271,15 +271,15 @@ The proposed algorithm constitutes a simple yet intuitive variable fixing method
 \begin{algorithm}
 \caption{Variable Fixing Selection Algorithm}\label{alg:variable_fixing}
 \begin{algorithmic}[1]
-\Require{Fraction of variables to fix $\rho$, $0 < \rho < 1$}
+\Require{Original $MIP$ formulation; Fraction of variables to fix $\rho \in (0,1)$}
 \Ensure{Set of integer indices $F$}
-\Function{RandomFixings}{$\rho$}
+\Function{RandomFixings}{$MIP$, $\rho$}
     \State $i \gets \Call{UniformFrom}{\mathcal{I}}$
     \State $F \gets \big[(i,i+1,\dots,i+\rho\cdot|\mathcal{I}| -1) \mod |\mathcal{I}|\big]$
     \State \Return $F$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
-In the Algorithm \ref{alg:variable_fixing}, the fixings are determined by selecting a random integer variable $x'$ and fixing a consecutive sequence of integer variables starting from $x'$ up to a cap determined by $\rho$, an input parameter that specifies the number of variables to be fixed.
+In the Algorithm \ref{alg:variable_fixing}, the fixings are determined by selecting a random integer variable $x_i$ and fixing a consecutive sequence of integer variables starting from $x_i$ up to a cap determined by $\rho$, an input parameter that specifies the number of variables to be fixed.
 The fixing is performed in a circular fashion: if the end of the set $\mathcal{I}$ is reached before the required number of variables are fixed, the algorithm continues from the beginning of $\mathcal{I}$.
 The effectiveness of this strategy relies on the fact that, for many problems—such as network flow and routing—the variables are arranged consecutively, often defining a cohesive substructure within the problem.

@@ -1,7 +1,7 @@
 %intro
 \section{Experimental Setup}
 The experiments are designed to compare the PACS framework with the standalone IBM ILOG CPLEX Optimization Studio (version 22.1).  
-The PACS framework is implemented in C++ for performance reasons, interfacing with the solver through the C API. The source code is available under a non-commercial MIT license at \url{https://github.com/francesco-biscaccia-carrara/PACS_Tuning}. 
+The PACS framework is implemented in C++ for performance reasons, interfacing with the IBM ILOG CPLEX MIP solver through the C API. The source code is available under a non-commercial MIT license at \url{https://github.com/francesco-biscaccia-carrara/PACS_Tuning}. 
 
 All experiments were conducted on a cluster within the UniPD DEI Blade infrastructure, running Rocky Linux 8.10. Each node is equipped with an Intel(R) Xeon(R) E5-2623 v3 processor (4 cores, 3.00 GHz) and 16 GB of RAM. Although the infrastructure is cluster-based, the computational power of a single node is comparable to that of a general-purpose laptop, or even lower.  
 For fairness in comparison, PACS executions use 4 logical threads, implemented as C++ standard threads, each running a CPLEX instance restricted to a single core. The baseline counterpart is a standalone CPLEX execution restricted to 4 cores.
@@ -13,7 +13,7 @@ Consequently, for each instance, five independent PACS runs and one CPLEX run we
 
 \subsection{Metrics}
 Both PACS and plain CPLEX terminate as soon as an a feasible solution is identified, subject to a global time limit of $5$ minutes.
-Since the PACS framework was executed five times for each instance, the reported solution quality and computation time are given as the mean across all runs.
+Since the PACS framework was executed five times for each instance, the reported solution quality and computation time are given as the arithmetic mean across all runs.
 Moreover, if the majority of PACS executions for a given instance---at least three out of five seeds---fail to produce a solution, the instance is recorded as unsolved.
 Instead of directly comparing the objective values of the solutions returned by the two approaches, the MIP gap metric$^\text{\cite{MIPGAP}}$ has been adopted. The MIP gap is defined as follows: given a solution $\hat{x}$ for a MIP with an optimal solution $x$, the primal gap $\gamma(\hat{x}) \in [0,1]$ is
 \begin{equation}
@@ -132,7 +132,7 @@ This experiment investigates the dynamic adjustment strategy\footnote{In the plo
 
 As in the static case, Figure \ref{fig:PACS_DYN_SuccRate} shows that CPLEX consistently outperforms PACS in terms of success rate. However, Figure \ref{fig:PACS_DYN_MGAP} demonstrates that dynamic adjustment of $\rho$ improves solution quality: selecting $\rho = .1$ produces higher-quality solutions roughly $1.73\times$ more frequently than CPLEX alone.
 
-The key observation from this experiment is that, unlike the fixed $\rho$ strategy—where the choice of $\rho$ significantly affects PACS performance—the dynamic adjustment greatly reduces sensitivity to the initial parameter. Regardless of the starting $\rho$, PACS achieves comparable results in both success rate and solution quality, providing consistently reliable outcomes.
+The key observation from this experiment is that, unlike the fixed $\rho$ strategy, where the choice of $\rho$ significantly affects PACS performance, the dynamic adjustment greatly reduces sensitivity to the initial parameter. Regardless of the starting $\rho$, PACS achieves comparable results in both success rate and solution quality, providing consistently reliable outcomes.
 
 Based on these results, the baseline PACS configuration under the dynamic fixing scenario is set to $\theta = .25$ and initial $\rho = .1$.
 

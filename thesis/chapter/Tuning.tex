@@ -1,4 +1,4 @@
-According to the original study, while the baseline PACS algorithm performs well on many MIP instances, its focus on integer variables and reliance on fixed parameters limit diversification and may lead to premature convergence.
+According to the original study, although the baseline PACS algorithm demonstrates strong performance on many MIP instances, its exclusive focus on integer variables and dependence on fixed parameters can restrict diversification and increase the risk of premature convergence.
 
 This section presents enhancements aimed at overcoming these limitations:
 \begin{enumerate}
@@ -17,9 +17,9 @@ To overcome this issue, Algorithm \ref{alg:starting_vector} and Algorithm \ref{a
 \begin{algorithm}[H]
 \caption{Generalized Starting vector heuristic}\label{alg:gen_starting_vector}
 \begin{algorithmic}[1]
-\Require{Percentage of variables to fix $\theta$, $0 < \theta \leq 100$; Fixed bound constant $c_b$}
+\Require{Original $MIP$ formulation; Percentage of variables to fix $\theta \in (0,100]$; Fixed bound constant $c_b$}
 \Ensure{Starting integer-feasible vector $\hat{x}$}
-\Function{InitThetaSolution}{$\theta$, $c_b$}
+\Function{InitThetaSolution}{$MIP$, $\theta$, $c_b$}
 \State $V \gets \text{sort}_\uparrow(\big \{x \in \{x_1,\dots,x_n\}\big\}, (u_x-l_x))$
 \State $F \gets \emptyset$
 \While{$\lnot \Call{IsIntegerFeasible}{\hat{x}} \land |F| \neq |V|$}
@@ -28,7 +28,7 @@ To overcome this issue, Algorithm \ref{alg:starting_vector} and Algorithm \ref{a
         \State $\hat{x}_k \gets \Call{RandomInteger}{\max(l_k, -c_b), \min(u_k, c_b)}$
     \EndFor
     \State $F \gets F \cup \mathcal{K}$
-    \State $[x, \Delta^+, \Delta^-] \gets \Call{RELAXED\_MIP}{F,\hat{x}}$
+    \State $[x, \Delta^+, \Delta^-] \gets \Call{RELAXED\_MIP}{MIP, F, \hat{x}}$
     \State $Q \gets \{i \;|\; x_i \in x, x_i \in \mathbb{Z},\cancel{x_i \in \mathcal{I}}\}$
     \State $\hat{x}_q \gets x_q, \; \forall q \in Q$
     \State $F \gets F \cup Q$
@@ -37,30 +37,20 @@ To overcome this issue, Algorithm \ref{alg:starting_vector} and Algorithm \ref{a
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
+
 \begin{algorithm}[H]
 \caption{Generalized Variable Fixing Selection Algorithm}\label{alg:gen_variable_fixing}
-% \begin{algorithmic}[1]
-% \Require{Fraction of variables to fix $\rho$, $0 < \rho < 1$}
-% \Ensure{Set of integer indices $F$}
-% \Function{RandomFixings}{$\rho$}
-%     \State $i :=$ random element in $\{1\dots n\}$ \Comment $n$: number of variables in the original MIP 
-%     \State $F :=$ first $\rho \cdot n$ consecutive \cancel{integer} variable indices starting from $i$ in a circular fashion
-%     \State \Return $F$
-% \EndFunction
-% \end{algorithmic}
 \begin{algorithmic}[1]
-\Require{Fraction of variables to fix $\rho$, $0 < \rho < 1$}
+\Require{Original $MIP$ formulation; Fraction of variables to fix $\rho \in (0,1)$}
 \Ensure{Set of integer indices $F$}
-\Function{RandomFixings}{$\rho$}
+\Function{RandomFixings}{$MIP$, $\rho$}
     \State $i \gets \Call{UniformFrom}{\{1,\dots,n\}}$ \Comment $n$: number of variables in the original MIP 
     \State $F \gets \big[(i,i+1,\dots,i+\rho\cdot n -1) \mod |n|\big]$
     \State \Return $F$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
-Since these algorithms are executed on the auxiliary MIP problems -FMIP or OMIP-, the variables subject to fixing correspond exactly to those defined in the original MIP formulation.  
-By generalizing the fixing strategy to include both integer and continuous variables, diversification is enhanced, thereby reducing the likelihood of stagnation in local minima and potentially improving the exploration of the solution space.
-
+Although these algorithms operate on the auxiliary MIP problems---FMIP or OMIP---the variables subject to fixing are the same as those in the original MIP formulation. By extending the fixing strategy to include both integer and continuous variables, diversification is improved, reducing the likelihood of stagnation in local minima and enhancing exploration of the solution space.
 \section{Architecture-Agnostic Parallelization}
 In the original study, the Message Passing Interface (MPI) was employed to synchronize processors at each recombination phase. While this approach is well suited to high-performance computing environments, it may be unnecessarily complex in general-purpose scenarios, where a simpler multi-threading implementation is often preferable.  
 In this thesis, communication is instead managed through a set of logical threads, which may differ from the number of available hardware threads. This abstraction ensures that, even on machines with fewer physical cores, the algorithm can reproduce the same behavior across different architectures, provided sufficient computational time is allowed.  
@@ -68,12 +58,12 @@ More specifically, during the coordination phase, either the most feasible or th
 \begin{algorithm}[H]
 \caption{Parallel ACS Incumbent Update Procedure}\label{alg:inc_update}
 \begin{algorithmic}[1]
-\Require Candidate solution $\hat{x}$ with slack sum $S(\hat{x})$ and objective value $C(\hat{x})$; Incumbent $x_{ACS}$; Zero-tolerance $\epsilon$
-\Ensure Updated incumbent $\tilde{x}$ in a thread-safe manner
-\Function{UpdateIncumbent}{$\hat{x}$}
+\Require Original $MIP$ formulation; Candidate solution $[\hat{x}, \hat{\Delta}^+, \hat{\Delta}^-]$; Incumbent $x_{ACS}$ with slack sum $\Delta_{ACS}$ and objective value $C_{ACS}=c^T x_{ACS}$; Zero-tolerance $\epsilon$
+\Ensure Updated incumbent $x_{ACS}$ in a thread-safe manner
+\Function{UpdateIncumbent}{$MIP$, $[\hat{x}, \hat{\Delta}^+, \hat{\Delta}^-]$}
     \State \textbf{acquire lock}
-    \If{$(|S(\hat{x})| < |S(x_{ACS})|) \;\;\lor\;\; (|S(\hat{x})| < \epsilon \;\land\; C(\hat{x}) < C(x_{ACS}))$}
-        \State $x_{ACS} \gets \hat{x}$
+    \If{$(|\sum_i^m \hat{\Delta}_i^+ + \hat{\Delta}_i^- | < |\Delta_{ACS}|) \;\;\lor\;\; (|\sum_i^m \hat{\Delta}_i^+ + \hat{\Delta}_i^- | < \epsilon \;\land\; c^T \hat{x} < C_{ACS})$}
+        \State $[x_{ACS},\Delta_{ACS},C_{ACS}] \gets [\hat{x},\sum_i^m \hat{\Delta}_i^+ + \hat{\Delta}_i^-,c^T \hat{x}]$
     \EndIf
     \State \textbf{release lock}
 \EndFunction
@@ -115,20 +105,20 @@ Since the LNS heuristics in the PACS algorthm restrict the search space by fixin
 \begin{algorithm}[H]
 \caption{Parallel ACS Rho Update (Parallel Phases)}\label{alg:rho_update_MT}
 \begin{algorithmic}[1]
-\Require Status code $MIP_{code}$ returned by the solver; Adjustment step $\Delta_\rho$ for $\rho$; The variable fixing parameter $\rho$; Number of parallel sub-MIPs $num_{MIP}$
+\Require Status code $MIP_{code}$ returned by the solver; Adjustment step $\delta_\rho$ for $\rho$; The variable fixing parameter $\rho$; Number of parallel sub-MIPs $num_{MIP}$
 \Ensure Updated value of $\rho$, synchronized across parallel sub-MIPs
-\Function{DynRhoUpdate}{$MIP_{code}$, $\Delta_\rho$, $\rho$, $num_{MIP}$}
-    \State $\hat\Delta_\rho \gets {\Delta_\rho \over{num_{MIP}}}$
+\Function{DynRhoUpdate}{$MIP_{code}$, $\delta_\rho$, $\rho$, $num_{MIP}$}
+    \State $\hat\delta_\rho \gets {\delta_\rho \over{num_{MIP}}}$
     \State \textbf{acquire lock}
     \If{$MIP_{code} = OPT \;\lor\; MIP_{code} = OPT_{TOL}$}
-        \State $\rho \gets \rho - \hat\Delta_\rho$
+        \State $\rho \gets \rho - \hat\delta_\rho$
     \EndIf
     \If{$MIP_{code} = FEAS_{TL} \;\lor\; MIP_{code} = FEAS_{DET\_TL}$}
-        \State $\rho \gets \rho + \hat\Delta_\rho$
+        \State $\rho \gets \rho + \hat\delta_\rho$
     \EndIf
     \State $\rho \gets \Call{Clamp}{\rho,0.01,0.99}$
     \If{*Tie Case detected*}
-        \State $\rho \gets \rho - \Delta_\rho$
+        \State $\rho \gets \rho - \delta_\rho$
     \EndIf
     \State \textbf{release lock}
 \EndFunction
@@ -136,28 +126,28 @@ Since the LNS heuristics in the PACS algorthm restrict the search space by fixin
 \end{algorithm}
 The procedure, described in Algorithm \ref{alg:rho_update_MT}, is applied after each sub-MIP optimization phase in the parallel step. Based on the status returned by the solver, the value of $\rho$ is updated as follows:
 \begin{itemize}
-    \item  If the solver hits the time limit—either the deterministic limit or the global remaining time—while still producing a feasible solution, $\rho$ is increased by $\frac{\Delta_\rho}{num_{MIP}}$. This adjustment suggests fixing more variables in subsequent phases, thereby simplifying the subproblem to be solved. 
-    \item Conversely, if the solver converges to an optimal solution within the tolerance, this indicates that the corresponding region of the search space has already been sufficiently explored. In this case, $\rho$ is decreased by $\frac{\Delta_\rho}{num_{MIP}}$, enlarging the search space and granting the solver greater freedom in the following optimization steps.  
+    \item  If the solver hits the time limit—either the deterministic limit or the global remaining time—while still producing a feasible solution, $\rho$ is increased by $\frac{\delta_\rho}{num_{MIP}}$. This adjustment suggests fixing more variables in subsequent phases, thereby simplifying the subproblem to be solved. 
+    \item Conversely, if the solver converges to an optimal solution within the tolerance, this indicates that the corresponding region of the search space has already been sufficiently explored. In this case, $\rho$ is decreased by $\frac{\delta_\rho}{num_{MIP}}$, enlarging the search space and granting the solver greater freedom in the following optimization steps.  
 \end{itemize}
-Since each sub-MIP independently attempts to modify the value of $\rho$, synchronization through locking is required to prevent inconsistencies. The final update is determined as the average of the adjustments proposed by the parallel optimization phases. In case of a tie, a deterministic rule is applied: $\rho$ is decreased by $\Delta_\rho$.  
+Since each sub-MIP independently attempts to modify the value of $\rho$, synchronization through locking is required to prevent inconsistencies. The final value of the parameter $\rho$ is determined as the average of the adjustments proposed by the parallel optimization phases. In case of a tie, a deterministic rule is applied: $\rho$ is decreased by $\delta_\rho$.  
 \begin{algorithm}[H]
 \caption{Parallel ACS Rho Update (Recombination Phases)}\label{alg:rho_update}
 \begin{algorithmic}[1]
-\Require Status code $MIP_{code}$ returned by the solver; Adjustment step $\Delta_\rho$ for $\rho$; The variable fixing parameter $\rho$; Number of parallel sub-MIPs $num_{MIP}$
+\Require Status code $MIP_{code}$ returned by the solver; Adjustment step $\delta_\rho$ for $\rho$; The variable fixing parameter $\rho$; Number of parallel sub-MIPs $num_{MIP}$
 \Ensure Updated value of $\rho$ after recombination adjustment
-\Function{DynRhoUpdate}{$MIP_{code}$, $\Delta_\rho$, $\rho$, $num_{MIP}$}
-    \State $\hat\Delta_\rho \gets {2\Delta_\rho \over{num_{MIP}}}$
+\Function{DynRhoUpdate}{$MIP_{code}$, $\delta_\rho$, $\rho$, $num_{MIP}$}
+    \State $\hat\delta_\rho \gets {2\delta_\rho \over{num_{MIP}}}$
     \If{$MIP_{code} = OPT \;\lor\; MIP_{code} = OPT_{TOL}$}
-        \State $\rho \gets \rho - \hat\Delta_\rho$
+        \State $\rho \gets \rho - \hat\delta_\rho$
     \EndIf
     \If{$MIP_{code} = FEAS_{TL} \;\lor\; MIP_{code} = FEAS_{DET\_TL}$}
-        \State $\rho \gets \rho + \hat\Delta_\rho$
+        \State $\rho \gets \rho + \hat\delta_\rho$
     \EndIf
     \State $\rho \gets \Call{Clamp}{\rho,0.01,0.99}$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
-For the recombination phase, the procedure is slightly modified into Algorithm \ref{alg:rho_update}, where the adjustment step is doubled, i.e. $2\Delta_\rho / num_{MIP}$, in order to resolve potential tie cases.\\
+For the recombination phase, the procedure is slightly modified into Algorithm \ref{alg:rho_update}, where the adjustment step is doubled, i.e. $2\delta_\rho / num_{MIP}$, in order to resolve potential tie cases.\\
 Finally, although an initial value of $\rho$ must be provided to start the fixing process, experimental results in Section \ref{sec:test_dyn_rho} show that performance is only marginally affected by this initialization. Consequently, the effectiveness of the method does not critically depend on the initial choice of $\rho$.
 
 \subsection{Parameter-Free Strategy for Initial Solution Construction}\label{sec:init_sol_maxFeas}
@@ -168,10 +158,10 @@ Therefore, Algorithm \ref{alg:max_feasSol} is designed with the following goal: 
 \begin{algorithm}[H]
 \caption{Heuristic Initialization of Starting Solution}\label{alg:max_feasSol}
 \begin{algorithmic}[1]
-\Require $MIP$ instance with $n$ variables, objective coefficients $c_i$, bounds $[l_i, u_i]$; Zero-tolerance $\epsilon$
+\Require Original $MIP$ formulation with $n$ variables, objective coefficients $c_i$, bounds $[l_i, u_i]$; Zero-tolerance $\epsilon$
 \Ensure Starting solution vector $\hat{x} \in \bar{\mathbb{R}}^n$
 \Function{StartSolMaxFeas}{$MIP$}
-    \State $\hat{x} \gets ( +\infty, \ldots, +\infty ) \in \bar{\mathbb{R}}^n$
+    \State $[\hat{x},\hat\Delta^+,\hat\Delta^-] \gets ( +\infty, \ldots, +\infty ) \in \bar{\mathbb{R}}^{n+2m}$
     \For{$i = 1 \to n$}
         \State $(l_i, u_i) \gets$ variable bounds of variable $i$
         \If{$l_i = -\infty \;\land\; u_i = +\infty$}
@@ -190,7 +180,7 @@ Therefore, Algorithm \ref{alg:max_feasSol} is designed with the following goal: 
             \EndIf
         \EndIf
     \EndFor
-    \State \Return $\hat{x}$
+    \State \Return $[\hat{x},\hat\Delta^+,\hat\Delta^-]$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
@@ -200,7 +190,7 @@ The initialization procedure in Algorithm \ref{alg:max_feasSol} operates as foll
     \item If a variable has only one finite bound, it is set to that bound.
     \item If both bounds are finite:
     \begin{itemize}
-        \item set the variable to the lower bound if $c_i \leq -\epsilon$,i.e. the coefficient is negative,
+        \item set the variable to the lower bound if $c_i \leq -\epsilon$, i.e. the coefficient is negative,
         \item set it to the upper bound if $c_i \geq \epsilon$, i.e. the coefficient is positive,
         \item choose a random integer within $[l_i, u_i]$ if $-\epsilon \leq c_i \leq \epsilon$, i.e.the coefficient is close to zero.
     \end{itemize}
@@ -217,30 +207,35 @@ The procedure is implemented as shown in Algorithm \ref{alg:fixing_slackUB}.
 \begin{algorithm}[H]
 \caption{Fixing Slack Variables to Upper Bound}\label{alg:fixing_slackUB}
 \begin{algorithmic}[1]
-\Require $MIP$ model with $n$ variables; Solution $\hat{x}$ of length $n+2m$; Zero-tolerance $\epsilon$
-\Ensure Set of variables-upper bound pair $S_{UB}$ to fix
-\Function{SlackUpperBoundFixing}{$MIP$, $\hat{x}$}
-    \State $S_{UB} \gets \emptyset$ \Comment Set of variables-upper bound to be updated
-    \For{$i = n \to n+2m$}
-        \State $u_i \gets$ upper bound of variable $i$
-        \If{$u_i - \hat{x}_i > \epsilon$}
-            \State $S_{UB} \gets  S_{UB} \cup (i,\hat{x}_i)$
+\Require Original $MIP$ formulation; Solution $[\hat{x}, \hat{\Delta}^+, \hat{\Delta}^-]$; Zero-tolerance $\epsilon$
+\Ensure Set $S_{UB}$ of variable–upper bound pairs to be fixed
+\Function{SlackUpperBoundFixings}{$MIP$, $[\hat{x}, \hat{\Delta}^+, \hat{\Delta}^-]$}
+    \State $S_{UB}^+ \gets \emptyset$ \Comment Set of variable-upper bound pairs for $\Delta^+$
+    \State $S_{UB}^- \gets \emptyset$ \Comment Set of variable-upper bound pairs for $\Delta^-$
+    \For{$i = 1 \to m$}
+        \State $u^+_i \gets$ upper bound of $\Delta^+_i$
+        \If{$u^+_i - \hat{\Delta}^+_i > \epsilon$}
+            \State $S_{UB}^+ \gets S_{UB}^+ \cup \{(i, \Delta^+_i)\}$
+        \EndIf
+        \State $u^-_i \gets$ upper bound of $\Delta^-_i$
+        \If{$u^-_i - \hat{\Delta}^-_i > \epsilon$}
+            \State $S_{UB}^- \gets S_{UB}^- \cup \{(i, \Delta^-_i)\}$
         \EndIf
     \EndFor
-    \State \Return $S_{UB}$
+    \State \Return $[S_{UB}^+, S_{UB}^-]$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
-Here, the solution vector $\hat{x}$ corresponds to the current PACS incumbent—valid in both the parallel and recombination phases—and each slack variable is compared with its respective upper bound. If the variable value is smaller than the existing upper bound, the variable index together with its solution value is added to $S_{UB}$ as a pair $(i, \hat{x}_i)$.
-The resulting set $S_{UB}$ is subsequently employed to update the upper bounds of the slack variables, thereby modifying the auxiliary FMIP and OMIP formulations as follows.
+Here, the solution vector $\hat{x}$ corresponds to the current PACS incumbent---valid in both the parallel and recombination phases---and each slack variable is compared with its respective upper bound. Whenever the value of a slack variable is strictly smaller than its upper bound by more than the tolerance $\epsilon$, the variable index together with its solution value is recorded in either $S_{UB}^+$ or $S_{UB}^-$, depending on the sign of the slack, as a pair $(i, \hat{\Delta}_i)$.
+The resulting sets $S_{UB}^+$ and $S_{UB}^-$ are subsequently employed to update the upper bounds of the slack variables, thereby modifying the auxiliary FMIP and OMIP formulations as follows.
 \subsubsection{FMIP Reformulation}
 \begin{equation}
 \begin{cases}
 \text{min} \quad & \sum_{i=0}^m \Delta_i^{+}+\Delta_i^{-} \\ 
 \text{s.t.} \quad & Ax + I_m\Delta^+ - I_m\Delta^- = b\\ 
 & x_i = \hat{x_i}, \; \forall i \in F\\ 
-& \Delta^+_i \le \hat{u}_i, \; \forall (i,\hat{u}_i) \in S_{UB}^+\\
-& \Delta^-_i \le \hat{u}_i, \; \forall (i,\hat{u}_i) \in S_{UB}^-\\  
+& \Delta^+_i \le \hat{\Delta}_i, \; \forall (i,\hat{\Delta}_i) \in S_{UB}^+\\
+& \Delta^-_i \le \hat{\Delta}_i, \; \forall (i,\hat{\Delta}_i) \in S_{UB}^-\\  
 & l \le x \le u\\ 
 & x_i \in \mathbb{Z}, \; \forall i \in \mathcal{I} \\ 
 & \Delta^+ \ge 0, \; \Delta^- \ge 0
@@ -254,14 +249,13 @@ The resulting set $S_{UB}$ is subsequently employed to update the upper bounds o
 \text{s.t.} \quad & Ax + I_m\Delta^+ - I_m\Delta^- = b\\
 & \cancel{\sum_{i=0}^m \Delta_i^{+}+\Delta_i^{-} \le \sum_{i=0}^m \hat\Delta_i^{+}+\hat\Delta_i^{-}}\\ 
 & x_i = \hat{x}_i, \; \forall i \in F\\ 
-& \Delta^+_i \le \hat{u}_i, \; \forall (i,\hat{u}_i) \in S_{UB}^+\\
-& \Delta^-_i \le \hat{u}_i, \; \forall (i,\hat{u}_i) \in S_{UB}^-\\  
+& \Delta^+_i \le \hat{\Delta}_i, \; \forall (i,\hat{\Delta}_i) \in S_{UB}^+\\
+& \Delta^-_i \le \hat{\Delta}_i, \; \forall (i,\hat{\Delta}_i) \in S_{UB}^-\\   
 & l \le x \le u\\ 
 & x_i \in \mathbb{Z}, \; \forall i \in \mathcal{I} \\ 
 & \Delta^+ \ge 0, \; \Delta^- \ge 0 
 \end{cases}
 \end{equation}
-In these formulations, the set $S_{UB}$ is partitioned into $S_{UB}^+$ and $S_{UB}^-$ to remain consistent with the notation used for FMIP and OMIP.  
 It is worth noting that the budget constraint in OMIP can now be removed, since the slack upper bound fixing provides a stronger restriction, as will be further confirmed by the results in Section \ref{sec:test_slack_UB}.  
 
 \subsection{WalkMIP: Violated-Constraints-Based Variable Fixing}
@@ -270,40 +264,40 @@ It is worthwhile to investigate a more sophisticated and potentially efficient v
 
 Algorithm \ref{alg:walkMIP} presents the WalkMIP procedure adapted for MIP constraint satisfaction problems.
 
-\begin{algorithm}[H]
+\begin{algorithm}[htbp]
 \caption{Walk-based Repair Heuristic for MIP}\label{alg:walkMIP}
 \begin{algorithmic}[1]
-\Require $MIP$ model with $n+2m$ variables (FMIP or OMIP); Initial solution $x$; Fixing parameter $\rho$; Random walk probability $p \in (0,1)$; Solution kick probability $p_{HUGE\_KICK}$
-\Ensure {Updated solution $\hat{x}$; Set of integer indices $F$}
-\Function{WalkMIP}{$MIP$, $\hat{x}$, $\rho$, $p$, $p_{HUGE\_KICK}$}
+\Require Auxiliary formulation $\overline{MIP}$ (FMIP or OMIP); Initial solution $\hat{x}$; Fixing parameter $\rho$; Random walk probability $p \in (0,1)$; Solution kick probability $p_{HUGE\_KICK}$
+\Ensure Updated solution $\hat{x}$ and set $F$ of integer indices
+\Function{WalkMIP}{$\overline{MIP}$, $\hat{x}$, $\rho$, $p$, $p_{HUGE\_KICK}$}
     \State $violConstr \gets$ Set of indices of violated constraints, under $\hat{x}$
     \State $F \gets \emptyset$
     \If{*First Execution*} $numInitialConstr \gets |violConstr|$\EndIf
     \If{$violConstr = \emptyset$ } \Return \EndIf
     \If{with $\mathbb{P} = p_{HUGE\_KICK}$} 
-        \State \Return \Call{RandomFixings}{$\rho$}
+        \State \Return \Call{RandomFixings}{$\overline{MIP},\rho$}
     \EndIf
     \State $k \gets $\Call{NumConstrToFix}{$numInitialConstr$,$|violConstr|$}
     \Repeat
         \State $c \gets \Call{UniformFrom}{violConstr}$
-        \State $(i_{best}, val_{best}, minDMG) \gets$ \Call{MinDamageMove}{$c, \hat{x}$}
+        \State $[i^*, x^*, \delta^*] \gets$ \Call{MinDamageMove}{$\overline{MIP}, c,\hat{x}$}
         \If{$minDMG \leq -\epsilon$}
-            \State $F \gets F \cup i_{best}$
-            \State $\hat{x} \gets \Call{UpdateSol}{\hat{x},i_{best},val_{best}}$\Comment Apply best move to $\hat{x}$
-        \ElsIf{with $\mathbb{P} = 1-p \land i_{best} \neq -1$}
-            \State $F \gets F \cup i_{best}$
-            \State $\hat{x} \gets \Call{UpdateSol}{\hat{x},i_{best},val_{best}}$\Comment Apply min-damage move to $\hat{x}$
+            \State $F \gets F \cup i^*$
+            \State $\hat{x} \gets \Call{UpdateSol}{\hat{x},i^*,x^*}$\Comment Apply best move to $\hat{x}$
+        \ElsIf{with $\mathbb{P} = 1-p \land i^* \neq -1$}
+            \State $F \gets F \cup i^*$
+            \State $\hat{x} \gets \Call{UpdateSol}{\hat{x},i^*,x^*}$\Comment Apply min-damage move to $\hat{x}$
         \Else 
             \State $i_{rnd} \gets \Call{RandomInteger}{0,n-1}$
             \State $F \gets F \cup i_{rnd}$
-            \State $\hat{x} \gets \Call{UpdateSol}{\hat{x}, i_{rnd},x_{i_{rnd}}}$ \Comment Randomly fixing a var in $\hat{x}$
+            \State $\hat{x} \gets \Call{UpdateSol}{\hat{x}, i_{rnd},\hat{x}_{i_{rnd}}}$ \Comment Randomly fixing a var in $\hat{x}$
         \EndIf
         \State $violConstr \gets$ Set of indices of violated constraints, under $\hat{x}$
         \If{$violConstr = \emptyset$} \textbf{break} \EndIf
     \Until $k$ times
 
     \If{$k < \rho \cdot n$}
-        \State $F \gets  \Call{RandomFixings}{\rho- {k\over{n}}}$ \Comment Fix remaining vars (up to $\rho \cdot n$) from $\hat{x}$
+        \State $F \gets  \Call{RandomFixings}{\overline{MIP},\rho- {k\over{n}}}$ \Comment Fix remaining vars (up to $\rho \cdot n$) from $\hat{x}$
     \EndIf
     \State \Return $F$
 \EndFunction
@@ -313,37 +307,43 @@ Algorithm \ref{alg:walkMIP} presents the WalkMIP procedure adapted for MIP const
 The WalkMIP algorithm is executed independently by each processor, replacing the standard random fixing procedure. The strategy can be decomposed into three main phases:
 
 \begin{enumerate}
-    \item \textbf{Initialization and Huge-Kick Phase (lines 1-9 in Algorithm \ref{alg:walkMIP})}: If this is the first execution of the routine, the algorithm records the number of violated constraints under the current solution $x$, which is later used to determine the number of iterations for the main loop. To enhance diversification and escape local minima, a probability $p_{HUGE\_KICK}$ is introduced to randomly fix variables according to $\rho$. In the implementation, this parameter is set to $1/16$.
+    \item \textbf{Initialization and Huge-Kick Phase (lines 1-10 in Algorithm \ref{alg:walkMIP})}: If this is the first execution of the routine, the algorithm records the number of violated constraints under the current solution $x$, which is later used to determine the number of iterations for the main loop. To enhance diversification and escape local minima, a probability $p_{HUGE\_KICK}$ is introduced to randomly fix variables according to $\rho$. In the implementation, this parameter is set to $1/16$.
     
-    \item \textbf{Constraint Selection and Optimization Loop (lines 10-25 in Algorithm \ref{alg:walkMIP})}: The number of constraints to target is determined by the function:
-    $$
+    \item \textbf{Constraint Selection and Optimization Loop (lines 11-29 in Algorithm \ref{alg:walkMIP})}: 
+    The number of constraints to target is determined by
+    \[
     k(v, v_0) =
     \begin{cases}
-    \left\lceil k_{\min} + (k_{\max}-k_{\min}) \cdot \hat{r}^{\,\beta} \right\rceil & \text{if } v > k_{\min} \\[0.5em]
-    v & \text{otherwise}
+    \left\lceil k_{\min} + (k_{\max}-k_{\min}) \cdot \hat{r}^{\,\beta} \right\rceil & \text{if } v > k_{\min}, \\[0.5em]
+    v & \text{otherwise},
     \end{cases}
-    $$
+    \]
     where
-    $$
-    \hat{r} = \min\!\left(1, \max\!\left(0, \frac{v}{\max(1, v_0)}\right)\right),\quad k_{\min}=32,\; k_{\max}=1024,\; \beta=\frac{\sqrt{5}-1}{2}.
-    $$
-    This ensures that the number of touched constraints is bounded by $k_{\max}$ while accounting for constraints that have become feasible since the algorithm started. Only one variable per constraint is modified, imitating the WalkSAT strategy. The main loop iterates over $k$ randomly chosen violated constraints---updated at each iteration---selecting the ``minimum damage move'' for each constraint. The function \textsc{MinDamageMove}, the Algorithm \ref{alg:min_DMG_WalkMIP}, evaluates potential moves:  
-        \begin{itemize}
-            \item If a variable fixing reduces infeasibility, the best move is applied.
-            \item Otherwise, with probability $1-p$, the minimal-damage move is applied.
-            \item Otherwise, with probability $p$, a random variable is fixed using its current solution value $x_{i_{rnd}}$.
-        \end{itemize}
+    \[
+    \hat{r} = \min\!\left(1, \max\!\left(0, \tfrac{v}{\max(1, v_0)}\right)\right), 
+    \quad k_{\min} = 32,\; k_{\max} = 1024,\; \beta = \tfrac{\sqrt{5}-1}{2}.
+    \]
+    Here, $v_0$ is the initial number of violated constraints, and $v$ is the current number of violated constraints.
+    This rule guarantees that the number of touched constraints never exceeds $k_{\max}$, while adapting to the reduction of violations over time. 
+    At each iteration, the loop samples $k$ violated constraints and, for each, selects one variable to modify, in analogy to the WalkSAT strategy. 
+    The function \textsc{MinDamageMove} (Algorithm \ref{alg:min_DMG_WalkMIP}) evaluates candidate moves and returns the one that minimizes constraint violation. The update proceeds as follows:
+    \begin{itemize}
+        \item If a fixing reduces infeasibility, the best move is applied.
+        \item Otherwise, with probability $1-p$, the minimal-damage move is applied.
+        \item Otherwise, with probability $p$, a random variable is fixed using its current solution value $x_{i_{\mathrm{rnd}}}$.
+    \end{itemize}
+
     
-    \item \textbf{Fixing Remaining Variables (lines 26-29 in Algorithm \ref{alg:walkMIP})}: To maintain consistency with the original variable fixing strategy, the total number of fixed variables is set to $\rho \cdot n$. If the previous phases fixed fewer variables, the remaining variables are fixed according to the standard strategy.
+    \item \textbf{Fixing Remaining Variables (lines 30-33 in Algorithm \ref{alg:walkMIP})}: To maintain consistency with the original variable fixing strategy, the total number of fixed variables is set to $\rho \cdot n$. If the previous phases fixed fewer variables, the remaining variables are fixed according to the standard strategy.
 \end{enumerate}
 
 \begin{algorithm}[H]
 \caption{Minimum Damage Move Selection for a Violated Constraint in WalkMIP}\label{alg:min_DMG_WalkMIP}
-\begin{algorithmic}
-\Require Violated constraint $c$, current solution vector $\hat{x}$
-\Ensure Tuple $(i_{best}, val_{best}, minDMG)$, where $i_{best}$ is the index of the variable to modify, $val_{best}$ is the new value for that variable, and $minDMG$ is the resulting minimum change in constraint violation
-\Function{MinDamageMove}{$c, x$}
-    \State $minDMG \gets +\infty$, $i_{best} \gets -1$, $val_{best} \gets +\infty$
+\begin{algorithmic}[1]
+\Require Auxiliary formulation $\overline{MIP}$ (FMIP or OMIP); Violated constraint $c$; Current solution vector $\hat{x}$
+\Ensure $[i^*, x^*, \delta^*]$ with $i^*$ the selected index, $x^*$ its new value, and $\delta^*$ the minimum violation change
+\Function{MinDamageMove}{$\overline{MIP}$, $c$, $\hat{x}$}
+    \State $[i^*, x^*, \delta^*] \gets [-1,+\infty,+\infty]$
     \For{\textbf{each} variable $i$ in $c$}
         \If{$i$.type = BIN} $\bar{x}_i \gets \neg \hat{x}_i$
         \ElsIf{$i$.type = INT} $\bar{x}_i \gets \hat{x}_i + \Call{RandomInteger}{-1,1}$
@@ -351,14 +351,13 @@ The WalkMIP algorithm is executed independently by each processor, replacing the
         \EndIf
         \State $\bar{x}_i \gets \Call{Clamp}{\bar{x}_i,l_i,u_i}$
         \State $\delta \gets \Call{ComputeViolation}{\hat{x},\bar{x}_i}$
-        \If{$\delta < minDMG$}
-            \State $i_{best} \gets i$, $minDMG \gets \delta$, $val_{best} \gets \bar{x}_i$
+        \If{$\delta < \delta^*$}
+            \State $[i^*, x^*, \delta^*] \gets [i,\bar{x}_i,\delta]$
         \EndIf
     \EndFor
-    \State \Return $(i_{best}, val_{best}, minDMG)$
+    \State \Return $[i^*, x^*, \delta^*]$
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
-
-Notice that any modifications of $\rho$ via the dynamic adjustment routine are incorporated in subsequent WalkMIP iterations. It is important to emphasize that WalkMIP can only be applied when the slack variables are nonzero. Consequently, the original random fixing strategy, described in Section \ref{sec:dyn_var_fix}, remains necessary during OMIP optimization phases where the slack sum is below the zero-tolerance threshold $\epsilon$.
+Any modifications of $\rho$ introduced through the dynamic adjustment routine are subsequently propagated to later WalkMIP iterations. Nevertheless, it is important to emphasize that WalkMIP can only be applied when the slack variables are nonzero.Consequently, the original random fixing strategy, described in Section \ref{sec:dyn_var_fix}, remains necessary during OMIP optimization phases where the slack sum is below the zero-tolerance threshold $\epsilon$.
 Although the results in Section \ref{sec:test_walkMIP} indicate that this strategy is less effective than the simpler, more straightforward variable fixing approach, it offers valuable insights and suggests a potential direction for future research.

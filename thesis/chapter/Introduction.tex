@@ -6,14 +6,14 @@ A generic mixed-integer program (MIP) will be defined as
 \begin{cases}
 \text{min} \quad & c^T x \\
 \text{s.t.} \quad & Ax = b \\
-                        & x_i \in \mathbb{Z},\; \forall i \in \mathcal{I} \\
-                        & l \le x \le u
+                        & l \le x \le u \\
+                        & x_i \in \mathbb{Z},\; \forall i \in \mathcal{I}   
 \end{cases}
 \end{equation}
 where $c \in \mathbb{R}^n$, $A \in \mathbb{R}^{m \times n}$ and $\mathcal{I}\subseteq\{1\dots n\}$ is the subset of integer variables indices. The solution vector $x$ is bounded by $l \in \bar{\mathbb{R}}^n$ and $u \in \bar{\mathbb{R}}^n$ where $\bar{\mathbb{R}}= \mathbb{R} \cup \{-\infty,\infty\}$.
 Here, some decision variables are constrained to take integer values, which increases the model’s complexity.
 \subsection{Heuristic in MIP solving}
-The presence of integer variables significantly increases the computational complexity of MIP problems, especially as the number of variables and constraints grows. Solvers such as IBM ILOG CPLEX$^\text{\cite{cplex}}$ and GUROBI$^\text{\cite{gurobi}}$ incorporate a variety of built-in strategies to improve performance. Among these strategies are heuristics, which are specialized algorithms designed to quickly find feasible---but not necessarily optimal---solutions. Although heuristics do not guarantee optimality, they are computationally efficient and can significantly accelerate the solution 
+The presence of integer variables significantly increases the computational complexity of MIP problems, especially as the number of variables and constraints grows. Solvers such as IBM ILOG CPLEX$^\text{\cite{cplex}}$ and GUROBI$^\text{\cite{gurobi}}$ incorporate a variety of built-in strategies to improve performance. Among these strategies are heuristics, which are specialized algorithms designed to quickly find feasible, but not necessarily optimal, solutions. Although heuristics do not guarantee optimality, they are computationally efficient and can significantly accelerate the solution 
 process by providing good initial solutions or guiding the search within the solution space.
 
 \section{Alternating Criteria Search (ACS)}

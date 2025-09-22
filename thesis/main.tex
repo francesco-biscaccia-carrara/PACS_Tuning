@@ -7,7 +7,7 @@
 
 % Libraries
 \documentclass[a4paper,12pt,ì]{report}
-%\documentclass[a4paper,12pt,twoside]{report} solo per stampa
+%\documentclass[a4paper,12pt,twoside]{report} %solo per stampa
 \usepackage[utf8]{inputenc}
 \usepackage{bookmark}
 \usepackage{hyperref}
@@ -126,7 +126,7 @@
 
 \vfill
 {\large Academic Year 2024/2025}\\
-{Date TBD} 
+{Date 07/10/2025} 
 \end{center}
 \end{titlepage}
 
@@ -137,7 +137,7 @@
 
 \pagenumbering{roman}
 \thispagestyle{empty}
-%\clearpage{\pagestyle{plain}\cleardoublepage}
+
 
 % Abstract
 \newcommand\summaryname{Abstract}
@@ -146,6 +146,11 @@
     \bfseries{\summaryname} \end{center}}
     
 \begin{Abstract}
+    This thesis focuses on enhancing the Alternating Criteria Search (ACS) heuristic for solving large and complex Mixed-Integer Programming (MIP) problems. While the Parallel ACS (PACS) approach has proven effective in generating high-quality solutions through large-scale parallelization, it remains limited by reliance on specialized hardware and by the need for manual parameter calibration. To overcome these issues, this work develops a refined PACS framework that adapts automatically to different problem instances and computing environments. The improvements center on a dynamic mechanism for adjusting the variable fixing strategy, a lightweight initialization method that avoids parameter tuning, and a reformulation of subproblems that leverages slack-based constraints for greater efficiency. Extensive computational experiments on hard instances from MIPLIB 2017 confirm that the refined PACS consistently achieves better solution quality than the baseline approach, while remaining robust, architecture-agnostic, and easy to integrate into modern MIP solvers.
+\end{Abstract}
+\newpage
+\begin{Abstract}
+    Questa tesi si concentra sul perfezionamento dell’euristica Alternating Criteria Search (ACS) per la risoluzione di problemi di Programmazione Mista Intera (MIP) di grande dimensione e complessità. Sebbene l’approccio Parallel ACS (PACS) abbia dimostrato di essere efficace nel generare soluzioni di alta qualità attraverso la parallelizzazione su larga scala, esso presenta ancora limiti legati alla dipendenza da hardware specializzato e alla necessità di una calibrazione manuale dei parametri. Per superare tali criticità, questo lavoro propone un framework PACS perfezionato, capace di adattarsi automaticamente a diversi tipi di problemi e a differenti ambienti di calcolo. Le migliorie principali riguardano un meccanismo dinamico per l’adattamento della strategia di fissaggio delle variabili, un metodo di inizializzazione leggero che elimina la necessità di tarature manuali, e una riformulazione dei sottoproblemi basata su vincoli slack per garantire maggiore efficienza. Ampi test computazionali su istanze complesse tratte da MIPLIB 2017 confermano come il PACS perfezionato raggiunga sistematicamente risultati di qualità superiore rispetto all’approccio di riferimento, mantenendosi al contempo robusto, indipendente dall’architettura e facilmente integrabile nei moderni solver MIP.
 \end{Abstract}
 
 \afterpage{\blankpage}
