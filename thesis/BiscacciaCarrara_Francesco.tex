@@ -1,13 +1,16 @@
 \pdfinfo{
     /Author (Francesco Biscaccia Carrara)
     /Title (Enhancing the ACS Heuristic: Parameter Tuning and Computational Experiments for Solving MIP Problems)
-    /Subject (Master Degree thesis in Computer Engineering UniPD 2024/2025)
+    /Subject (Master Degree Thesis in Computer Engineering UniPD 2024/2025)
     /Keyword (ACS, Heuristic, MIP, Parallelism, MIPLIB2017)
 }
 
 % Libraries
-\documentclass[a4paper,12pt,ì]{report}
+
+\documentclass[a4paper,12pt]{report}
 %\documentclass[a4paper,12pt,twoside]{report} %solo per stampa
+\usepackage[a-2b,mathxmp]{pdfx}
+
 \usepackage[utf8]{inputenc}
 \usepackage{bookmark}
 \usepackage{hyperref}
@@ -20,20 +23,18 @@
 \usepackage{subcaption}
 \usepackage{graphicx}
 \graphicspath{{./chapter/img/}}
-\usepackage[usenames]{color}
 \usepackage{cancel}
 \usepackage{amsmath,amssymb}
 \usepackage{xcolor}
 \usepackage{colortbl}
 \usepackage{tocloft}
-\usepackage[a-1b]{pdfx}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{hyperref}
 \usepackage{tabto}
 \usepackage{pgf}
-% \usepackage{lmodern}
 \usepackage{pgfplots}
+
 
 \usepackage{tikz}
 \usepackage{circuitikz}
@@ -45,16 +46,7 @@
 \usepackage{amsthm}
 \usepackage[sorting=none]{biblatex} % For biblatex
 \addbibresource{refs.bib} % Path to your .bib file
-
 \usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds}
-
-\DeclareMathOperator{\E}{\mathbb{E}}
-\DeclareMathOperator{\Prob}{\mathbb{P}}
-%-------------TO REMOVE------------
-\newtheorem{definition}{Definition} %
-\newtheorem{theorem}{Teorema} %
-\newtheorem{problem}{Problema} %
-%-----------------------------------
 \usetikzlibrary{patterns}
 \usetikzlibrary{math}
 \pgfplotsset{width=10cm,compat=1.9}
@@ -133,10 +125,11 @@
 \thispagestyle{empty}
 \cleardoublepage%
 
-%\clearpage\null\newpage
+\clearpage\null\newpage
 
 \pagenumbering{roman}
 \thispagestyle{empty}
+\clearpage{\pagestyle{plain}\cleardoublepage}
 
 
 % Abstract
@@ -144,9 +137,9 @@
 \newenvironment{Abstract}%
     {\begin{center}%
     \bfseries{\summaryname} \end{center}}
-    
+
 \begin{Abstract}
-    This thesis focuses on enhancing the Alternating Criteria Search (ACS) heuristic for solving large and complex Mixed-Integer Programming (MIP) problems. While the Parallel ACS (PACS) approach has proven effective in generating high-quality solutions through large-scale parallelization, it remains limited by reliance on specialized hardware and by the need for manual parameter calibration. To overcome these issues, this work develops a refined PACS framework that adapts automatically to different problem instances and computing environments. The improvements center on a dynamic mechanism for adjusting the variable fixing strategy, a lightweight initialization method that avoids parameter tuning, and a reformulation of subproblems that leverages slack-based constraints for greater efficiency. Extensive computational experiments on hard instances from MIPLIB 2017 confirm that the refined PACS consistently achieves better solution quality than the baseline approach, while remaining robust, architecture-agnostic, and easy to integrate into modern MIP solvers.
+    This thesis focuses on enhancing the Alternating Criteria Search (ACS) heuristic for solving large and complex Mixed Integer Programming (MIP) problems. While the Parallel ACS (PACS) approach has proven effective in generating high-quality solutions through large-scale parallelization, it remains limited by reliance on specialized hardware and by the need for manual parameter calibration. To overcome these issues, this work develops a refined PACS framework that adapts automatically to different problem instances and computing environments. The improvements center on a dynamic mechanism for adjusting the variable fixing strategy, a lightweight initialization method that avoids parameter tuning, and a reformulation of subproblems that leverages slack-based constraints for greater efficiency. Extensive computational experiments on hard instances from MIPLIB 2017 confirm that the refined PACS consistently achieves better solution quality than the baseline approach, while remaining robust, architecture-agnostic, and easy to integrate into modern MIP solvers.
 \end{Abstract}
 \newpage
 \begin{Abstract}
@@ -162,7 +155,7 @@
 %\listoftables%
 
 \afterpage{\blankpage}
-\afterpage{\blankpage}
+% \afterpage{\blankpage}
 
 \clearpage{\pagestyle{plain}\cleardoublepage}
 \pagenumbering{arabic}
@@ -171,36 +164,31 @@
 \clearpage{\pagestyle{plain}\cleardoublepage}
 \chapter{Introduction}
 \input{chapter/Introduction.tex}
-
-%\afterpage{\blankpage}
+\clearpage\null\newpage
 
 % % Chapter 1
 \clearpage{\pagestyle{plain}\cleardoublepage}
 \chapter{The ACS Framework}
 \input{chapter/ACSFramework.tex}
-
-%\afterpage{\blankpage}
+\clearpage\null\newpage
 
 % % Chapter 2
 \clearpage{\pagestyle{plain}\cleardoublepage}
 \chapter{The PACS Tuning}
 \input{chapter/Tuning.tex}
-
-% %\afterpage{\blankpage}
+\clearpage\null\newpage
 
 % % Chapter 3
 \clearpage{\pagestyle{plain}\cleardoublepage}
 \chapter{Experimental Results}
 \input{chapter/Results.tex}
-
-% %\afterpage{\blankpage}
+\clearpage\null\newpage
 
 % % Chapter 5
 \clearpage{\pagestyle{plain}\cleardoublepage}
 \chapter{Conclusion and Future Work}
 \input{chapter/Conclusion.tex}
-
-% %\afterpage{\blankpage}
+\clearpage\null\newpage
 
 % % Biblio
 \printbibliography[nottype=online]
