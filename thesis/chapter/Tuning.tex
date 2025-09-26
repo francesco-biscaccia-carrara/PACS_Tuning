@@ -117,7 +117,7 @@ Since the LNS heuristics in the PACS algorthm restrict the search space by fixin
         \State $\rho \gets \rho + \hat\delta_\rho$
     \EndIf
     \State $\rho \gets \Call{Clamp}{\rho,0.01,0.99}$
-    \If{*Tie Case detected*}
+    \If {\Call{TieCase}$ $}
         \State $\rho \gets \rho - \delta_\rho$
     \EndIf
     \State \textbf{release lock}
@@ -208,10 +208,9 @@ The procedure is implemented as shown in Algorithm \ref{alg:fixing_slackUB}.
 \caption{Fixing Slack Variables to Upper Bound}\label{alg:fixing_slackUB}
 \begin{algorithmic}[1]
 \Require Original $MIP$ formulation; Solution $[\hat{x}, \hat{\Delta}^+, \hat{\Delta}^-]$; Zero-tolerance $\epsilon$
-\Ensure Set $S_{UB}$ of variable–upper bound pairs to be fixed
+\Ensure Sets $S_{UB}^+$ and $S_{UB}^-$ of variable–upper bound pairs to be fixed for $\Delta^+$ and $\Delta^-$, respectively
 \Function{SlackUpperBoundFixings}{$MIP$, $[\hat{x}, \hat{\Delta}^+, \hat{\Delta}^-]$}
-    \State $S_{UB}^+ \gets \emptyset$ \Comment Set of variable-upper bound pairs for $\Delta^+$
-    \State $S_{UB}^- \gets \emptyset$ \Comment Set of variable-upper bound pairs for $\Delta^-$
+    \State $[S_{UB}^+,S_{UB}^-] \gets [\emptyset,\emptyset]$ 
     \For{$i = 1 \to m$}
         \State $u^+_i \gets$ upper bound of $\Delta^+_i$
         \If{$u^+_i - \hat{\Delta}^+_i > \epsilon$}
@@ -267,21 +266,21 @@ Algorithm \ref{alg:walkMIP} presents the WalkMIP procedure adapted for MIP const
 \begin{algorithm}[htbp]
 \caption{Walk-based Repair Heuristic for MIP}\label{alg:walkMIP}
 \begin{algorithmic}[1]
-\Require Auxiliary formulation $\overline{MIP}$ (FMIP or OMIP); Initial solution $\hat{x}$; Fixing parameter $\rho$; Random walk probability $p \in (0,1)$; Solution kick probability $p_{HUGE\_KICK}$
+\Require Auxiliary formulation $\overline{MIP}$ (FMIP or OMIP); Initial solution $\hat{x}$; Fixing parameter $\rho$; Random walk probability $p \in (0,1)$; Solution kick probability $p_{HUGE\_KICK}$; Zero-tolerance $\epsilon$
 \Ensure Updated solution $\hat{x}$ and set $F$ of integer indices
 \Function{WalkMIP}{$\overline{MIP}$, $\hat{x}$, $\rho$, $p$, $p_{HUGE\_KICK}$}
-    \State $violConstr \gets$ Set of indices of violated constraints, under $\hat{x}$
+    \State $v \gets$ Set of indices of violated constraints, under $\hat{x}$
     \State $F \gets \emptyset$
-    \If{*First Execution*} $numInitialConstr \gets |violConstr|$\EndIf
-    \If{$violConstr = \emptyset$ } \Return \EndIf
+    \If{\Call{FirstExec}$ $} $v_0 \gets |v|$\EndIf
+    \If{$v = \emptyset$ } \Return \EndIf
     \If{with $\mathbb{P} = p_{HUGE\_KICK}$} 
         \State \Return \Call{RandomFixings}{$\overline{MIP},\rho$}
     \EndIf
-    \State $k \gets $\Call{NumConstrToFix}{$numInitialConstr$,$|violConstr|$}
+    \State $k \gets $\Call{NumConstrToFix}{$v_0$,$|v|$}
     \Repeat
-        \State $c \gets \Call{UniformFrom}{violConstr}$
+        \State $c \gets \Call{UniformFrom}{v}$
         \State $[i^*, x^*, \delta^*] \gets$ \Call{MinDamageMove}{$\overline{MIP}, c,\hat{x}$}
-        \If{$minDMG \leq -\epsilon$}
+        \If{$\delta^* \leq -\epsilon$}
             \State $F \gets F \cup i^*$
             \State $\hat{x} \gets \Call{UpdateSol}{\hat{x},i^*,x^*}$\Comment Apply best move to $\hat{x}$
         \ElsIf{with $\mathbb{P} = 1-p \land i^* \neq -1$}
@@ -292,12 +291,12 @@ Algorithm \ref{alg:walkMIP} presents the WalkMIP procedure adapted for MIP const
             \State $F \gets F \cup i_{rnd}$
             \State $\hat{x} \gets \Call{UpdateSol}{\hat{x}, i_{rnd},\hat{x}_{i_{rnd}}}$ \Comment Randomly fixing a var in $\hat{x}$
         \EndIf
-        \State $violConstr \gets$ Set of indices of violated constraints, under $\hat{x}$
-        \If{$violConstr = \emptyset$} \textbf{break} \EndIf
+        \State $v \gets$ Set of indices of violated constraints, under $\hat{x}$
+        \If{$v = \emptyset$} \textbf{break} \EndIf
     \Until $k$ times
 
     \If{$k < \rho \cdot n$}
-        \State $F \gets  \Call{RandomFixings}{\overline{MIP},\rho- {k\over{n}}}$ \Comment Fix remaining vars (up to $\rho \cdot n$) from $\hat{x}$
+        \State $F \gets  F\cup \Call{RandomFixings}{\overline{MIP},\rho- {k\over{n}}}$ \Comment Fix vars up to $\rho \cdot n$ from $\hat{x}$
     \EndIf
     \State \Return $F$
 \EndFunction
