@@ -1,7 +1,7 @@
 %intro
 \section{Experimental Setup}
 The experiments are designed to compare the PACS framework with the standalone IBM ILOG CPLEX Optimization Studio (version 22.1).  
-The PACS framework is implemented in C++ for performance reasons, interfacing with the IBM ILOG CPLEX MIP solver through the C API. The source code is available under a non-commercial MIT license at \url{https://github.com/francesco-biscaccia-carrara/PACS_Tuning}. 
+The PACS framework is implemented in C++ for performance reasons, interfacing with the IBM ILOG CPLEX MIP solver through the C API. The source code is available under a non-commercial MIT license at \url{https://github.com/Francesco-Biscaccia/PACS_Tuning}. 
 
 All experiments were conducted on a cluster within the UniPD DEI Blade infrastructure, running Rocky Linux 8.10. Each node is equipped with an Intel(R) Xeon(R) E5-2623 v3 processor (4 cores, 3.00 GHz) and 16 GB of RAM. Although the infrastructure is cluster-based, the computational power of a single node is comparable to that of a general-purpose laptop, or even lower.  
 For fairness in comparison, PACS executions use 4 logical threads, implemented as C++ standard threads, each running a CPLEX instance restricted to a single core. The baseline counterpart is a standalone CPLEX execution restricted to 4 cores.
@@ -58,10 +58,10 @@ This section presents the experimental evaluation and details the progressive tu
 \subsection{Fixed $\rho$ Initialization Test}\label{sec:test_fix_rho}
 The first experiment focuses on the choice of the parameter $\rho$ in the variable fixing strategy.  
 In this experiment, PACS was employed with generalized fixing strategies under an architecture-agnostic parallelization scheme
-The predefined values of $\rho$ considered are $\{.1, .25, .5, .75, .9\}$.  
+The predefined values of $\rho$ considered are $\{0.1, 0.25, 0.5, 0.75, 0.9\}$.  
 It is worth noting that smaller values of $\rho$ leave greater freedom to the MIP solver.  
 
-Since the PACS algorithm also requires the parameter $\theta$ for the initial solution construction strategy, it was fixed to $\theta = .25$ for this test.  
+Since the PACS algorithm also requires the parameter $\theta$ for the initial solution construction strategy, it was fixed to $\theta = 0.25$ for this test.  
 
 \begin{figure}[H]
     \centering
@@ -93,13 +93,13 @@ Since the PACS algorithm also requires the parameter $\theta$ for the initial so
     \label{fig:PACS_STD_MGAP}
 \end{figure}
 From Figure \ref{fig:PACS_STD_SuccRate}, it is evident that standalone CPLEX consistently outperforms PACS in terms of success rate across all values of $\rho$.  
-However, Figure \ref{fig:PACS_STD_MGAP} reveals a different picture: PACS with $\rho = .1$ outperforms all other settings of $\rho$, and even surpasses CPLEX in terms of solution quality, providing higher-quality solutions approximately $1.72\times$ more frequently than the solver alone.
+However, Figure \ref{fig:PACS_STD_MGAP} reveals a different picture: PACS with $\rho = 0.1$ outperforms all other settings of $\rho$, and even surpasses CPLEX in terms of solution quality, providing higher-quality solutions approximately $1.72\times$ more frequently than the solver alone.
 This result may be attributed to the fact that greater freedom allows CPLEX to optimize more effectively, whereas PACS primarily benefits from enhanced diversification through its parallelization strategy.
 
-Based on these observations, the baseline PACS configuration under the static fixing scenario is set to $\theta = .25$ and $\rho = .1$.
+Based on these observations, the baseline PACS configuration under the static fixing scenario is set to $\theta = 0.25$ and $\rho = 0.1$.
 
 \subsection{Dynamic $\rho$ Adjustment Test}\label{sec:test_dyn_rho}
-This experiment investigates the dynamic adjustment strategy\footnote{In the plots, the PACS algorithm with dynamically adjusted $\rho$ is denoted as DACS for brevity.} for the variable fixing parameter $\rho$, as introduced in Section \ref{sec:dyn_var_fix}. Although PACS requires an initial $\rho$ value, it is automatically updated during execution. In this test, the candidate values for $\rho$ are ${.1, .25, .5}$, while the starting solution parameter $\theta$ is set to $.25$, consistent with the previous experiment.
+This experiment investigates the dynamic adjustment strategy\footnote{In the plots, the PACS algorithm with dynamically adjusted $\rho$ is denoted as DACS for brevity.} for the variable fixing parameter $\rho$, as introduced in Section \ref{sec:dyn_var_fix}. Although PACS requires an initial $\rho$ value, it is automatically updated during execution. In this test, the candidate values for $\rho$ are $\{0.1, 0.25, 0.5\}$, while the starting solution parameter $\theta$ is set to $0.25$, consistent with the previous experiment.
 \begin{figure}[H]
 \centering
 \begin{minipage}{0.6\columnwidth}
@@ -130,11 +130,11 @@ This experiment investigates the dynamic adjustment strategy\footnote{In the plo
 \label{fig:PACS_DYN_MGAP}
 \end{figure}
 
-As in the static case, Figure \ref{fig:PACS_DYN_SuccRate} shows that CPLEX consistently outperforms PACS in terms of success rate. However, Figure \ref{fig:PACS_DYN_MGAP} demonstrates that dynamic adjustment of $\rho$ improves solution quality: selecting $\rho = .1$ produces higher-quality solutions roughly $1.73\times$ more frequently than CPLEX alone.
+As in the static case, Figure \ref{fig:PACS_DYN_SuccRate} shows that CPLEX consistently outperforms PACS in terms of success rate. However, Figure \ref{fig:PACS_DYN_MGAP} demonstrates that dynamic adjustment of $\rho$ improves solution quality: selecting $\rho = 0.1$ produces higher-quality solutions roughly $1.73\times$ more frequently than CPLEX alone.
 
 The key observation from this experiment is that, unlike the fixed $\rho$ strategy, where the choice of $\rho$ significantly affects PACS performance, the dynamic adjustment greatly reduces sensitivity to the initial parameter. Regardless of the starting $\rho$, PACS achieves comparable results in both success rate and solution quality, providing consistently reliable outcomes.
 
-Based on these results, the baseline PACS configuration under the dynamic fixing scenario is set to $\theta = .25$ and initial $\rho = .1$.
+Based on these results, the baseline PACS configuration under the dynamic fixing scenario is set to $\theta = 0.25$ and initial $\rho = 0.1$.
 
 \subsection{Fixed vs. Dynamically Adjusted $\rho$ Test}\label{sec:test_fixvsdyn_rho}
 This experiment compares the fixed and dynamically adjusted strategies for selecting the variable fixing parameter $\rho$, aiming to identify the most effective approach for the final PACS algorithm. Since $\theta$ is consistent across the previous experiments, a direct comparison is possible.
@@ -171,10 +171,10 @@ This experiment compares the fixed and dynamically adjusted strategies for selec
 
 As evident from Figures \ref{fig:PACS_STD_DYN_SuccRate} and \ref{fig:PACS_STD_DYN_MGAP}, there is no significant difference in performance between the two strategies, both in terms of success rate and solution quality.
 
-Considering the results from the previous experiment, the dynamic adjustment strategy for $\rho$ is preferred due to its reduced sensitivity to the initial parameter choice. Consequently, the final PACS framework adopts dynamic variable fixing with an initial $\rho = .1$ and $\theta = .25$.
+Considering the results from the previous experiment, the dynamic adjustment strategy for $\rho$ is preferred due to its reduced sensitivity to the initial parameter choice. Consequently, the final PACS framework adopts dynamic variable fixing with an initial $\rho = 0.1$ and $\theta = 0.25$.
 
 \subsection{Initial Solution Construction Test}\label{sec:test_init_sol}
-This experiment evaluates different strategies for constructing the initial solution, with the dual objectives of identifying the most effective parameter settings and, if possible, reducing parameter dependence. Specifically, the initialization strategy described in Section \ref{sec:gen_fixing} is analyzed with $\theta \in \{.25, 1\}$. The choice $\theta = .25$ encourages the algorithm to produce solutions of higher quality with respect to the original MIP objective, whereas $\theta = 1$ corresponds to constructing a solution by randomly fixing variables within their bounds. These two strategies are compared with the parameter-free approach introduced in Section \ref{sec:init_sol_maxFeas}.  
+This experiment evaluates different strategies for constructing the initial solution, with the dual objectives of identifying the most effective parameter settings and, if possible, reducing parameter dependence. Specifically, the initialization strategy described in Section \ref{sec:gen_fixing} is analyzed with $\theta \in \{0.25, 1\}$. The choice $\theta = 0.25$ encourages the algorithm to produce solutions of higher quality with respect to the original MIP objective, whereas $\theta = 1$ corresponds to constructing a solution by randomly fixing variables within their bounds. These two strategies are compared with the parameter-free approach introduced in Section \ref{sec:init_sol_maxFeas}.  
 \begin{figure}[H]
     \centering
     \begin{minipage}{0.6\columnwidth}
@@ -204,9 +204,9 @@ This experiment evaluates different strategies for constructing the initial solu
     \caption{Success Rate vs. MIP Gap Plot for Initial Solution Construction Test}
     \label{fig:PACS_InitSol_MGAP}
 \end{figure}
-Figures \ref{fig:PACS_InitSol_SuccRate} and \ref{fig:PACS_InitSol_MGAP} indicate that overall performance is broadly comparable across all strategies. However, a closer inspection of the integral values reveals that the parameter-free strategy achieves the best results: 173.66 vs.\ 169.98 in terms of success rate, and 33.63 vs.\ 33.40 in terms of MIP gap integrals (MaxFeas vs. DACS, $\theta=.25$). Moreover, since the parameter-free approach eliminates the need to tune $\theta$, it represents a more robust and practical choice.
+Figures \ref{fig:PACS_InitSol_SuccRate} and \ref{fig:PACS_InitSol_MGAP} indicate that overall performance is broadly comparable across all strategies. However, a closer inspection of the integral values reveals that the parameter-free strategy achieves the best results: 173.66 vs.\ 169.98 in terms of success rate, and 33.63 vs.\ 33.40 in terms of MIP gap integrals (MaxFeas vs. DACS, $\theta=0.25$). Moreover, since the parameter-free approach eliminates the need to tune $\theta$, it represents a more robust and practical choice.
 
-Consequently, based on this test, the best configuration of PACS employs a variable fixing strategy with dynamic adjustment of $\rho$ initialized at $\rho = .1$, combined with a parameter-free initial solution construction strategy that maximizes feasibility.
+Consequently, based on this test, the best configuration of PACS employs a variable fixing strategy with dynamic adjustment of $\rho$ initialized at $\rho = 0.1$, combined with a parameter-free initial solution construction strategy that maximizes feasibility.
 
 \subsection{Slack Upper Bound Enforcement Test}\label{sec:test_slack_UB}
 In this experiment, the PACS algorithm—tuned with the best strategies and parameters identified in the previous tests—was evaluated to assess the effectiveness of the slack upper bound enforcement described in Section \ref{sec:slack_UB_BDG_constr}.
@@ -285,7 +285,7 @@ As shown in Figures \ref{fig:PACS_BDGRem_SuccRate} and \ref{fig:PACS_BDGRem_MGAP
 Therefore, the budget constraint is omitted in the final PACS framework, as its enforcement through slack upper bounds proves both sufficient and more efficient.
 
 \subsection{WalkMIP Strategy Test}\label{sec:test_walkMIP}
-The final experiment evaluates the performance of the WalkMIP strategy, a more sophisticated variable fixing approach compared to the original PACS method. The key parameter here is the probability $p$, which governs the likelihood of selecting a minimum-damage move rather than a random move. In practice, higher values of $p$ increase the chance of random moves being chosen. To investigate this effect, $p$ was tested with values $\{.6, .7, .8\}$.
+The final experiment evaluates the performance of the WalkMIP strategy, a more sophisticated variable fixing approach compared to the original PACS method. The key parameter here is the probability $p$, which governs the likelihood of selecting a minimum-damage move rather than a random move. In practice, higher values of $p$ increase the chance of random moves being chosen. To investigate this effect, $p$ was tested with values $\{0.6, 0.7, 0.8\}$.
 \begin{figure}[H]
 \centering
 \begin{minipage}{0.6\columnwidth}
@@ -318,5 +318,5 @@ The final experiment evaluates the performance of the WalkMIP strategy, a more s
 
 As shown in Figures \ref{fig:PACS_WalkMIP_SuccRate} and \ref{fig:PACS_WalkMIP_MGAP}, the simpler and more direct variable fixing strategy consistently outperforms WalkMIP in both success rate and solution quality.
 
-For this reason, WalkMIP was not included in the final PACS framework. The final configuration of PACS therefore incorporates all modifications validated up to the budget constraint removal test, with parameters set as follows: dynamic adjustment of $\rho$, initialized at $\rho=.1$, parameter-free initial solution construction, slack upper bound enforcement, and removal of the budget constraint.
+For this reason, WalkMIP was not included in the final PACS framework. The final configuration of PACS therefore incorporates all modifications validated up to the budget constraint removal test, with parameters set as follows: dynamic adjustment of $\rho$, initialized at $\rho=0.1$, parameter-free initial solution construction, slack upper bound enforcement, and removal of the budget constraint.
 

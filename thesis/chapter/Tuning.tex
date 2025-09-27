@@ -20,15 +20,16 @@ To overcome this issue, Algorithm \ref{alg:starting_vector} and Algorithm \ref{a
 \Require{Original $MIP$ formulation; Percentage of variables to fix $\theta \in (0,100]$; Fixed bound constant $c_b$}
 \Ensure{Starting integer-feasible vector $\hat{x}$}
 \Function{InitThetaSolution}{$MIP$, $\theta$, $c_b$}
-\State $V \gets \text{sort}_\uparrow(\big \{x \in \{x_1,\dots,x_n\}\big\}, (u_x-l_x))$
+\State $V \gets \text{sort}_\uparrow(\big\{x \in \{x_1,\dots,x_n\}\big\}, (u_x-l_x))$
 \State $F \gets \emptyset$
+\State $\hat{x} \gets [+\infty, \ldots, +\infty] \in \bar{\mathbb{R}}^{n}$
 \While{$\lnot \Call{IsIntegerFeasible}{\hat{x}} \land |F| \neq |V|$}
     \State $\mathcal{K} \gets$ top $\theta \%$ of unfixed variables from $V$
     \For{$k \in \mathcal{K}$}
         \State $\hat{x}_k \gets \Call{RandomInteger}{\max(l_k, -c_b), \min(u_k, c_b)}$
     \EndFor
     \State $F \gets F \cup \mathcal{K}$
-    \State $[x, \Delta^+, \Delta^-] \gets \Call{RELAXED\_MIP}{MIP, F, \hat{x}}$
+    \State $[x, \Delta^+, \Delta^-] \gets \Call{RELAXED\_FMIP}{MIP, F, \hat{x}}$
     \State $Q \gets \{i \;|\; x_i \in x, x_i \in \mathbb{Z},\cancel{x_i \in \mathcal{I}}\}$
     \State $\hat{x}_q \gets x_q, \; \forall q \in Q$
     \State $F \gets F \cup Q$
@@ -110,11 +111,11 @@ Since the LNS heuristics in the PACS algorthm restrict the search space by fixin
 \Function{DynRhoUpdate}{$MIP_{code}$, $\delta_\rho$, $\rho$, $num_{MIP}$}
     \State $\hat\delta_\rho \gets {\delta_\rho \over{num_{MIP}}}$
     \State \textbf{acquire lock}
-    \If{$MIP_{code} = OPT \;\lor\; MIP_{code} = OPT_{TOL}$}
-        \State $\rho \gets \rho - \hat\delta_\rho$
-    \EndIf
     \If{$MIP_{code} = FEAS_{TL} \;\lor\; MIP_{code} = FEAS_{DET\_TL}$}
         \State $\rho \gets \rho + \hat\delta_\rho$
+    \EndIf
+    \If{$MIP_{code} = OPT \;\lor\; MIP_{code} = OPT_{TOL}$}
+        \State $\rho \gets \rho - \hat\delta_\rho$
     \EndIf
     \State $\rho \gets \Call{Clamp}{\rho,0.01,0.99}$
     \If {\Call{TieCase}$ $}
@@ -137,11 +138,11 @@ Since each sub-MIP independently attempts to modify the value of $\rho$, synchro
 \Ensure Updated value of $\rho$ after recombination adjustment
 \Function{DynRhoUpdate}{$MIP_{code}$, $\delta_\rho$, $\rho$, $num_{MIP}$}
     \State $\hat\delta_\rho \gets {2\delta_\rho \over{num_{MIP}}}$
-    \If{$MIP_{code} = OPT \;\lor\; MIP_{code} = OPT_{TOL}$}
-        \State $\rho \gets \rho - \hat\delta_\rho$
-    \EndIf
     \If{$MIP_{code} = FEAS_{TL} \;\lor\; MIP_{code} = FEAS_{DET\_TL}$}
         \State $\rho \gets \rho + \hat\delta_\rho$
+    \EndIf
+    \If{$MIP_{code} = OPT \;\lor\; MIP_{code} = OPT_{TOL}$}
+        \State $\rho \gets \rho - \hat\delta_\rho$
     \EndIf
     \State $\rho \gets \Call{Clamp}{\rho,0.01,0.99}$
 \EndFunction
@@ -161,7 +162,7 @@ Therefore, Algorithm \ref{alg:max_feasSol} is designed with the following goal: 
 \Require Original $MIP$ formulation with $n$ variables, objective coefficients $c_i$, bounds $[l_i, u_i]$; Zero-tolerance $\epsilon$
 \Ensure Starting solution vector $\hat{x} \in \bar{\mathbb{R}}^n$
 \Function{StartSolMaxFeas}{$MIP$}
-    \State $[\hat{x},\hat\Delta^+,\hat\Delta^-] \gets ( +\infty, \ldots, +\infty ) \in \bar{\mathbb{R}}^{n+2m}$
+    \State $[\hat{x},\hat\Delta^+,\hat\Delta^-] \gets [+\infty, \ldots, +\infty] \in \bar{\mathbb{R}}^{n+2m}$
     \For{$i = 1 \to n$}
         \State $(l_i, u_i) \gets$ variable bounds of variable $i$
         \If{$l_i = -\infty \;\land\; u_i = +\infty$}
@@ -214,11 +215,11 @@ The procedure is implemented as shown in Algorithm \ref{alg:fixing_slackUB}.
     \For{$i = 1 \to m$}
         \State $u^+_i \gets$ upper bound of $\Delta^+_i$
         \If{$u^+_i - \hat{\Delta}^+_i > \epsilon$}
-            \State $S_{UB}^+ \gets S_{UB}^+ \cup \{(i, \Delta^+_i)\}$
+            \State $S_{UB}^+ \gets S_{UB}^+ \cup \{(i, \hat\Delta^+_i)\}$
         \EndIf
         \State $u^-_i \gets$ upper bound of $\Delta^-_i$
         \If{$u^-_i - \hat{\Delta}^-_i > \epsilon$}
-            \State $S_{UB}^- \gets S_{UB}^- \cup \{(i, \Delta^-_i)\}$
+            \State $S_{UB}^- \gets S_{UB}^- \cup \{(i, \hat\Delta^-_i)\}$
         \EndIf
     \EndFor
     \State \Return $[S_{UB}^+, S_{UB}^-]$
@@ -276,7 +277,7 @@ Algorithm \ref{alg:walkMIP} presents the WalkMIP procedure adapted for MIP const
     \If{with $\mathbb{P} = p_{HUGE\_KICK}$} 
         \State \Return \Call{RandomFixings}{$\overline{MIP},\rho$}
     \EndIf
-    \State $k \gets $\Call{NumConstrToFix}{$v_0$,$|v|$}
+    \State $k \gets $\Call{NumConstrToFix}{$|v|,v_0$}
     \Repeat
         \State $c \gets \Call{UniformFrom}{v}$
         \State $[i^*, x^*, \delta^*] \gets$ \Call{MinDamageMove}{$\overline{MIP}, c,\hat{x}$}
@@ -287,9 +288,9 @@ Algorithm \ref{alg:walkMIP} presents the WalkMIP procedure adapted for MIP const
             \State $F \gets F \cup i^*$
             \State $\hat{x} \gets \Call{UpdateSol}{\hat{x},i^*,x^*}$\Comment Apply min-damage move to $\hat{x}$
         \Else 
-            \State $i_{rnd} \gets \Call{RandomInteger}{0,n-1}$
-            \State $F \gets F \cup i_{rnd}$
-            \State $\hat{x} \gets \Call{UpdateSol}{\hat{x}, i_{rnd},\hat{x}_{i_{rnd}}}$ \Comment Randomly fixing a var in $\hat{x}$
+            \State $i_{\xi} \gets \Call{RandomInteger}{0,n-1}$
+            \State $F \gets F \cup i_{\xi}$
+            \State $\hat{x} \gets \Call{UpdateSol}{\hat{x}, i_{\xi},\hat{x}_{i_{\xi}}}$ \Comment Randomly fixing a var in $\hat{x}$
         \EndIf
         \State $v \gets$ Set of indices of violated constraints, under $\hat{x}$
         \If{$v = \emptyset$} \textbf{break} \EndIf
@@ -358,5 +359,5 @@ The WalkMIP algorithm is executed independently by each processor, replacing the
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
-Any modifications of $\rho$ introduced through the dynamic adjustment routine are subsequently propagated to later WalkMIP iterations. Nevertheless, it is important to emphasize that WalkMIP can only be applied when the slack variables are nonzero.Consequently, the original random fixing strategy, described in Section \ref{sec:dyn_var_fix}, remains necessary during OMIP optimization phases where the slack sum is below the zero-tolerance threshold $\epsilon$.
+Any modifications of $\rho$ introduced through the dynamic adjustment routine are subsequently propagated to later WalkMIP iterations. Nevertheless, it is important to emphasize that WalkMIP can only be applied when the slack variables are nonzero. Consequently, the original random fixing strategy, described in Section \ref{sec:dyn_var_fix}, remains necessary during OMIP optimization phases where the slack sum is below the zero-tolerance threshold $\epsilon$.
 Although the results in Section \ref{sec:test_walkMIP} indicate that this strategy is less effective than the simpler, more straightforward variable fixing approach, it offers valuable insights and suggests a potential direction for future research.

@@ -104,7 +104,7 @@ Following this parallelization step, the improvements obtained in parallel must 
 \Function{PACS}{$MIP$, $TL_{PACS}$, $T$, $\theta$, $\rho$}
 \State $[\hat{x}, \hat{\Delta}^+, \hat{\Delta}^-] \gets \Call{InitThetaSolution}{MIP,\theta,10^6}$
 \While{\Call{TimeElapsed} $\le TL_{PACS}$ }
-    \If{$\sum_i \Delta_i^+ + \Delta_i^- > 0$}
+    \If{$\sum_i^m \hat\Delta_i^+ + \hat\Delta_i^- > 0$}
         \ForAll{threads $t_i:  i \in \{0,T-1\}$ \textbf{in parallel}}
             \State $F_{t_i} \gets \Call{RandomFixings}{MIP,\rho}$
             \State $[x^{t_i}, \Delta^{+t_i}, \Delta^{-t_i}] \gets \Call{FMIP\_LNS}{MIP,F_{t_i}, \hat{x}}$
@@ -235,7 +235,7 @@ The proposed algorithm provides a lightweight heuristic that seeks to minimize t
 \begin{algorithm}
 \caption{Starting vector heuristic}\label{alg:starting_vector}
 \begin{algorithmic}
-\Function{RELAXED\_MIP}{$MIP$, $F$, $\hat{x}$}
+\Function{RELAXED\_FMIP}{$MIP$, $F$, $\hat{x}$}
     \State \Return $\min\{\sum_i \Delta_i^+ + \Delta_i^- \mid A x + I_m \Delta^+ - I_m \Delta^- = b, \; x_j = \hat{x}_j \;\; \forall j \in F\}$
 \EndFunction
 \end{algorithmic}
@@ -246,13 +246,14 @@ The proposed algorithm provides a lightweight heuristic that seeks to minimize t
 \Function{InitThetaSolution}{$MIP$, $\theta$, $c_b$}
 \State $V \gets \text{sort}_\uparrow(\{x \in \mathcal{I}\}, (u_x-l_x))$
 \State $F \gets \emptyset$
+\State $\hat{x} \gets [+\infty, \ldots, +\infty] \in \bar{\mathbb{R}}^{n} $
 \While{$\lnot \Call{IsIntegerFeasible}{\hat{x}} \land F \neq \mathcal{I}$}
     \State $\mathcal{K} \gets$ top $\theta \%$ of unfixed variables from $V$
     \For{$k \in \mathcal{K}$}
         \State $\hat{x}_k \gets \Call{RandomInteger}{\max(l_k, -c_b), \min(u_k, c_b)}$
     \EndFor
     \State $F \gets F \cup \mathcal{K}$
-    \State $[x, \Delta^+, \Delta^-] \gets \Call{RELAXED\_MIP}{MIP,F,\hat{x}}$
+    \State $[x, \Delta^+, \Delta^-] \gets \Call{RELAXED\_FMIP}{MIP,F,\hat{x}}$
     \State $Q \gets \{i \;|\; x_i \in x,\; x_i \in \mathbb{Z},\; x_i \in \mathcal{I}\}$
     \State $\hat{x}_q \gets x_q, \; \forall q \in Q$
     \State $F \gets F \cup Q$
